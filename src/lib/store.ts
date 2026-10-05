@@ -27,11 +27,14 @@ function setStorage<T>(key: string, value: T): void {
 
 export function initializeStore() {
   const users = getStorage<User[]>(KEYS.USERS, []);
+  
+  // Only create the initial admin user if no users exist at all
   if (users.length === 0) {
     users.push({
-      id: crypto.randomUUID(),
+      id: 'usr-admin',
       username: 'admin',
-      password: 'admin123',
+      fullName: 'Administrator',
+      password: 'admin',
       role: 'admin',
       createdAt: new Date().toISOString()
     });
@@ -47,7 +50,7 @@ export function initializeStore() {
 
 export function login(username: string, password: string): User | null {
   const users = getStorage<User[]>(KEYS.USERS, []);
-  const user = users.find(u => u.username === username && u.password === password);
+  const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password);
   if (user) {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(KEYS.SESSION, JSON.stringify(user));
@@ -77,17 +80,37 @@ export function isLoggedIn(): boolean {
   return getCurrentUser() !== null;
 }
 
+export function getUsers(): User[] {
+  return getStorage<User[]>(KEYS.USERS, []);
+}
+
+export function addUser(userData: Omit<User, 'id' | 'createdAt'>): User {
+  const users = getUsers();
+  const newUser: User = {
+    ...userData,
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString()
+  };
+  users.push(newUser);
+  setStorage(KEYS.USERS, users);
+  return newUser;
+}
+
+export function getCollectors(): User[] {
+  return getUsers().filter(u => u.role === 'collector');
+}
+
 export function getDebtors(): Debtor[] {
   return getStorage<Debtor[]>(KEYS.DEBTORS, []);
 }
 
 export function getDebtor(id: string): Debtor | null {
-  const debtors = getDebtors();
+  const debtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
   return debtors.find(d => d.id === id) || null;
 }
 
 export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updatedAt' | 'outstandingBalance'>): Debtor {
-  const debtors = getDebtors();
+  const all = getStorage<Debtor[]>(KEYS.DEBTORS, []);
   const outstandingBalance = Number(debtorData.outstandingAmount || 0) - Number(debtorData.paidAmount || 0);
   const now = new Date().toISOString();
   
@@ -99,31 +122,31 @@ export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updated
     updatedAt: now
   };
   
-  debtors.push(newDebtor);
-  setStorage(KEYS.DEBTORS, debtors);
+  all.push(newDebtor);
+  setStorage(KEYS.DEBTORS, all);
   return newDebtor;
 }
 
 export function updateDebtor(id: string, updates: Partial<Omit<Debtor, 'id' | 'createdAt' | 'updatedAt'>>): Debtor | null {
-  const debtors = getDebtors();
-  const index = debtors.findIndex(d => d.id === id);
+  const all = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+  const index = all.findIndex(d => d.id === id);
   if (index === -1) return null;
   
-  const debtor = debtors[index];
+  const debtor = all[index];
   const updatedDebtor = { ...debtor, ...updates, updatedAt: new Date().toISOString() };
   
   if ('outstandingAmount' in updates || 'paidAmount' in updates) {
     updatedDebtor.outstandingBalance = Number(updatedDebtor.outstandingAmount || 0) - Number(updatedDebtor.paidAmount || 0);
   }
   
-  debtors[index] = updatedDebtor;
-  setStorage(KEYS.DEBTORS, debtors);
+  all[index] = updatedDebtor;
+  setStorage(KEYS.DEBTORS, all);
   return updatedDebtor;
 }
 
 export function deleteDebtor(id: string): void {
-  const debtors = getDebtors();
-  setStorage(KEYS.DEBTORS, debtors.filter(d => d.id !== id));
+  const all = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+  setStorage(KEYS.DEBTORS, all.filter(d => d.id !== id));
   
   const payments = getStorage<Payment[]>(KEYS.PAYMENTS, []);
   setStorage(KEYS.PAYMENTS, payments.filter(p => p.debtorId !== id));
@@ -132,7 +155,7 @@ export function deleteDebtor(id: string): void {
   setStorage(KEYS.ACTIVITIES, activities.filter(a => a.debtorId !== id));
 }
 
-export function searchDebtors(query: string, categoryFilter?: Category, flagFilter?: ColorFlag): Debtor[] {
+export function searchDebtors(query: string, categoryFilter?: Category, flagFilter?: ColorFlag, clientFilter?: string): Debtor[] {
   let debtors = getDebtors();
   
   if (categoryFilter) {
@@ -142,10 +165,15 @@ export function searchDebtors(query: string, categoryFilter?: Category, flagFilt
   if (flagFilter && flagFilter !== 'none') {
     debtors = debtors.filter(d => d.colorFlag === flagFilter);
   }
+
+  if (clientFilter) {
+    debtors = debtors.filter(d => d.clientName.toLowerCase() === clientFilter.toLowerCase());
+  }
   
   if (query) {
     const q = query.toLowerCase();
     debtors = debtors.filter(d => 
+      (d.debtorName && d.debtorName.toLowerCase().includes(q)) ||
       (d.clientName && d.clientName.toLowerCase().includes(q)) ||
       (d.accountNumber && d.accountNumber.toLowerCase().includes(q)) ||
       (d.customerId && d.customerId.toLowerCase().includes(q))
@@ -164,13 +192,14 @@ export function addPayment(paymentData: any): Payment {
   const payments = getStorage<Payment[]>(KEYS.PAYMENTS, []);
   const amountPaid = Number(paymentData.amountPaid || paymentData.amount || 0);
   const paymentDate = paymentData.paymentDate || paymentData.date || new Date().toISOString();
+  const user = getCurrentUser();
   
   const newPayment: Payment = {
     id: crypto.randomUUID(),
     debtorId: paymentData.debtorId,
     amountPaid,
     paymentDate,
-    recordedBy: paymentData.recordedBy || 'Admin',
+    recordedBy: paymentData.recordedBy || user?.fullName || 'Collector',
     notes: paymentData.notes || ''
   };
   
@@ -193,6 +222,8 @@ export function getActivities(debtorId: string): Activity[] {
 
 export function addActivity(activityData: any): Activity {
   const activities = getStorage<Activity[]>(KEYS.ACTIVITIES, []);
+  const user = getCurrentUser();
+  
   const newActivity: Activity = {
     id: crypto.randomUUID(),
     debtorId: activityData.debtorId,
@@ -200,7 +231,7 @@ export function addActivity(activityData: any): Activity {
     description: activityData.description || '',
     scheduledDate: activityData.scheduledDate || activityData.date,
     createdAt: new Date().toISOString(),
-    createdBy: activityData.createdBy || 'Admin'
+    createdBy: activityData.createdBy || user?.fullName || 'Collector'
   };
   
   activities.push(newActivity);
@@ -216,12 +247,12 @@ export interface DashboardStats {
   outstandingBalance: number;
   categoryCounts: Record<Category, number>;
   flagCounts: Record<ColorFlag, number>;
-  byCategory: Record<string, number>;
-  byFlag: Record<string, number>;
+  clientsCount: number;
 }
 
 export function getDashboardStats(): DashboardStats {
   const debtors = getDebtors();
+  const uniqueClients = new Set(debtors.map(d => d.clientName).filter(Boolean));
   
   const stats: DashboardStats = {
     totalDebtors: debtors.length,
@@ -229,6 +260,7 @@ export function getDashboardStats(): DashboardStats {
     totalPaid: 0,
     totalBalance: 0,
     outstandingBalance: 0,
+    clientsCount: uniqueClients.size,
     categoryCounts: {
       completed: 0,
       paying: 0,
@@ -245,9 +277,7 @@ export function getDashboardStats(): DashboardStats {
       blue: 0,
       yellow: 0,
       green: 0
-    },
-    byCategory: {},
-    byFlag: {}
+    }
   };
   
   debtors.forEach(d => {
@@ -258,55 +288,66 @@ export function getDashboardStats(): DashboardStats {
     if (d.category && d.category in stats.categoryCounts) {
       stats.categoryCounts[d.category]++;
     }
-    stats.byCategory[d.category] = (stats.byCategory[d.category] || 0) + 1;
     
     if (d.colorFlag && d.colorFlag in stats.flagCounts) {
       stats.flagCounts[d.colorFlag]++;
     }
-    stats.byFlag[d.colorFlag] = (stats.byFlag[d.colorFlag] || 0) + 1;
   });
   
   stats.outstandingBalance = stats.totalBalance;
   return stats;
 }
 
-export function exportDebtorsCSV(): string {
-  const debtors = getDebtors();
+// Download/Export Clients & Debtors Data (Bank = Client, Client wa Bank = Debtor)
+export function exportClientsDebtorsCSV(): string {
+  const debtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
   if (debtors.length === 0) return '';
   
   const headers = [
-    'Account Number', 'Customer ID', 'Client Name', 'Bank Name',
-    'Outstanding Amount', 'Paid Amount', 'Date of Payment',
-    'Outstanding Balance', 'WhatsApp Number', 'Category', 'Color Flag', 'Notes'
+    'Client (Bank Name)',
+    'Debtor (Bank Client)',
+    'Account Number',
+    'Customer ID',
+    'Outstanding Amount',
+    'Paid Amount',
+    'Outstanding Balance',
+    'Date of Payment',
+    'WhatsApp Number',
+    'Category',
+    'Color Flag',
+    'Assigned Collector',
+    'Notes'
   ];
   
   const rows = debtors.map(d => [
+    d.clientName || '',
+    d.debtorName || '',
     d.accountNumber || '',
     d.customerId || '',
-    d.clientName || '',
-    d.bankName || '',
     (d.outstandingAmount || 0).toString(),
     (d.paidAmount || 0).toString(),
-    d.dateOfPayment || '',
     (d.outstandingBalance || 0).toString(),
+    d.dateOfPayment || '',
     d.whatsappNumber || '',
     d.category || '',
     d.colorFlag || '',
+    d.assignedCollector || '',
     (d.notes || '').replace(/"/g, '""')
   ].map(field => `"${field}"`).join(','));
   
   return [headers.join(','), ...rows].join('\n');
 }
 
-export function importDebtorsFromCSV(csvText: string): { successCount: number; errorCount: number; errors: string[]; success: number } {
+// Upload/Import Clients & Debtors Information (CSV)
+export function importClientsDebtorsFromCSV(csvText: string): { successCount: number; errorCount: number; errors: string[]; success: number } {
   const result = { successCount: 0, errorCount: 0, errors: [] as string[], success: 0 };
   const user = getCurrentUser();
-  const createdBy = user ? user.username : 'system';
+  const createdBy = user ? user.fullName : 'Admin';
   
   try {
     const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (lines.length <= 1) {
-      result.errors.push('CSV is empty or missing data rows');
+      result.errors.push('CSV file is empty or missing data rows');
       return result;
     }
     
@@ -317,10 +358,10 @@ export function importDebtorsFromCSV(csvText: string): { successCount: number; e
         const rowString = lines[i];
         const matches = rowString.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
         const row = matches ? matches.map(m => m.replace(/^"|"$/g, '').replace(/""/g, '"').trim()) : [];
-        if (row.length < 3) continue;
+        if (row.length < 2) continue;
         
-        const getValue = (headerName: string) => {
-          const index = headers.findIndex(h => h.includes(headerName.toLowerCase()));
+        const getValue = (headerKey: string) => {
+          const index = headers.findIndex(h => h.includes(headerKey.toLowerCase()));
           return index !== -1 && index < row.length ? row[index] : '';
         };
         
@@ -328,24 +369,25 @@ export function importDebtorsFromCSV(csvText: string): { successCount: number; e
         const paidAmount = parseFloat(getValue('paid') || '0');
         
         addDebtor({
+          clientName: getValue('client') || getValue('bank') || 'Client Bank',
+          debtorName: getValue('debtor') || getValue('name') || `Debtor ${i}`,
           accountNumber: getValue('account') || `ACC-${Date.now()}-${i}`,
-          customerId: getValue('customer') || getValue('cust') || `CUST-${i}`,
-          clientName: getValue('client') || getValue('name') || `Debtor ${i}`,
-          bankName: getValue('bank') || 'Bank',
+          customerId: getValue('customer') || getValue('cust') || `ID-${i}`,
           outstandingAmount: isNaN(outstandingAmount) ? 0 : outstandingAmount,
           paidAmount: isNaN(paidAmount) ? 0 : paidAmount,
           dateOfPayment: getValue('date') || new Date().toISOString().split('T')[0],
           whatsappNumber: getValue('whatsapp') || '',
           category: (getValue('category') as Category) || 'paying',
           colorFlag: (getValue('color') || getValue('flag') as ColorFlag) || 'none',
-          notes: getValue('note'),
+          assignedCollector: getValue('collector') || '',
+          notes: getValue('note') || '',
           createdBy
         });
         
         result.successCount++;
       } catch (err: any) {
         result.errorCount++;
-        result.errors.push(`Row ${i + 1}: ${err.message || 'Parse error'}`);
+        result.errors.push(`Row ${i + 1}: ${err.message || 'Error parsing row'}`);
       }
     }
   } catch (err: any) {
@@ -359,17 +401,23 @@ export function importDebtorsFromCSV(csvText: string): { successCount: number; e
 export function generateWhatsAppLink(debtor: Debtor): string {
   const cleanNumber = (debtor.whatsappNumber || '').replace(/\D/g, '');
   const balance = (debtor.outstandingBalance || 0).toFixed(2);
-  const message = `Dear ${debtor.clientName}, this is a reminder from Recovery Credit 6 regarding your account ${debtor.accountNumber} with an outstanding balance of R${balance}. Please contact us or arrange payment. Thank you.`;
+  const message = `Dear ${debtor.debtorName}, this is a reminder regarding your account ${debtor.accountNumber} with ${debtor.clientName} for an outstanding balance of R${balance}. Please contact your assigned recovery officer or arrange payment. Thank you - Recovery Credit 6`;
   return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
 }
 
+// Backward compatibility alias
+export const exportDebtorsCSV = exportClientsDebtorsCSV;
+export const importDebtorsFromCSV = importClientsDebtorsFromCSV;
+
 export const store = {
-  get isAuthenticated() { return isLoggedIn(); },
   initializeStore,
   login,
   logout,
   getCurrentUser,
   isLoggedIn,
+  getUsers,
+  addUser,
+  getCollectors,
   getDebtors,
   getDebtor,
   addDebtor,
@@ -381,8 +429,8 @@ export const store = {
   getActivities,
   addActivity,
   getDashboardStats,
-  exportDebtorsCSV,
-  importDebtorsFromCSV,
+  exportClientsDebtorsCSV,
+  importClientsDebtorsFromCSV,
   generateWhatsAppLink
 };
 

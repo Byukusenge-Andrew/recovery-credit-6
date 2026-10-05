@@ -2,7 +2,8 @@ export interface User {
   id: string;
   username: string;
   password: string;
-  role: 'admin' | 'user';
+  fullName: string;
+  role: 'admin' | 'collector';
   createdAt: string;
 }
 
@@ -10,8 +11,8 @@ export interface Debtor {
   id: string;
   accountNumber: string;
   customerId: string;
-  clientName: string;
-  bankName: string;
+  debtorName: string;       // Bank client (Debtor)
+  clientName: string;       // Bank (Client)
   outstandingAmount: number;
   paidAmount: number;
   dateOfPayment: string;
@@ -19,6 +20,7 @@ export interface Debtor {
   whatsappNumber: string;
   category: Category;
   colorFlag: ColorFlag;
+  assignedCollector?: string; // Optional assigned collector
   notes: string;
   createdAt: string;
   updatedAt: string;

@@ -1,125 +1,70 @@
 # Recovery Credit 6 (Umusa)
 
-A modern, clean debt collection and recovery portfolio management system built with Next.js (App Router), TypeScript, and Tailwind CSS.
+Debt Recovery & Credit Portfolio Management System built with Next.js (App Router), TypeScript, and Tailwind CSS.
 
 ---
 
-## Features
+## Terminology
 
-- **Authentication & Authorization**
-  - Secure sign-in system with preconfigured credentials (`admin` / `admin123`).
-  - Auth guards protecting internal dashboard and management pages.
-
-- **Minimalist Dashboard (Inspired by Modern Clean SaaS)**
-  - Crisp white background layout with subtle borders and typography.
-  - Quick KPI overview: **Total Debtors**, **Total Outstanding Amount**, **Collected Funds**, and **Net Due Balance**.
-  - Recovery category statistics and priority flag counts.
-  - Recent debtors table for fast access.
-
-- **Debtor File Management**
-  - Track complete debtor records:
-    - Account Number & Customer ID
-    - Debtor / Client Name
-    - Bank Name
-    - Outstanding Amount & Paid Amount
-    - Outstanding Balance (auto-calculated)
-    - Date of Payment
-    - WhatsApp Contact Number
-    - Notes & History
-  - Search, filter by Category or Priority Flag, and sort files.
-  - CSV export and bulk CSV import.
-
-- **Status Categories**
-  - **Completed**
-  - **Paying**
-  - **Promise to Pay**
-  - **Schedule Meeting**
-  - **Waiver Letter**
-  - **Disputed**
-  - **Negotiation**
-  - **Skip Tracing**
-
-- **Color Priority Flags**
-  - Red, Blue, Yellow, and Green priority flags to highlight critical accounts.
-
-- **WhatsApp Payment Reminders**
-  - One-click payment reminder generator linking directly to `wa.me` with pre-filled debt details and outstanding balance.
-
-- **Payment & Activity Tracking**
-  - Record payments per debtor with instant balance recalculation.
-  - Timeline of activities: notes, meetings scheduled, reminder letters, phone calls, and negotiations.
+- **Client**: The **Bank / Lending Institution** (e.g. *Standard Bank*, *Absa*, *Nedbank*, *First National Bank*, etc.).
+- **Debtor**: The **Bank Client** who owes the outstanding credit balance.
 
 ---
 
-## Project Structure
+## Data Download & Upload Features
 
-```
-recovery-credit-6/
-├── src/
-│   ├── app/
-│   │   ├── (app)/
-│   │   │   ├── dashboard/page.tsx       # Main analytics dashboard
-│   │   │   ├── debtors/
-│   │   │   │   ├── page.tsx             # Debtors list & search table
-│   │   │   │   ├── add/page.tsx         # Add new debtor
-│   │   │   │   └── [id]/
-│   │   │   │       ├── page.tsx         # Debtor file details, payments & activity
-│   │   │   │       └── edit/page.tsx    # Edit debtor file
-│   │   │   ├── upload/page.tsx          # CSV bulk upload
-│   │   │   └── layout.tsx               # Top bar header & hamburger navigation
-│   │   ├── globals.css                  # Minimal typography and light styles
-│   │   ├── layout.tsx                   # Root HTML wrapper
-│   │   └── page.tsx                     # Clean login page
-│   ├── components/
-│   │   ├── AuthGuard.tsx                # Client session protector
-│   │   ├── CategoryBadge.tsx            # Clean pill badge with status dot
-│   │   ├── DebtorFormFields.tsx         # Form fields component
-│   │   ├── FlagDot.tsx                  # Priority flag indicator
-│   │   ├── Sidebar.tsx                  # Collapsible hamburger icon rail
-│   │   └── StatsCard.tsx                # Dashboard metric cards
-│   └── lib/
-│       ├── constants.ts                 # Category styles, flag colors & action types
-│       ├── store.ts                     # Local storage data layer, CSV parser & calculations
-│       └── types.ts                     # TypeScript data interfaces
-└── package.json
-```
+### 1. Download Information
+- Accessible from both the **Dashboard** and **Debtors** pages via the **"Download All Data"** button.
+- Exports a complete CSV report containing:
+  - Client (Bank Name)
+  - Debtor (Bank Client Name)
+  - Account Number & Customer ID
+  - Total Outstanding Amount & Paid Amount
+  - Net Balance Due
+  - Payment Due Date
+  - WhatsApp Number
+  - Category & Color Flag
+  - Assigned Collector (if assigned)
+  - Case Notes
+
+### 2. Upload Information (Bulk CSV Import)
+- On the **/upload** page, you can import debtor files in bulk.
+- Click **"Download Sample CSV Template"** for the exact column headers:
+  ```csv
+  client,debtor,accountNumber,customerId,outstandingAmount,paidAmount,dateOfPayment,whatsappNumber,category,colorFlag,collector,notes
+  ```
+
+---
+
+## Lifecycle Categories & Color Flags
+
+### Categories:
+- **Completed** (Fully paid)
+- **Paying** (Active payment plan)
+- **Promise to Pay** (Commitment date recorded)
+- **Schedule Meeting** (Consultation scheduled)
+- **Waiver Letter** (Settlement discount requested)
+- **Disputed** (Disputed obligation)
+- **Negotiation** (Ongoing settlement discussions)
+- **Skip Tracing** (Location tracing in progress)
+
+### Priority Flags:
+- **Red** (High Priority / Urgent Action)
+- **Blue** (Standard Follow-Up)
+- **Yellow** (Pending Review)
+- **Green** (On Track)
 
 ---
 
 ## Getting Started
 
-### 1. Install Dependencies
 ```bash
+cd d:\Tony\recovery-credit-6
 npm install
-```
-
-### 2. Run the Development Server
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 3. Default Login Credentials
-- **Username**: `admin`
-- **Password**: `admin123`
-
----
-
-## CSV Bulk Upload Format
-
-When importing debtors in the **Upload** page, format your CSV with the following headers:
-
-```csv
-accountNumber,customerId,clientName,bankName,outstandingAmount,paidAmount,dateOfPayment,whatsappNumber,category,colorFlag,notes
-ACC-1001,CUST-001,John Doe,Standard Bank,15000,5000,2026-09-15,+27821234567,paying,red,Contacted customer regarding remaining balance.
-```
-
----
-
-## Build for Production
-
-```bash
-npm run build
-npm start
-```
+Open [http://localhost:3000](http://localhost:3000) in your browser:
+- **Landing Page**: [http://localhost:3000/](http://localhost:3000/)
+- **Agent Login**: [http://localhost:3000/login](http://localhost:3000/login)
+  - Initial Administrator: `admin` / `admin`

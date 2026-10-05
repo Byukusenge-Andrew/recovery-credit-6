@@ -7,13 +7,14 @@ import { getDebtor, getPayments, getActivities, addPayment, addActivity, generat
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
-import type { Debtor, Payment, Activity } from '@/lib/types';
+import type { Debtor, Payment, Activity, User } from '@/lib/types';
 
 export default function DebtorDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [debtor, setDebtor] = useState<Debtor | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -38,14 +39,15 @@ export default function DebtorDetailPage() {
   };
 
   useEffect(() => {
+    setCurrentUser(getCurrentUser());
     loadData();
   }, [id]);
 
   if (!debtor) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-base font-semibold text-slate-700">Debtor not found</h2>
-        <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-rose-600 hover:underline">
+        <h2 className="text-base font-semibold text-slate-700">Debtor file not found</h2>
+        <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-blue-600 hover:underline">
           Return to Debtors List
         </button>
       </div>
@@ -55,13 +57,12 @@ export default function DebtorDetailPage() {
   const handleRecordPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!payAmount || isNaN(Number(payAmount))) return;
-    const user = getCurrentUser();
 
     addPayment({
       debtorId: id,
       amountPaid: Number(payAmount),
       paymentDate: payDate,
-      recordedBy: user?.username || 'Admin',
+      recordedBy: currentUser?.fullName || 'Collector',
       notes: payNotes
     });
 
@@ -73,14 +74,13 @@ export default function DebtorDetailPage() {
   const handleAddActivity = (e: React.FormEvent) => {
     e.preventDefault();
     if (!actDesc) return;
-    const user = getCurrentUser();
 
     addActivity({
       debtorId: id,
       activityType: actType as Activity['activityType'],
       description: actDesc,
       scheduledDate: actDate,
-      createdBy: user?.username || 'Admin'
+      createdBy: currentUser?.fullName || 'Collector'
     });
 
     setActDesc('');
@@ -97,19 +97,30 @@ export default function DebtorDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{debtor.clientName}</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Account: {debtor.accountNumber} • Customer ID: {debtor.customerId || '—'}</p>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-xs">
+              Client (Bank): {debtor.clientName}
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs text-slate-500">
+              Assigned Collector: <strong>{debtor.assignedCollector || 'Unassigned'}</strong>
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
+            {debtor.debtorName || (debtor as any).clientName}
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">Account: {debtor.accountNumber} • Customer ID: {debtor.customerId || '—'}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => router.push('/debtors')} className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-xs transition">
             Back to List
           </button>
           <Link href={`/debtors/${id}/edit`} className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-xs transition">
-            Edit
+            Edit File
           </Link>
           {debtor.whatsappNumber && (
             <button onClick={handleWhatsApp} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-xs flex items-center gap-1.5 transition">
-              <span>Send WhatsApp</span>
+              <span>Send WhatsApp Reminder</span>
             </button>
           )}
         </div>
@@ -122,7 +133,7 @@ export default function DebtorDetailPage() {
             <CategoryBadge category={debtor.category} />
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <FlagDot flag={debtor.colorFlag} />
-              <span className="capitalize">{debtor.colorFlag} priority</span>
+              <span className="capitalize">{debtor.colorFlag} Flag Priority</span>
             </div>
           </div>
           <div className="text-right">
@@ -135,15 +146,15 @@ export default function DebtorDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs">
           <div>
-            <p className="text-slate-400 font-medium mb-1">Bank Name</p>
-            <p className="font-semibold text-slate-800">{debtor.bankName || '—'}</p>
+            <p className="text-slate-400 font-medium mb-1">Client (Bank Name)</p>
+            <p className="font-semibold text-slate-800">{debtor.clientName || '—'}</p>
           </div>
           <div>
             <p className="text-slate-400 font-medium mb-1">WhatsApp Number</p>
             <p className="font-semibold text-slate-800">{debtor.whatsappNumber || '—'}</p>
           </div>
           <div>
-            <p className="text-slate-400 font-medium mb-1">Total Outstanding</p>
+            <p className="text-slate-400 font-medium mb-1">Total Outstanding Amount</p>
             <p className="font-semibold text-slate-800">{formatCurrency(debtor.outstandingAmount)}</p>
           </div>
           <div>
@@ -154,7 +165,7 @@ export default function DebtorDetailPage() {
 
         {debtor.notes && (
           <div className="mt-6 pt-6 border-t border-slate-100">
-            <p className="text-xs text-slate-400 font-medium mb-1">Case Notes</p>
+            <p className="text-xs text-slate-400 font-medium mb-1">Case Notes & Details</p>
             <p className="text-xs text-slate-700 whitespace-pre-line leading-relaxed">{debtor.notes}</p>
           </div>
         )}
@@ -169,7 +180,7 @@ export default function DebtorDetailPage() {
             <form onSubmit={handleRecordPayment} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Amount (R)</label>
+                  <label className="block text-slate-500 font-medium mb-1">Amount Paid (R)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -177,33 +188,33 @@ export default function DebtorDetailPage() {
                     value={payAmount}
                     onChange={(e) => setPayAmount(e.target.value)}
                     required
-                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300"
+                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Date</label>
+                  <label className="block text-slate-500 font-medium mb-1">Payment Date</label>
                   <input
                     type="date"
                     value={payDate}
                     onChange={(e) => setPayDate(e.target.value)}
                     required
-                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300"
+                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Reference / Note</label>
+                <label className="block text-slate-500 font-medium mb-1">Payment Reference / Note</label>
                 <input
                   type="text"
                   value={payNotes}
                   onChange={(e) => setPayNotes(e.target.value)}
-                  placeholder="Receipt number or deposit slip"
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300"
+                  placeholder="Receipt number, deposit slip, or transaction reference"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition text-xs shadow-sm mt-2"
+                className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold transition text-xs shadow-sm mt-2"
               >
                 Save Payment
               </button>
@@ -213,14 +224,14 @@ export default function DebtorDetailPage() {
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Payment History</h3>
             {payments.length === 0 ? (
-              <p className="text-slate-400 text-xs italic">No payments recorded yet.</p>
+              <p className="text-slate-400 text-xs italic">No payments recorded for this debtor yet.</p>
             ) : (
               <div className="divide-y divide-slate-100">
                 {payments.map((p) => (
                   <div key={p.id} className="py-2.5 flex items-center justify-between text-xs">
                     <div>
                       <p className="font-semibold text-slate-800">{formatCurrency(p.amountPaid)}</p>
-                      <p className="text-[11px] text-slate-400">{p.notes || 'No reference'} • by {p.recordedBy}</p>
+                      <p className="text-[11px] text-slate-400">{p.notes || 'No reference'} • Recorded by: {p.recordedBy}</p>
                     </div>
                     <span className="text-slate-500 text-[11px]">{new Date(p.paymentDate).toLocaleDateString()}</span>
                   </div>
@@ -233,15 +244,15 @@ export default function DebtorDetailPage() {
         {/* Activity Column */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Add Log / Activity</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Log Activity / Interaction</h3>
             <form onSubmit={handleAddActivity} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Action Type</label>
+                  <label className="block text-slate-500 font-medium mb-1">Activity Type</label>
                   <select
                     value={actType}
                     onChange={(e) => setActType(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300"
+                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                   >
                     {ACTIVITY_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>{t.label}</option>
@@ -255,24 +266,24 @@ export default function DebtorDetailPage() {
                     value={actDate}
                     onChange={(e) => setActDate(e.target.value)}
                     required
-                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300"
+                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Details</label>
+                <label className="block text-slate-500 font-medium mb-1">Interaction Details</label>
                 <textarea
                   value={actDesc}
                   onChange={(e) => setActDesc(e.target.value)}
                   required
                   rows={3}
-                  placeholder="Record summary of call, meeting, negotiation outcome..."
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300"
+                  placeholder="Summary of conversation, promise date, negotiation outcome..."
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                 ></textarea>
               </div>
               <button
                 type="submit"
-                className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-medium transition text-xs shadow-sm mt-2"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-xs shadow-sm mt-2"
               >
                 Log Activity
               </button>
@@ -282,7 +293,7 @@ export default function DebtorDetailPage() {
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Activity Timeline</h3>
             {activities.length === 0 ? (
-              <p className="text-slate-400 text-xs italic">No activity recorded yet.</p>
+              <p className="text-slate-400 text-xs italic">No activity recorded for this debtor yet.</p>
             ) : (
               <div className="space-y-3">
                 {activities.map((act) => {
@@ -296,7 +307,7 @@ export default function DebtorDetailPage() {
                         </span>
                       </div>
                       <p className="text-slate-600">{act.description}</p>
-                      <p className="text-[10px] text-slate-400 mt-1.5">Logged by {act.createdBy}</p>
+                      <p className="text-[10px] text-slate-400 mt-1.5">Logged by: {act.createdBy}</p>
                     </div>
                   );
                 })}

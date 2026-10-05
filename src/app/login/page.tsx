@@ -1,0 +1,200 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { initializeStore, login, isLoggedIn } from '@/lib/store';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Security features: Lockout after 5 failed attempts
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockTimer, setLockTimer] = useState(0);
+
+  useEffect(() => {
+    initializeStore();
+    if (isLoggedIn()) {
+      router.push('/dashboard');
+    } else {
+      setLoading(false);
+    }
+  }, [router]);
+
+  // Lockout countdown timer
+  useEffect(() => {
+    let interval: any;
+    if (lockTimer > 0) {
+      interval = setInterval(() => {
+        setLockTimer((prev) => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            setFailedAttempts(0);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [lockTimer]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (isLocked) {
+      setError(`Account temporarily locked due to excessive failed attempts. Try again in ${lockTimer}s.`);
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError('You must read and strictly accept the Terms of Service & Privacy Notice before accessing debt data.');
+      return;
+    }
+
+    const user = login(username, password);
+    if (user) {
+      setFailedAttempts(0);
+      router.push('/dashboard');
+    } else {
+      const nextFailures = failedAttempts + 1;
+      setFailedAttempts(nextFailures);
+
+      if (nextFailures >= 5) {
+        setIsLocked(true);
+        setLockTimer(60); // 60 seconds lockout
+        setError('Security threshold triggered: 5 failed attempts. Login locked for 60 seconds.');
+      } else {
+        setError(`Invalid credentials. ${5 - nextFailures} attempt(s) remaining before security lockout.`);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col justify-between bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Top Brand Link */}
+      <div className="text-center">
+        <Link href="/" className="inline-flex items-center gap-2 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+            RC6
+          </div>
+          <span className="font-bold text-slate-900 text-base">Recovery Credit 6</span>
+        </Link>
+        <p className="text-xs text-slate-500">Authorized Personnel & Agent Security Portal</p>
+      </div>
+
+      {/* Main Card */}
+      <div className="w-full max-w-md mx-auto my-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 space-y-6">
+          <div className="border-b border-slate-100 pb-4">
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Agent Sign In</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Access to debtor records is monitored and logged in compliance with data protection laws.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-medium text-slate-700 mb-1">Agent Username / ID</label>
+              <input
+                type="text"
+                disabled={isLocked}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition disabled:opacity-50"
+                placeholder="admin"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium text-slate-700 mb-1">Access Key / Password</label>
+              <input
+                type="password"
+                disabled={isLocked}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition disabled:opacity-50"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            {/* Strict Compliance Checkbox */}
+            <div className="pt-2">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 shrink-0"
+                  required
+                />
+                <span className="text-[11px] text-slate-600 leading-snug">
+                  I certify that I am an authorized recovery officer. I agree to the{' '}
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                    Terms of Service
+                  </Link>{' '}
+                  and acknowledge the{' '}
+                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                    Privacy Notice
+                  </Link>
+                  . All access is logged.
+                </span>
+              </label>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium leading-relaxed">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLocked}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition shadow-sm text-xs mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLocked ? `Locked (${lockTimer}s)` : 'Verify Credentials & Enter'}
+            </button>
+          </form>
+
+          {/* Security Features Badge */}
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5 text-emerald-600 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              256-Bit SSL Enforced
+            </span>
+            <span>Default: admin / admin123</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Navigation */}
+      <div className="text-center text-xs text-slate-400 space-x-4">
+        <Link href="/" className="hover:text-slate-600 transition">Back to Home</Link>
+        <span>•</span>
+        <Link href="/privacy" className="hover:text-slate-600 transition">Privacy</Link>
+        <span>•</span>
+        <Link href="/terms" className="hover:text-slate-600 transition">Terms</Link>
+        <span>•</span>
+        <Link href="/security" className="hover:text-slate-600 transition">Security</Link>
+      </div>
+    </div>
+  );
+}
