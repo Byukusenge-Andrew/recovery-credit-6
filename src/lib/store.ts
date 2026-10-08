@@ -1,10 +1,11 @@
-import { User, Debtor, Payment, Activity, Category, ColorFlag, ActivityType } from './types';
+import { User, Debtor, Payment, Activity, Category, ColorFlag, ActivityType, Notification } from './types';
 
 const KEYS = {
   USERS: 'rc6_users',
   DEBTORS: 'rc6_debtors',
   PAYMENTS: 'rc6_payments',
   ACTIVITIES: 'rc6_activities',
+  NOTIFICATIONS: 'rc6_notifications',
   SESSION: 'rc6_session'
 };
 
@@ -33,9 +34,11 @@ export function initializeStore() {
     users.push({
       id: 'usr-admin',
       username: 'admin',
+      email: 'admin@recoverycredit.internal',
       fullName: 'Administrator',
       password: 'admin',
       role: 'admin',
+      isEmailVerified: true,
       createdAt: new Date().toISOString()
     });
     setStorage(KEYS.USERS, users);
@@ -45,12 +48,17 @@ export function initializeStore() {
     if (!localStorage.getItem(KEYS.DEBTORS)) setStorage(KEYS.DEBTORS, []);
     if (!localStorage.getItem(KEYS.PAYMENTS)) setStorage(KEYS.PAYMENTS, []);
     if (!localStorage.getItem(KEYS.ACTIVITIES)) setStorage(KEYS.ACTIVITIES, []);
+    if (!localStorage.getItem(KEYS.NOTIFICATIONS)) setStorage(KEYS.NOTIFICATIONS, []);
   }
 }
 
-export function login(username: string, password: string): User | null {
+export function login(usernameOrEmail: string, password: string): User | null {
   const users = getStorage<User[]>(KEYS.USERS, []);
-  const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password);
+  const input = usernameOrEmail.trim().toLowerCase();
+  const user = users.find(u => 
+    (u.username.toLowerCase() === input || (u.email && u.email.toLowerCase() === input)) && 
+    u.password === password
+  );
   if (user) {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(KEYS.SESSION, JSON.stringify(user));
@@ -100,13 +108,92 @@ export function getCollectors(): User[] {
   return getUsers().filter(u => u.role === 'collector');
 }
 
-export function getDebtors(): Debtor[] {
-  return getStorage<Debtor[]>(KEYS.DEBTORS, []);
+// ---------------------------------------------------------------------
+// NOTIFICATION SYSTEM
+// ---------------------------------------------------------------------
+
+export function getNotifications(username?: string): Notification[] {
+  const allNotifications = getStorage<Notification[]>(KEYS.NOTIFICATIONS, []);
+  if (!username) return allNotifications;
+  return allNotifications
+    .filter(n => n.recipientUsername.toLowerCase() === username.toLowerCase())
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+export function getUnreadNotificationsCount(username: string): number {
+  return getNotifications(username).filter(n => !n.isRead).length;
+}
+
+export function createNotification(data: Omit<Notification, 'id' | 'createdAt' | 'isRead'>): Notification {
+  const notifications = getStorage<Notification[]>(KEYS.NOTIFICATIONS, []);
+  const newNotification: Notification = {
+    ...data,
+    id: crypto.randomUUID(),
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  notifications.push(newNotification);
+  setStorage(KEYS.NOTIFICATIONS, notifications);
+  return newNotification;
+}
+
+export function markNotificationAsRead(id: string): void {
+  const notifications = getStorage<Notification[]>(KEYS.NOTIFICATIONS, []);
+  const item = notifications.find(n => n.id === id);
+  if (item) {
+    item.isRead = true;
+    setStorage(KEYS.NOTIFICATIONS, notifications);
+  }
+}
+
+export function markAllNotificationsAsRead(username: string): void {
+  const notifications = getStorage<Notification[]>(KEYS.NOTIFICATIONS, []);
+  notifications.forEach(n => {
+    if (n.recipientUsername.toLowerCase() === username.toLowerCase()) {
+      n.isRead = true;
+    }
+  });
+  setStorage(KEYS.NOTIFICATIONS, notifications);
+}
+
+// ---------------------------------------------------------------------
+// DEBTORS SYSTEM WITH STRICT DATA ISOLATION
+// ---------------------------------------------------------------------
+
+/**
+ * Strict Data Isolation:
+ * - Admin: sees all debtors across all clients and collectors.
+ * - Collector: strictly sees ONLY the debtors assigned to their username.
+ */
+export function getDebtors(): Debtor[] {
+  const user = getCurrentUser();
+  const allDebtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+
+  if (user && user.role === 'collector') {
+    return allDebtors.filter(d => d.assignedCollector?.toLowerCase() === user.username.toLowerCase());
+  }
+
+  return allDebtors;
+}
+
+/**
+ * Isolated single debtor getter:
+ * Returns the debtor only if user is admin or the assigned collector.
+ */
 export function getDebtor(id: string): Debtor | null {
-  const debtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
-  return debtors.find(d => d.id === id) || null;
+  const user = getCurrentUser();
+  const allDebtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+  const found = allDebtors.find(d => d.id === id) || null;
+
+  if (!found) return null;
+
+  if (user && user.role === 'collector') {
+    if (found.assignedCollector?.toLowerCase() !== user.username.toLowerCase()) {
+      return null; // Forbidden: Collector cannot see another collector's debtor file
+    }
+  }
+
+  return found;
 }
 
 export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updatedAt' | 'outstandingBalance'>): Debtor {
@@ -124,6 +211,20 @@ export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updated
   
   all.push(newDebtor);
   setStorage(KEYS.DEBTORS, all);
+
+  // AUTOMATED NOTIFICATION: When a debtor is assigned to a collector, send notification message
+  if (debtorData.assignedCollector) {
+    createNotification({
+      recipientUsername: debtorData.assignedCollector,
+      title: 'New Debtor Case Assigned',
+      message: `You have been assigned to recover a balance of R ${outstandingBalance.toLocaleString()} for debtor ${debtorData.debtorName} from client ${debtorData.clientName}.`,
+      debtorId: newDebtor.id,
+      debtorName: debtorData.debtorName,
+      clientName: debtorData.clientName,
+      amount: outstandingBalance
+    });
+  }
+
   return newDebtor;
 }
 
@@ -133,6 +234,7 @@ export function updateDebtor(id: string, updates: Partial<Omit<Debtor, 'id' | 'c
   if (index === -1) return null;
   
   const debtor = all[index];
+  const oldCollector = debtor.assignedCollector;
   const updatedDebtor = { ...debtor, ...updates, updatedAt: new Date().toISOString() };
   
   if ('outstandingAmount' in updates || 'paidAmount' in updates) {
@@ -141,6 +243,20 @@ export function updateDebtor(id: string, updates: Partial<Omit<Debtor, 'id' | 'c
   
   all[index] = updatedDebtor;
   setStorage(KEYS.DEBTORS, all);
+
+  // If a new collector was assigned or re-assigned, send notification
+  if (updates.assignedCollector && updates.assignedCollector !== oldCollector) {
+    createNotification({
+      recipientUsername: updates.assignedCollector,
+      title: 'Debtor Case Reassigned To You',
+      message: `Debtor account for ${updatedDebtor.debtorName} (${updatedDebtor.clientName}) with balance R ${updatedDebtor.outstandingBalance.toLocaleString()} has been assigned to you.`,
+      debtorId: updatedDebtor.id,
+      debtorName: updatedDebtor.debtorName,
+      clientName: updatedDebtor.clientName,
+      amount: updatedDebtor.outstandingBalance
+    });
+  }
+
   return updatedDebtor;
 }
 
@@ -250,8 +366,13 @@ export interface DashboardStats {
   clientsCount: number;
 }
 
+/**
+ * Strict Data Isolation for Dashboard:
+ * - Admin: totals across the entire organization.
+ * - Collector: totals strictly calculate their assigned debtors and accounts.
+ */
 export function getDashboardStats(): DashboardStats {
-  const debtors = getDebtors();
+  const debtors = getDebtors(); // Automatically filtered based on role!
   const uniqueClients = new Set(debtors.map(d => d.clientName).filter(Boolean));
   
   const stats: DashboardStats = {
@@ -298,9 +419,9 @@ export function getDashboardStats(): DashboardStats {
   return stats;
 }
 
-// Download/Export Clients & Debtors Data (Bank = Client, Client wa Bank = Debtor)
+// Download/Export Clients & Debtors Data (strictly isolated for collectors)
 export function exportClientsDebtorsCSV(): string {
-  const debtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+  const debtors = getDebtors(); // Collectors only export what they are assigned
   if (debtors.length === 0) return '';
   
   const headers = [
@@ -367,6 +488,7 @@ export function importClientsDebtorsFromCSV(csvText: string): { successCount: nu
         
         const outstandingAmount = parseFloat(getValue('outstanding') || '0');
         const paidAmount = parseFloat(getValue('paid') || '0');
+        const assignedCollector = getValue('collector') || '';
         
         addDebtor({
           clientName: getValue('client') || getValue('bank') || 'Client Bank',
@@ -377,9 +499,9 @@ export function importClientsDebtorsFromCSV(csvText: string): { successCount: nu
           paidAmount: isNaN(paidAmount) ? 0 : paidAmount,
           dateOfPayment: getValue('date') || new Date().toISOString().split('T')[0],
           whatsappNumber: getValue('whatsapp') || '',
-          category: (getValue('category') as Category) || 'paying',
-          colorFlag: (getValue('color') || getValue('flag') as ColorFlag) || 'none',
-          assignedCollector: getValue('collector') || '',
+          category: ((getValue('category') || 'paying') as Category),
+          colorFlag: ((getValue('color') || getValue('flag') || 'none') as ColorFlag),
+          assignedCollector,
           notes: getValue('note') || '',
           createdBy
         });
@@ -418,6 +540,11 @@ export const store = {
   getUsers,
   addUser,
   getCollectors,
+  getNotifications,
+  getUnreadNotificationsCount,
+  createNotification,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
   getDebtors,
   getDebtor,
   addDebtor,

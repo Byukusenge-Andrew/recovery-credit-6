@@ -18,8 +18,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white" suppressHydrationWarning>
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" suppressHydrationWarning></div>
       </div>
     );
   }

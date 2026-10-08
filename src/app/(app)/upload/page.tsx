@@ -1,35 +1,29 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { importClientsDebtorsFromCSV, exportClientsDebtorsCSV } from '@/lib/store';
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { importClientsDebtorsFromCSV, exportClientsDebtorsCSV, getCurrentUser } from '@/lib/store';
+import type { User } from '@/lib/types';
 
 export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [results, setResults] = useState<{ success: number; errors: string[] } | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isClientLoaded, setIsClientLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsClientLoaded(true);
+    setCurrentUser(getCurrentUser());
+  }, []);
 
   const handleDownloadTemplate = () => {
-    const headers = [
-      'client', 'debtor', 'accountNumber', 'customerId', 
-      'outstandingAmount', 'paidAmount', 'dateOfPayment', 
-      'whatsappNumber', 'category', 'colorFlag', 'collector', 'notes'
-    ].join(',');
-
-    const sampleRow = [
-      'Standard Bank', 'John Doe', 'SB-100293', 'CIF-9921',
-      '25000', '5000', '2026-10-01',
-      '+27821234567', 'paying', 'yellow', 'collector1', 'Agreed to bi-monthly installments.'
-    ].join(',');
-    
-    const content = `${headers}\n${sampleRow}`;
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'clients_and_debtors_template.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    // Downloads the rich sample CSV created for the user
+    const link = document.createElement('a');
+    link.href = '/sample_debtors.csv';
+    link.download = 'sample_debtors.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDownloadExistingData = () => {
@@ -68,6 +62,28 @@ export default function UploadPage() {
     }
   };
 
+  if (isClientLoaded && currentUser?.role === 'collector') {
+    return (
+      <div className="max-w-2xl mx-auto py-12 text-center bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+        <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-bold text-slate-800">Administrator Access Required</h2>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          Bulk uploading and importing bank portfolios is restricted to System Administrators. Please contact your administrator if you need new debtor files imported into the system.
+        </p>
+        <Link
+          href="/dashboard"
+          className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+        >
+          Return to My Dashboard
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -102,7 +118,7 @@ export default function UploadPage() {
             onClick={handleDownloadTemplate}
             className="px-3.5 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-semibold rounded-lg hover:bg-blue-100 transition text-xs"
           >
-            Download Sample CSV Template
+            Download Sample CSV (sample_debtors.csv)
           </button>
         </div>
 

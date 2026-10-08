@@ -1,9 +1,11 @@
 export interface User {
   id: string;
   username: string;
+  email: string;
   password: string;
   fullName: string;
   role: 'admin' | 'collector';
+  isEmailVerified?: boolean;
   createdAt: string;
 }
 
@@ -20,11 +22,24 @@ export interface Debtor {
   whatsappNumber: string;
   category: Category;
   colorFlag: ColorFlag;
-  assignedCollector?: string; // Optional assigned collector
+  assignedCollector?: string; // Optional assigned collector username
   notes: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+}
+
+export interface Notification {
+  id: string;
+  recipientUsername: string; // The collector who receives the notification
+  title: string;
+  message: string;
+  debtorId?: string;
+  debtorName?: string;
+  clientName?: string;
+  amount?: number;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface Payment {

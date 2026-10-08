@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Debtor, Category, ColorFlag } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { Debtor, Category, ColorFlag, User } from '@/lib/types';
 import { CATEGORIES, COLOR_FLAGS } from '@/lib/constants';
-import { getCollectors } from '@/lib/store';
+import { getCollectors, getCurrentUser } from '@/lib/store';
 
 export interface DebtorFormData {
   accountNumber: string;
@@ -28,6 +28,13 @@ interface Props {
 
 export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: Props) {
   const collectors = getCollectors();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
+
+  const isCollector = currentUser?.role === 'collector';
 
   const [formData, setFormData] = useState<DebtorFormData>({
     accountNumber: debtor?.accountNumber || '',
@@ -70,10 +77,11 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
             type="text"
             name="clientName"
             required
+            disabled={isCollector}
             placeholder="e.g. Standard Bank, Absa, Nedbank, FNB..."
             value={formData.clientName}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -85,10 +93,11 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
             type="text"
             name="debtorName"
             required
+            disabled={isCollector}
             placeholder="Full name of bank client with outstanding balance..."
             value={formData.debtorName}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -98,10 +107,11 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
             type="text"
             name="accountNumber"
             required
+            disabled={isCollector}
             placeholder="Bank account number"
             value={formData.accountNumber}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -110,10 +120,11 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
           <input
             type="text"
             name="customerId"
+            disabled={isCollector}
             placeholder="Customer ID or National ID"
             value={formData.customerId}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -124,9 +135,10 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
             step="0.01"
             name="outstandingAmount"
             required
+            disabled={isCollector}
             value={formData.outstandingAmount}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -182,7 +194,8 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
               name="assignedCollector"
               value={formData.assignedCollector}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+              disabled={isCollector}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
             >
               <option value="">Unassigned</option>
               {collectors.map(c => (
@@ -193,10 +206,11 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
             <input
               type="text"
               name="assignedCollector"
+              disabled={isCollector}
               placeholder="e.g. Agent name or ID (optional)"
               value={formData.assignedCollector}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
             />
           )}
         </div>

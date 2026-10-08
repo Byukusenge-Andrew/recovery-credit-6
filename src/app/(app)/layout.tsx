@@ -2,10 +2,13 @@
 
 import AuthGuard from '@/components/AuthGuard';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/store';
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+
+const subscribe = () => () => {};
 
 export default function AppLayout({
   children,
@@ -13,13 +16,12 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [username, setUsername] = useState('Admin');
+  const username = useSyncExternalStore(
+    subscribe,
+    () => getCurrentUser()?.username ?? 'Admin',
+    () => 'Admin'
+  );
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-
-  useEffect(() => {
-    const u = getCurrentUser();
-    if (u) setUsername(u.username);
-  }, []);
 
   return (
     <AuthGuard>
@@ -41,10 +43,10 @@ export default function AppLayout({
 
             <Link href="/dashboard" className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs tracking-tight">
-                RC6
+                RC
               </div>
               <span className="font-semibold text-slate-900 text-sm tracking-tight hidden sm:inline">
-                Recovery Credit 6
+                Recovery Credit
               </span>
             </Link>
           </div>
@@ -71,7 +73,10 @@ export default function AppLayout({
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             <Link
               href="/debtors/add"
               className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition shadow-sm flex items-center gap-1.5"

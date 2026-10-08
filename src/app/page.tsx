@@ -8,9 +8,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-sm">
-              RC6
+              RC
             </div>
-            <span className="font-bold text-slate-900 text-base tracking-tight">Recovery Credit 6</span>
+            <span className="font-bold text-slate-900 text-base tracking-tight">Recovery Credit</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-slate-600">

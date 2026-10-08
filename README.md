@@ -4,59 +4,71 @@ Debt Recovery & Credit Portfolio Management System built with Next.js (App Route
 
 ---
 
-## Terminology
+## How the System Works & Assignment Notifications
 
-- **Client**: The **Bank / Lending Institution** (e.g. *Standard Bank*, *Absa*, *Nedbank*, *First National Bank*, etc.).
-- **Debtor**: The **Bank Client** who owes the outstanding credit balance.
-
----
-
-## Data Download & Upload Features
-
-### 1. Download Information
-- Accessible from both the **Dashboard** and **Debtors** pages via the **"Download All Data"** button.
-- Exports a complete CSV report containing:
-  - Client (Bank Name)
-  - Debtor (Bank Client Name)
-  - Account Number & Customer ID
-  - Total Outstanding Amount & Paid Amount
-  - Net Balance Due
-  - Payment Due Date
-  - WhatsApp Number
-  - Category & Color Flag
-  - Assigned Collector (if assigned)
-  - Case Notes
-
-### 2. Upload Information (Bulk CSV Import)
-- On the **/upload** page, you can import debtor files in bulk.
-- Click **"Download Sample CSV Template"** for the exact column headers:
-  ```csv
-  client,debtor,accountNumber,customerId,outstandingAmount,paidAmount,dateOfPayment,whatsappNumber,category,colorFlag,collector,notes
-  ```
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                              ADMIN (You)                               │
+│  - Registers Debt Collectors under /collectors                         │
+│  - Enters Client (Financial institution / Bank) & Debtor               │
+│  - Assigns Debtor to a Collector                                       │
+│                                                                        │
+│    ⚡ TRIGGER: As soon as a debtor is assigned or reassigned,           │
+│    an automated notification message is dispatched to that collector.  │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                      Instant Alert  │
+                                     ▼
+        ┌────────────────────────────────────────────────────────┐
+        │                    DEBT COLLECTOR                      │
+        │  1. Logs in with their assigned username & password     │
+        │  2. Notification bell rings with unread counter badge   │
+        │  3. Prominent real-time alert banner on their Dashboard │
+        │  4. Clicking the notification opens the case directly   │
+        └────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Lifecycle Categories & Color Flags
+## Notification System Architecture
 
-### Categories:
-- **Completed** (Fully paid)
-- **Paying** (Active payment plan)
-- **Promise to Pay** (Commitment date recorded)
-- **Schedule Meeting** (Consultation scheduled)
-- **Waiver Letter** (Settlement discount requested)
-- **Disputed** (Disputed obligation)
-- **Negotiation** (Ongoing settlement discussions)
-- **Skip Tracing** (Location tracing in progress)
+1. **Automatic Assignment Notification**:
+   - When a Debtor is created via `/debtors/add` and assigned to a collector, a notification is generated:
+     > *"New Debtor Case Assigned: You have been assigned to recover a balance of R [amount] for debtor [Debtor Name] from client [Client Name]."*
+   - When an existing Debtor is edited and reassigned to a new collector via `/debtors/[id]/edit`, an alert is dispatched to the new collector.
+   - Bulk CSV uploads specifying `collector` will automatically send notifications to those collectors.
 
-### Priority Flags:
-- **Red** (High Priority / Urgent Action)
-- **Blue** (Standard Follow-Up)
-- **Yellow** (Pending Review)
-- **Green** (On Track)
+2. **Interactive Notification Bell (`NotificationBell.tsx`)**:
+   - Located on the top navigation bar.
+   - Displays real-time unread count badge.
+   - Dropdown menu showing timestamps, case summary, unread indicator, and **"Open Case File →"** direct link.
+   - Support for **"Mark all read"**.
+
+3. **Dashboard Real-Time Alert Banner**:
+   - Displays right at the top of the collector's dashboard when they sign in to immediately highlight their latest assigned account.
 
 ---
 
-## Getting Started
+## Core Entities & Terminology
+
+1. **Admin**:
+   - The agency manager. Registers collectors, inputs clients & debtors, assigns/reassigns files, and exports reports.
+   - Initial credentials: `admin` / `admin`
+
+2. **Debt Collectors**:
+   - Recovery officers registered by the Admin in `/collectors`.
+   - Log in with their own credentials.
+   - Receive instant notifications when cases are assigned to them.
+
+3. **Client (Bank / Creditor)**:
+   - The financial institution or creditor company claiming the debt (e.g. *Standard Bank*, *Absa*, *Nedbank*).
+
+4. **Debtor (Bank Client)**:
+   - The person who owes the money. Linked to a Client and assigned to a Collector.
+
+---
+
+## Running the Application
 
 ```bash
 cd d:\Tony\recovery-credit-6
@@ -66,5 +78,5 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser:
 - **Landing Page**: [http://localhost:3000/](http://localhost:3000/)
-- **Agent Login**: [http://localhost:3000/login](http://localhost:3000/login)
-  - Initial Administrator: `admin` / `admin`
+- **Sign In Portal**: [http://localhost:3000/login](http://localhost:3000/login)
+  - Admin: `admin` / `admin`

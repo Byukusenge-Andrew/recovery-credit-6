@@ -59,14 +59,22 @@ export default function DebtorsPage() {
     window.open(link, '_blank');
   };
 
+  const isCollector = currentUser?.role === 'collector';
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Debtors Portfolio</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {isCollector ? 'My Assigned Debtors' : 'Debtors Portfolio'}
+          </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Bank clients assigned across 12 Recovery Collectors • Signed in as: <span className="font-semibold text-blue-600">{currentUser?.fullName}</span>
+            {isCollector ? (
+              <>Debtor files assigned to you for recovery • Logged in as: <span className="font-semibold text-blue-600">{currentUser?.fullName}</span></>
+            ) : (
+              <>Bank clients assigned across Recovery Collectors • Signed in as: <span className="font-semibold text-blue-600">{currentUser?.fullName}</span></>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -74,31 +82,35 @@ export default function DebtorsPage() {
           <button
             onClick={handleDownloadClientsDebtors}
             className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
-            title="Download full CSV report of all clients and debtors"
+            title={isCollector ? 'Download CSV report of your assigned debtors' : 'Download full CSV report of all clients and debtors'}
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            <span>Download All Data</span>
+            <span>{isCollector ? 'Download My Debtors (CSV)' : 'Download All Data'}</span>
           </button>
 
-          {/* Upload Button */}
-          <Link
-            href="/upload"
-            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
-          >
-            <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-            <span>Upload Data</span>
-          </Link>
+          {/* Admin-only Upload & Add Buttons */}
+          {!isCollector && (
+            <>
+              <Link
+                href="/upload"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <span>Upload Data</span>
+              </Link>
 
-          <Link
-            href="/debtors/add"
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm"
-          >
-            + Add Debtor
-          </Link>
+              <Link
+                href="/debtors/add"
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm"
+              >
+                + Add Debtor
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
@@ -170,7 +182,7 @@ export default function DebtorsPage() {
                 <th className="py-3 px-4 font-medium">Client (Bank Name)</th>
                 <th className="py-3 px-4 font-medium">Debtor (Bank Client)</th>
                 <th className="py-3 px-4 font-medium">Account / ID</th>
-                <th className="py-3 px-4 font-medium">Assigned Collector</th>
+                {!isCollector && <th className="py-3 px-4 font-medium">Assigned Collector</th>}
                 <th className="py-3 px-4 font-medium text-right">Outstanding</th>
                 <th className="py-3 px-4 font-medium text-right">Paid</th>
                 <th className="py-3 px-4 font-medium text-right">Balance Due</th>
@@ -196,11 +208,13 @@ export default function DebtorsPage() {
                     <div>{debtor.accountNumber}</div>
                     <div className="text-[10px] text-slate-400">{debtor.customerId}</div>
                   </td>
-                  <td className="py-3 px-4 text-slate-600">
-                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-medium">
-                      {debtor.assignedCollector || 'Unassigned'}
-                    </span>
-                  </td>
+                  {!isCollector && (
+                    <td className="py-3 px-4 text-slate-600">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-medium">
+                        {debtor.assignedCollector || 'Unassigned'}
+                      </span>
+                    </td>
+                  )}
                   <td className="py-3 px-4 text-right text-slate-600">{formatCurrency(debtor.outstandingAmount)}</td>
                   <td className="py-3 px-4 text-right text-emerald-600 font-medium">{formatCurrency(debtor.paidAmount)}</td>
                   <td className={`py-3 px-4 text-right font-bold ${debtor.outstandingBalance > 0 ? 'text-slate-900' : 'text-emerald-600'}`}>
@@ -261,9 +275,15 @@ export default function DebtorsPage() {
               ))}
               {debtors.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
-                    <p className="font-medium text-slate-600 text-sm">No debtor records found</p>
-                    <p className="text-xs text-slate-400 mt-1">Click &apos;+ Add Debtor&apos; or use &apos;Upload Data&apos; to import debtor files.</p>
+                  <td colSpan={isCollector ? 9 : 10} className="py-12 text-center text-slate-400">
+                    <p className="font-medium text-slate-600 text-sm">
+                      {isCollector ? 'No debtor files assigned to your queue yet' : 'No debtor records found'}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {isCollector
+                        ? 'When an administrator assigns client accounts to you, they will appear here.'
+                        : "Click '+ Add Debtor' or use 'Upload Data' to import debtor files."}
+                    </p>
                   </td>
                 </tr>
               )}

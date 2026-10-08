@@ -7,7 +7,7 @@ import { getDebtor, getPayments, getActivities, addPayment, addActivity, generat
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
-import type { Debtor, Payment, Activity, User } from '@/lib/types';
+import type { Debtor, Payment, Activity, User, ActivityType } from '@/lib/types';
 
 export default function DebtorDetailPage() {
   const params = useParams();
@@ -25,7 +25,7 @@ export default function DebtorDetailPage() {
   const [payNotes, setPayNotes] = useState('');
 
   // Activity form
-  const [actType, setActType] = useState(ACTIVITY_TYPES[0].value);
+  const [actType, setActType] = useState<ActivityType>(ACTIVITY_TYPES[0].value);
   const [actDesc, setActDesc] = useState('');
   const [actDate, setActDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -251,7 +251,7 @@ export default function DebtorDetailPage() {
                   <label className="block text-slate-500 font-medium mb-1">Activity Type</label>
                   <select
                     value={actType}
-                    onChange={(e) => setActType(e.target.value)}
+                    onChange={(e) => setActType(e.target.value as ActivityType)}
                     className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                   >
                     {ACTIVITY_TYPES.map((t) => (
