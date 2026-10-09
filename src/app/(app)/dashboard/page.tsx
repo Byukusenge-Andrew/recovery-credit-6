@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getDashboardStats, getDebtors, getCurrentUser, exportClientsDebtorsCSV, getNotifications } from '@/lib/store';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
+import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
 import type { Debtor, User, Notification } from '@/lib/types';
@@ -12,6 +13,7 @@ import type { DashboardStats } from '@/lib/store';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { t, lang } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentDebtors, setRecentDebtors] = useState<Debtor[]>([]);
@@ -54,8 +56,8 @@ export default function DashboardPage() {
     : 'User';
 
   const roleBadge = isCollector
-    ? `${displayName} (Recovery Collector)`
-    : `${displayName} (Admin)`;
+    ? `${displayName} (${t('role_collector')})`
+    : `${displayName} (${t('role_admin')})`;
 
   const recoveryRate = stats && stats.totalOutstanding > 0
     ? Math.min(100, Math.round((stats.totalPaid / stats.totalOutstanding) * 100))
@@ -68,7 +70,7 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              {isCollector ? 'My Recovery Portfolio' : 'Dashboard'}
+              {isCollector ? t('dash_title_collector') : t('dash_title_admin')}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
               {roleBadge}
@@ -76,9 +78,9 @@ export default function DashboardPage() {
           </div>
           <p className="text-sm text-slate-500 mt-0.5">
             {isCollector ? (
-              <>Your assigned debtor portfolio, recovery targets, and performance tracking.</>
+              t('dash_subtitle_collector')
             ) : (
-              <>Overview of portfolios for <strong>Clients (Banks)</strong> and their assigned <strong>Debtors</strong>.</>
+              t('dash_subtitle_admin')
             )}
           </p>
         </div>
@@ -88,12 +90,12 @@ export default function DashboardPage() {
           <button
             onClick={handleDownloadAll}
             className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition shadow-sm flex items-center gap-1.5"
-            title={isCollector ? 'Download CSV report of your assigned debtors' : 'Download CSV report of all clients and debtors'}
+            title={isCollector ? t('dash_btn_download_my') : t('dash_btn_download_all')}
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            <span>{isCollector ? 'Download My Debtors (CSV)' : 'Download All Data'}</span>
+            <span>{isCollector ? t('dash_btn_download_my') : t('dash_btn_download_all')}</span>
           </button>
 
           {/* Admin-only Upload & Add Buttons */}
@@ -106,7 +108,7 @@ export default function DashboardPage() {
                 <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <span>Upload CSV</span>
+                <span>{t('dash_btn_upload')}</span>
               </Link>
 
               <Link
@@ -114,7 +116,7 @@ export default function DashboardPage() {
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-sm"
               >
                 <span>+</span>
-                <span>Add Debtor</span>
+                <span>{t('dash_btn_add')}</span>
               </Link>
             </>
           )}
@@ -153,25 +155,25 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-semibold">
-                  {isCollector ? 'Personal Collection Target' : 'Portfolio Recovery Tracker'}
+                  {isCollector ? t('dash_target_banner_collector') : t('dash_target_banner_admin')}
                 </span>
                 <span className="text-xs text-slate-500 font-medium">
-                  {stats.totalDebtors} {isCollector ? 'Assigned Accounts' : 'Active Debtor Files'}
+                  {stats.totalDebtors} {isCollector ? t('dash_assigned_accounts') : t('dash_active_files')}
                 </span>
               </div>
               <h2 className="text-xl font-bold text-slate-900 mt-2">
-                {isCollector ? 'Recovery Rate: ' : 'Agency Recovery Progress: '}
+                {isCollector ? t('dash_recovery_rate') : t('dash_agency_recovery')}
                 <span className="text-blue-600">{recoveryRate}%</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                <span className="font-semibold text-slate-700">{formatCurrency(stats.totalPaid)}</span> recovered out of{' '}
-                <span className="font-semibold text-slate-700">{formatCurrency(stats.totalOutstanding)}</span> total claim exposure.
+                <span className="font-semibold text-slate-700">{formatCurrency(stats.totalPaid)}</span> {t('dash_recovered_out_of')}{' '}
+                <span className="font-semibold text-slate-700">{formatCurrency(stats.totalOutstanding)}</span> {t('dash_total_claim_exposure')}
               </p>
             </div>
             <div className="sm:text-right shrink-0 bg-slate-50/70 rounded-xl p-3 border border-slate-100 sm:min-w-[180px]">
-              <span className="text-[11px] font-medium text-slate-400 block">Remaining Due Balance</span>
+              <span className="text-[11px] font-medium text-slate-400 block">{t('dash_remaining_due_balance')}</span>
               <p className="text-base font-bold text-slate-900 mt-0.5">{formatCurrency(stats.totalBalance)}</p>
-              <span className="text-[10px] text-blue-600 font-medium">{100 - recoveryRate}% remaining</span>
+              <span className="text-[10px] text-blue-600 font-medium">{100 - recoveryRate}% {t('dash_remaining')}</span>
             </div>
           </div>
 
@@ -191,11 +193,11 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
-                {isCollector ? 'My Assigned Debtors' : 'Total Debtors (Bank Clients)'}
+                {isCollector ? t('dash_card_my_debtors') : t('dash_card_total_debtors')}
               </p>
               <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? stats.totalDebtors : 0}</h3>
               <p className="text-xs text-blue-600 font-medium mt-3">
-                {isCollector ? 'Client Banks in Queue:' : 'Clients (Banks):'} <strong>{stats ? stats.clientsCount : 0}</strong>
+                {isCollector ? t('dash_card_clients_queue') : t('dash_card_clients')} <strong>{stats ? stats.clientsCount : 0}</strong>
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
@@ -210,11 +212,11 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
-                {isCollector ? 'Assigned Claim Amount' : 'Total Outstanding Amount'}
+                {isCollector ? t('dash_card_my_outstanding') : t('dash_card_outstanding')}
               </p>
               <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? formatCurrency(stats.totalOutstanding) : 'R 0.00'}</h3>
               <p className="text-xs text-slate-500 font-medium mt-3">
-                {isCollector ? 'Total cases under management' : 'Total book claims'}
+                {isCollector ? t('dash_card_cases_mgmt') : t('dash_card_book_claims')}
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center">
@@ -230,11 +232,11 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
-                {isCollector ? 'Recovered by Me' : 'Total Recovered (Paid)'}
+                {isCollector ? t('dash_card_my_recovered') : t('dash_card_recovered')}
               </p>
               <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? formatCurrency(stats.totalPaid) : 'R 0.00'}</h3>
               <p className="text-xs text-emerald-600 font-medium mt-3">
-                {isCollector ? 'Funds successfully collected' : 'Agency recovered funds'}
+                {isCollector ? t('dash_card_my_recovered_sub') : t('dash_card_recovered_sub')}
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -249,10 +251,10 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
-                {isCollector ? 'My Remaining Exposure' : 'Net Due Balance'}
+                {isCollector ? t('dash_card_my_balance') : t('dash_card_balance')}
               </p>
               <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? formatCurrency(stats.totalBalance) : 'R 0.00'}</h3>
-              <p className="text-xs text-amber-600 font-medium mt-3">Remaining open exposure</p>
+              <p className="text-xs text-amber-600 font-medium mt-3">{t('dash_card_open_exposure')}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -268,16 +270,17 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-slate-900">
-              {isCollector ? 'My Portfolio Categories' : 'Recovery Categories'}
+              {isCollector ? t('dash_my_categories_title') : t('dash_categories_title')}
             </h2>
             <Link href="/debtors" className="text-xs font-medium text-blue-600 hover:text-blue-700 transition">
-              {isCollector ? 'View My Debtors →' : 'View All Debtors →'}
+              {isCollector ? t('dash_view_my_debtors') : t('dash_view_all_debtors')}
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {CATEGORIES.map((cat) => {
               const count = stats?.categoryCounts?.[cat.value] || 0;
+              const catTranslated = t(`cat_${cat.value}` as any) || cat.label;
               return (
                 <div
                   key={cat.value}
@@ -290,7 +293,7 @@ export default function DashboardPage() {
                       {count}
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-slate-700 truncate">{cat.label}</p>
+                  <p className="text-xs font-medium text-slate-700 truncate">{catTranslated}</p>
                 </div>
               );
             })}
@@ -299,12 +302,13 @@ export default function DashboardPage() {
 
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-slate-900">Priority Color Flags</h2>
+            <h2 className="text-base font-semibold text-slate-900">{t('dash_flags_title')}</h2>
           </div>
 
           <div className="space-y-3">
             {COLOR_FLAGS.filter((f) => f.value !== 'none').map((flag) => {
               const count = stats?.flagCounts?.[flag.value] || 0;
+              const flagTranslated = t(`flag_${flag.value}` as any) || `${flag.label} Flag`;
               return (
                 <div
                   key={flag.value}
@@ -313,7 +317,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center gap-2.5">
                     <FlagDot flag={flag.value} />
-                    <span className="text-xs font-medium text-slate-700 capitalize">{flag.label} Flag</span>
+                    <span className="text-xs font-medium text-slate-700 capitalize">{flagTranslated}</span>
                   </div>
                   <span className="text-xs font-semibold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-full">
                     {count}
@@ -329,10 +333,10 @@ export default function DashboardPage() {
       <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-slate-900">
-            {isCollector ? 'My Assigned Debtor Files' : 'Recently Added Debtors'}
+            {isCollector ? t('dash_my_recent_debtors') : t('dash_recent_debtors')}
           </h2>
           <Link href="/debtors" className="text-xs font-medium text-blue-600 hover:text-blue-700 transition">
-            View All
+            {t('dash_view_all')}
           </Link>
         </div>
 
@@ -340,14 +344,14 @@ export default function DashboardPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 font-medium">
-                <th className="pb-3 font-medium">Client (Bank)</th>
-                <th className="pb-3 font-medium">Debtor (Bank Client)</th>
-                {!isCollector && <th className="pb-3 font-medium">Assigned Collector</th>}
-                <th className="pb-3 font-medium text-right">Outstanding</th>
-                <th className="pb-3 font-medium text-right">Balance Due</th>
-                <th className="pb-3 font-medium text-center">Category</th>
-                <th className="pb-3 font-medium text-center">Flag</th>
-                {isCollector && <th className="pb-3 font-medium text-right">Action</th>}
+                <th className="pb-3 font-medium">{t('dash_col_client')}</th>
+                <th className="pb-3 font-medium">{t('dash_col_debtor')}</th>
+                {!isCollector && <th className="pb-3 font-medium">{t('dash_col_collector')}</th>}
+                <th className="pb-3 font-medium text-right">{t('dash_col_outstanding')}</th>
+                <th className="pb-3 font-medium text-right">{t('dash_col_balance')}</th>
+                <th className="pb-3 font-medium text-center">{t('dash_col_category')}</th>
+                <th className="pb-3 font-medium text-center">{t('dash_col_flag')}</th>
+                {isCollector && <th className="pb-3 font-medium text-right">{t('dash_col_action')}</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -384,7 +388,7 @@ export default function DashboardPage() {
                   {isCollector && (
                     <td className="py-3 text-right">
                       <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-800">
-                        Open File →
+                        {t('dash_open_file')}
                       </span>
                     </td>
                   )}
@@ -394,19 +398,19 @@ export default function DashboardPage() {
                 <tr>
                   <td colSpan={isCollector ? 7 : 7} className="py-12 text-center text-slate-400">
                     <p className="font-medium text-slate-600 text-sm">
-                      {isCollector ? 'No debtor files currently assigned to you' : 'No debtor files found'}
+                      {isCollector ? t('dash_empty_title_collector') : t('dash_empty_title_admin')}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
                       {isCollector
-                        ? 'When the administrator assigns bank debtor cases to your account, they will appear here.'
-                        : "Click 'Add Debtor' or use 'Upload CSV' to get started."}
+                        ? t('dash_empty_desc_collector')
+                        : t('dash_empty_desc_admin')}
                     </p>
                     {!isCollector && (
                       <Link
                         href="/debtors/add"
                         className="inline-block mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition shadow-sm"
                       >
-                        Add Debtor
+                        {t('dash_btn_add')}
                       </Link>
                     )}
                   </td>

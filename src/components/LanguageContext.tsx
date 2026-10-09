@@ -5,18 +5,20 @@ import { Language, TranslationKey, getStoredLanguage, setStoredLanguage, transla
 
 interface LanguageContextType {
   lang: Language;
+  language: Language;
   setLang: (newLang: Language) => void;
   t: (key: TranslationKey) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
-  lang: 'en',
+  lang: 'rw',
+  language: 'rw',
   setLang: () => {},
-  t: (key) => translate(key, 'en'),
+  t: (key) => translate(key, 'rw'),
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Language>('en');
+  const [lang, setLangState] = useState<Language>('rw');
 
   useEffect(() => {
     // Initial sync
@@ -56,7 +58,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [lang]);
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, language: lang, setLang, t }}>
       {children}
     </LanguageContext.Provider>
   );

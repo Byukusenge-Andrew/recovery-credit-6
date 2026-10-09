@@ -9,9 +9,8 @@ import { useLanguage } from '@/components/LanguageContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/store';
-import { useState, useSyncExternalStore } from 'react';
-
-const subscribe = () => () => {};
+import { useState, useEffect } from 'react';
+import type { User } from '@/lib/types';
 
 export default function AppLayout({
   children,
@@ -20,14 +19,15 @@ export default function AppLayout({
 }) {
   const router = useRouter();
   const { t } = useLanguage();
-  const currentUser = useSyncExternalStore(
-    subscribe,
-    () => getCurrentUser(),
-    () => null
-  );
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
+
   const username = currentUser?.username ?? 'Admin';
   const isAdmin = currentUser?.role === 'admin';
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   return (
     <AuthGuard>

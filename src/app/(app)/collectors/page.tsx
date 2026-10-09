@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUsers, addUser, getCurrentUser } from '@/lib/store';
+import { useLanguage } from '@/components/LanguageContext';
 import type { User } from '@/lib/types';
 
 export default function CollectorsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [collectors, setCollectors] = useState<User[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -102,9 +104,9 @@ export default function CollectorsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Debt Collectors</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('coll_title')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Manage your recovery team officers with official email accounts for future email verification.
+            {t('coll_subtitle')}
           </p>
         </div>
 
@@ -112,7 +114,7 @@ export default function CollectorsPage() {
           onClick={() => setShowAddForm(!showAddForm)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-sm self-start flex items-center gap-1.5"
         >
-          <span>{showAddForm ? '✕ Close Form' : '+ Add New Collector'}</span>
+          <span>{showAddForm ? t('coll_btn_close') : t('coll_btn_add')}</span>
         </button>
       </div>
 
@@ -120,16 +122,16 @@ export default function CollectorsPage() {
       {showAddForm && (
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
           <div className="border-b border-slate-100 pb-3">
-            <h2 className="text-base font-semibold text-slate-900">Register New Recovery Officer</h2>
+            <h2 className="text-base font-semibold text-slate-900">{t('coll_card_title')}</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Create an account for a debt collector. Their email will be used for official notifications and verification.
+              {t('coll_card_subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleAddCollector} className="space-y-4 text-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
-                <label className="block font-medium text-slate-700 mb-1">Full Legal Name *</label>
+                <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_fullname')}</label>
                 <input
                   type="text"
                   required
@@ -141,7 +143,7 @@ export default function CollectorsPage() {
               </div>
 
               <div>
-                <label className="block font-medium text-slate-700 mb-1">Official Email Address *</label>
+                <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_email')}</label>
                 <input
                   type="email"
                   required
@@ -153,7 +155,7 @@ export default function CollectorsPage() {
               </div>
 
               <div>
-                <label className="block font-medium text-slate-700 mb-1">Login Username *</label>
+                <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_username')}</label>
                 <input
                   type="text"
                   required
@@ -165,7 +167,7 @@ export default function CollectorsPage() {
               </div>
 
               <div>
-                <label className="block font-medium text-slate-700 mb-1">Initial Password *</label>
+                <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_pass')}</label>
                 <input
                   type="password"
                   required
@@ -177,7 +179,7 @@ export default function CollectorsPage() {
               </div>
 
               <div>
-                <label className="block font-medium text-slate-700 mb-1">Confirm Password *</label>
+                <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_confirm_pass')}</label>
                 <input
                   type="password"
                   required
@@ -207,7 +209,7 @@ export default function CollectorsPage() {
                 type="submit"
                 className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition"
               >
-                Save Collector Account
+                {t('coll_btn_create')}
               </button>
             </div>
           </form>
@@ -220,12 +222,12 @@ export default function CollectorsPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-medium">
-                <th className="py-3 px-4 font-medium">Full Name</th>
-                <th className="py-3 px-4 font-medium">Username</th>
-                <th className="py-3 px-4 font-medium">Email Address</th>
+                <th className="py-3 px-4 font-medium">{t('coll_th_name')}</th>
+                <th className="py-3 px-4 font-medium">{t('coll_th_username')}</th>
+                <th className="py-3 px-4 font-medium">{t('coll_th_email')}</th>
                 <th className="py-3 px-4 font-medium">System Role</th>
                 <th className="py-3 px-4 font-medium">Created Date</th>
-                <th className="py-3 px-4 font-medium text-right">Email Status</th>
+                <th className="py-3 px-4 font-medium text-right">{t('coll_th_status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -245,7 +247,7 @@ export default function CollectorsPage() {
                   </td>
                   <td className="py-3 px-4">
                     <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold text-[11px]">
-                      Recovery Officer
+                      {t('role_officer')}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-slate-500">
@@ -253,7 +255,7 @@ export default function CollectorsPage() {
                   </td>
                   <td className="py-3 px-4 text-right">
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
-                      Pending Verification
+                      {t('coll_pending_verify')}
                     </span>
                   </td>
                 </tr>
@@ -264,7 +266,7 @@ export default function CollectorsPage() {
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     <p className="font-semibold text-slate-700 text-sm">No debt collectors registered yet</p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Click the &quot;+ Add New Collector&quot; button above to create accounts for your agents.
+                      Click the &quot;{t('coll_btn_add')}&quot; button above to create accounts for your agents.
                     </p>
                   </td>
                 </tr>

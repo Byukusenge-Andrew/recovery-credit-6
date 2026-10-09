@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getDebtor, getPayments, getActivities, addPayment, addActivity, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
+import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
 import type { Debtor, Payment, Activity, User, ActivityType } from '@/lib/types';
@@ -12,6 +13,7 @@ import type { Debtor, Payment, Activity, User, ActivityType } from '@/lib/types'
 export default function DebtorDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const id = params.id as string;
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -46,9 +48,9 @@ export default function DebtorDetailPage() {
   if (!debtor) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-base font-semibold text-slate-700">Debtor file not found</h2>
+        <h2 className="text-base font-semibold text-slate-700">{t('detail_not_found')}</h2>
         <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-blue-600 hover:underline">
-          Return to Debtors List
+          {t('detail_return_list')}
         </button>
       </div>
     );
@@ -99,28 +101,28 @@ export default function DebtorDetailPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-xs">
-              Client (Bank): {debtor.clientName}
+              {t('detail_client_label')} {debtor.clientName}
             </span>
             <span className="text-xs text-slate-400">•</span>
             <span className="text-xs text-slate-500">
-              Assigned Collector: <strong>{debtor.assignedCollector || 'Unassigned'}</strong>
+              {t('detail_collector_label')} <strong>{debtor.assignedCollector || t('form_unassigned')}</strong>
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
             {debtor.debtorName || (debtor as any).clientName}
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">Account: {debtor.accountNumber} • Customer ID: {debtor.customerId || '—'}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{t('detail_account_label')} {debtor.accountNumber} • {t('detail_customer_id')} {debtor.customerId || '—'}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => router.push('/debtors')} className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-xs transition">
-            Back to List
+            {t('detail_back')}
           </button>
           <Link href={`/debtors/${id}/edit`} className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-xs transition">
-            Edit File
+            {t('detail_edit')}
           </Link>
           {debtor.whatsappNumber && (
             <button onClick={handleWhatsApp} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-xs flex items-center gap-1.5 transition">
-              <span>Send WhatsApp Reminder</span>
+              <span>{t('detail_send_whatsapp')}</span>
             </button>
           )}
         </div>
@@ -133,11 +135,11 @@ export default function DebtorDetailPage() {
             <CategoryBadge category={debtor.category} />
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <FlagDot flag={debtor.colorFlag} />
-              <span className="capitalize">{debtor.colorFlag} Flag Priority</span>
+              <span className="capitalize">{t(`flag_${debtor.colorFlag}` as any) || `${debtor.colorFlag} Flag Priority`}</span>
             </div>
           </div>
           <div className="text-right">
-            <span className="text-xs text-slate-400">Current Outstanding Balance</span>
+            <span className="text-xs text-slate-400">{t('detail_current_balance')}</span>
             <p className={`text-2xl font-bold ${debtor.outstandingBalance > 0 ? 'text-slate-900' : 'text-emerald-600'}`}>
               {formatCurrency(debtor.outstandingBalance)}
             </p>
@@ -146,26 +148,26 @@ export default function DebtorDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs">
           <div>
-            <p className="text-slate-400 font-medium mb-1">Client (Bank Name)</p>
+            <p className="text-slate-400 font-medium mb-1">{t('form_client_name')}</p>
             <p className="font-semibold text-slate-800">{debtor.clientName || '—'}</p>
           </div>
           <div>
-            <p className="text-slate-400 font-medium mb-1">WhatsApp Number</p>
+            <p className="text-slate-400 font-medium mb-1">{t('detail_whatsapp_num')}</p>
             <p className="font-semibold text-slate-800">{debtor.whatsappNumber || '—'}</p>
           </div>
           <div>
-            <p className="text-slate-400 font-medium mb-1">Total Outstanding Amount</p>
+            <p className="text-slate-400 font-medium mb-1">{t('detail_total_claim')}</p>
             <p className="font-semibold text-slate-800">{formatCurrency(debtor.outstandingAmount)}</p>
           </div>
           <div>
-            <p className="text-slate-400 font-medium mb-1">Total Paid</p>
+            <p className="text-slate-400 font-medium mb-1">{t('detail_total_paid')}</p>
             <p className="font-semibold text-emerald-600">{formatCurrency(debtor.paidAmount)}</p>
           </div>
         </div>
 
         {debtor.notes && (
           <div className="mt-6 pt-6 border-t border-slate-100">
-            <p className="text-xs text-slate-400 font-medium mb-1">Case Notes & Details</p>
+            <p className="text-xs text-slate-400 font-medium mb-1">{t('detail_notes_title')}</p>
             <p className="text-xs text-slate-700 whitespace-pre-line leading-relaxed">{debtor.notes}</p>
           </div>
         )}
@@ -176,11 +178,11 @@ export default function DebtorDetailPage() {
         {/* Payments Column */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Record Payment</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_record_payment')}</h3>
             <form onSubmit={handleRecordPayment} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Amount Paid (R)</label>
+                  <label className="block text-slate-500 font-medium mb-1">{t('detail_amount_paid')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -192,7 +194,7 @@ export default function DebtorDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Payment Date</label>
+                  <label className="block text-slate-500 font-medium mb-1">{t('detail_payment_date')}</label>
                   <input
                     type="date"
                     value={payDate}
@@ -203,7 +205,7 @@ export default function DebtorDetailPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Payment Reference / Note</label>
+                <label className="block text-slate-500 font-medium mb-1">{t('detail_pay_ref')}</label>
                 <input
                   type="text"
                   value={payNotes}
@@ -216,15 +218,15 @@ export default function DebtorDetailPage() {
                 type="submit"
                 className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold transition text-xs shadow-sm mt-2"
               >
-                Save Payment
+                {t('detail_save_payment')}
               </button>
             </form>
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Payment History</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_payment_history')}</h3>
             {payments.length === 0 ? (
-              <p className="text-slate-400 text-xs italic">No payments recorded for this debtor yet.</p>
+              <p className="text-slate-400 text-xs italic">{t('detail_no_payments')}</p>
             ) : (
               <div className="divide-y divide-slate-100">
                 {payments.map((p) => (
@@ -244,11 +246,11 @@ export default function DebtorDetailPage() {
         {/* Activity Column */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Log Activity / Interaction</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_log_activity')}</h3>
             <form onSubmit={handleAddActivity} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Activity Type</label>
+                  <label className="block text-slate-500 font-medium mb-1">{t('detail_activity_type')}</label>
                   <select
                     value={actType}
                     onChange={(e) => setActType(e.target.value as ActivityType)}
@@ -260,7 +262,7 @@ export default function DebtorDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-slate-500 font-medium mb-1">Date</label>
+                  <label className="block text-slate-500 font-medium mb-1">{t('detail_activity_date')}</label>
                   <input
                     type="date"
                     value={actDate}
@@ -271,7 +273,7 @@ export default function DebtorDetailPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Interaction Details</label>
+                <label className="block text-slate-500 font-medium mb-1">{t('detail_interaction_details')}</label>
                 <textarea
                   value={actDesc}
                   onChange={(e) => setActDesc(e.target.value)}
@@ -285,15 +287,15 @@ export default function DebtorDetailPage() {
                 type="submit"
                 className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-xs shadow-sm mt-2"
               >
-                Log Activity
+                {t('detail_btn_log_activity')}
               </button>
             </form>
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Activity Timeline</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_activity_timeline')}</h3>
             {activities.length === 0 ? (
-              <p className="text-slate-400 text-xs italic">No activity recorded for this debtor yet.</p>
+              <p className="text-slate-400 text-xs italic">{t('detail_no_activity')}</p>
             ) : (
               <div className="space-y-3">
                 {activities.map((act) => {

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { searchDebtors, deleteDebtor, exportClientsDebtorsCSV, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
+import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
 import type { Debtor, Category, ColorFlag, User } from '@/lib/types';
@@ -12,6 +13,7 @@ import type { Debtor, Category, ColorFlag, User } from '@/lib/types';
 export default function DebtorsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [debtors, setDebtors] = useState<Debtor[]>([]);
   const [search, setSearch] = useState(searchParams.get('search') || '');
@@ -67,12 +69,12 @@ export default function DebtorsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {isCollector ? 'My Assigned Debtors' : 'Debtors Portfolio'}
+            {isCollector ? t('debtors_title_collector') : t('debtors_title_admin')}
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {isCollector
-              ? 'Your assigned debt recovery portfolio and active debtor accounts.'
-              : 'Overview and management of institutional client portfolios and debtor files.'}
+              ? t('debtors_sub_collector')
+              : t('debtors_sub_admin')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -80,12 +82,12 @@ export default function DebtorsPage() {
           <button
             onClick={handleDownloadClientsDebtors}
             className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
-            title={isCollector ? 'Download CSV report of your assigned debtors' : 'Download full CSV report of all clients and debtors'}
+            title={isCollector ? t('debtors_btn_download_my') : t('debtors_btn_download')}
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            <span>{isCollector ? 'Download My Debtors (CSV)' : 'Download All Data'}</span>
+            <span>{isCollector ? t('debtors_btn_download_my') : t('debtors_btn_download')}</span>
           </button>
 
           {/* Admin-only Upload & Add Buttons */}
@@ -98,14 +100,14 @@ export default function DebtorsPage() {
                 <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <span>Upload Data</span>
+                <span>{t('debtors_btn_upload')}</span>
               </Link>
 
               <Link
                 href="/debtors/add"
                 className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm"
               >
-                + Add Debtor
+                {t('debtors_btn_add')}
               </Link>
             </>
           )}
@@ -116,7 +118,7 @@ export default function DebtorsPage() {
       <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[11px] font-medium text-slate-400 mb-1">Search (Debtor, Bank, Account)</label>
+            <label className="block text-[11px] font-medium text-slate-400 mb-1">{t('debtors_search_label')}</label>
             <input
               type="text"
               value={search}
@@ -127,7 +129,7 @@ export default function DebtorsPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-400 mb-1">Client (Bank Name)</label>
+            <label className="block text-[11px] font-medium text-slate-400 mb-1">{t('debtors_filter_client')}</label>
             <input
               type="text"
               value={clientFilter}
@@ -138,32 +140,32 @@ export default function DebtorsPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-400 mb-1">Category</label>
+            <label className="block text-[11px] font-medium text-slate-400 mb-1">{t('debtors_filter_category')}</label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-lg text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300 transition"
             >
-              <option value="">All Categories</option>
+              <option value="">{t('debtors_all_categories')}</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {t(`cat_${cat.value}` as any) || cat.label}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-400 mb-1">Priority Color Flag</label>
+            <label className="block text-[11px] font-medium text-slate-400 mb-1">{t('debtors_filter_flag')}</label>
             <select
               value={flagFilter}
               onChange={(e) => setFlagFilter(e.target.value)}
               className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-lg text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-slate-300 transition"
             >
-              <option value="">All Flags</option>
+              <option value="">{t('debtors_all_flags')}</option>
               {COLOR_FLAGS.filter((f) => f.value !== 'none').map((flag) => (
                 <option key={flag.value} value={flag.value}>
-                  {flag.label}
+                  {t(`flag_${flag.value}` as any) || `${flag.label} Flag`}
                 </option>
               ))}
             </select>
@@ -177,16 +179,16 @@ export default function DebtorsPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-medium">
-                <th className="py-3 px-4 font-medium">Client (Bank Name)</th>
-                <th className="py-3 px-4 font-medium">Debtor (Bank Client)</th>
-                <th className="py-3 px-4 font-medium">Account / ID</th>
-                {!isCollector && <th className="py-3 px-4 font-medium">Assigned Collector</th>}
-                <th className="py-3 px-4 font-medium text-right">Outstanding</th>
-                <th className="py-3 px-4 font-medium text-right">Paid</th>
-                <th className="py-3 px-4 font-medium text-right">Balance Due</th>
-                <th className="py-3 px-4 font-medium text-center">Category</th>
-                <th className="py-3 px-4 font-medium text-center">Flag</th>
-                <th className="py-3 px-4 font-medium text-right">Actions</th>
+                <th className="py-3 px-4 font-medium">{t('debtors_col_client')}</th>
+                <th className="py-3 px-4 font-medium">{t('debtors_col_debtor')}</th>
+                <th className="py-3 px-4 font-medium">{t('debtors_col_account')}</th>
+                {!isCollector && <th className="py-3 px-4 font-medium">{t('debtors_col_collector')}</th>}
+                <th className="py-3 px-4 font-medium text-right">{t('debtors_col_outstanding')}</th>
+                <th className="py-3 px-4 font-medium text-right">{t('debtors_col_paid')}</th>
+                <th className="py-3 px-4 font-medium text-right">{t('debtors_col_balance')}</th>
+                <th className="py-3 px-4 font-medium text-center">{t('debtors_col_category')}</th>
+                <th className="py-3 px-4 font-medium text-center">{t('debtors_col_flag')}</th>
+                <th className="py-3 px-4 font-medium text-right">{t('debtors_col_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -275,12 +277,12 @@ export default function DebtorsPage() {
                 <tr>
                   <td colSpan={isCollector ? 9 : 10} className="py-12 text-center text-slate-400">
                     <p className="font-medium text-slate-600 text-sm">
-                      {isCollector ? 'No debtor files assigned to your queue yet' : 'No debtor records found'}
+                      {isCollector ? t('debtors_empty_collector') : t('debtors_empty_admin')}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
                       {isCollector
-                        ? 'When an administrator assigns client accounts to you, they will appear here.'
-                        : "Click '+ Add Debtor' or use 'Upload Data' to import debtor files."}
+                        ? t('debtors_empty_sub_collector')
+                        : t('debtors_empty_sub_admin')}
                     </p>
                   </td>
                 </tr>

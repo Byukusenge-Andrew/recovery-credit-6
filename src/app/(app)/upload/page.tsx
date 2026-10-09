@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { importClientsDebtorsFromCSV, exportClientsDebtorsCSV, getCurrentUser } from '@/lib/store';
+import { useLanguage } from '@/components/LanguageContext';
 import type { User } from '@/lib/types';
 
 export default function UploadPage() {
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [results, setResults] = useState<{ success: number; errors: string[] } | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -88,9 +90,9 @@ export default function UploadPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Upload & Download Data</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('upload_title')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Bulk import (Upload) or export (Download) information for <strong>Clients (Banks)</strong> and their <strong>Debtors</strong>.
+            {t('upload_subtitle')}
           </p>
         </div>
 
@@ -101,15 +103,15 @@ export default function UploadPage() {
           <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
-          <span>Download All Data (Backup)</span>
+          <span>{t('upload_backup_btn')}</span>
         </button>
       </div>
 
       <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
         <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
-          <h3 className="font-semibold text-slate-800 text-sm mb-1">CSV File Specifications</h3>
+          <h3 className="font-semibold text-slate-800 text-sm mb-1">{t('upload_csv_specs')}</h3>
           <p className="text-xs text-slate-500 mb-3">
-            Your CSV file must include the following column headers:
+            {t('upload_csv_specs_desc')}
           </p>
           <div className="bg-white p-2.5 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-600 overflow-x-auto mb-3">
             client,debtor,accountNumber,customerId,outstandingAmount,paidAmount,dateOfPayment,whatsappNumber,category,colorFlag,collector,notes
@@ -118,7 +120,7 @@ export default function UploadPage() {
             onClick={handleDownloadTemplate}
             className="px-3.5 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-semibold rounded-lg hover:bg-blue-100 transition text-xs"
           >
-            Download Sample CSV (sample_debtors.csv)
+            {t('upload_sample_btn')}
           </button>
         </div>
 
@@ -139,9 +141,9 @@ export default function UploadPage() {
               </svg>
             </div>
             <span className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm">
-              Select CSV File to Upload
+              {t('upload_btn_select')}
             </span>
-            <span className="text-slate-400 text-xs mt-2">or drag and drop your file here</span>
+            <span className="text-slate-400 text-xs mt-2">{t('upload_drop_sub')}</span>
           </label>
         </div>
 

@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { getCurrentUser, updateUserProfile, getDashboardStats } from '@/lib/store';
+import { useLanguage } from '@/components/LanguageContext';
 import type { User } from '@/lib/types';
 import Link from 'next/link';
 
 export default function ProfilePage() {
+  const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isClientLoaded, setIsClientLoaded] = useState(false);
 
@@ -110,15 +112,15 @@ export default function ProfilePage() {
   }
 
   const isCollector = currentUser.role === 'collector';
-  const roleLabel = isCollector ? 'Recovery Officer' : 'System Administrator';
+  const roleLabel = isCollector ? t('role_officer') : t('role_administrator');
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">User Profile</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('prof_title')}</h1>
         <p className="text-sm text-slate-500 mt-0.5">
-          Manage your account credentials, official contact email, and security settings.
+          {t('prof_subtitle')}
         </p>
       </div>
 
@@ -147,8 +149,8 @@ export default function ProfilePage() {
                   </strong>
                 </span>
                 {currentUser.email && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
-                    Pending Verification
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+                    {t('coll_pending_verify')}
                   </span>
                 )}
               </div>
@@ -157,10 +159,10 @@ export default function ProfilePage() {
 
           <div className="sm:text-right shrink-0 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
             <span className="text-[11px] font-medium text-slate-400 block">
-              {isCollector ? 'Assigned Cases Queue' : 'Agency Access'}
+              {isCollector ? t('prof_overview_queue') : t('prof_overview_agency')}
             </span>
             <p className="text-lg font-bold text-slate-900 mt-0.5">
-              {isCollector ? `${assignedCount} Accounts` : 'Full System'}
+              {isCollector ? `${assignedCount} Accounts` : t('prof_overview_full')}
             </p>
             <Link
               href="/dashboard"
@@ -177,8 +179,8 @@ export default function ProfilePage() {
         {/* Profile Info Form */}
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Account Details</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Update your display name and email address.</p>
+            <h3 className="text-sm font-bold text-slate-900">{t('prof_account_details')}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{t('prof_account_sub')}</p>
           </div>
 
           {profileMsg && (
@@ -195,18 +197,18 @@ export default function ProfilePage() {
 
           <form onSubmit={handleUpdateProfile} className="space-y-4 text-xs">
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Username (System Identifier)</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('prof_lbl_username')}</label>
               <input
                 type="text"
                 disabled
                 value={currentUser.username}
                 className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 font-mono cursor-not-allowed"
               />
-              <p className="text-[10px] text-slate-400 mt-1">Username is fixed for database auditing and isolation.</p>
+              <p className="text-[10px] text-slate-400 mt-1">{t('prof_hint_username')}</p>
             </div>
 
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Full Name *</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('prof_lbl_fullname')}</label>
               <input
                 type="text"
                 required
@@ -218,7 +220,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Official Email Address</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('prof_lbl_email')}</label>
               <input
                 type="email"
                 value={email}
@@ -227,7 +229,7 @@ export default function ProfilePage() {
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 transition"
               />
               <p className="text-[10px] text-slate-400 mt-1">
-                Used for account recovery, notifications, and future email verification.
+                {t('prof_hint_email')}
               </p>
             </div>
 
@@ -236,7 +238,7 @@ export default function ProfilePage() {
                 type="submit"
                 className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-sm text-xs"
               >
-                Save Profile Changes
+                {t('prof_btn_save')}
               </button>
             </div>
           </form>
@@ -245,8 +247,8 @@ export default function ProfilePage() {
         {/* Change Password Form */}
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Security & Password</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Change your login authentication password.</p>
+            <h3 className="text-sm font-bold text-slate-900">{t('prof_security_title')}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{t('prof_security_sub')}</p>
           </div>
 
           {passwordMsg && (
@@ -263,7 +265,7 @@ export default function ProfilePage() {
 
           <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Current Password *</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('prof_lbl_current_pass')}</label>
               <input
                 type="password"
                 required
@@ -275,7 +277,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block font-medium text-slate-700 mb-1">New Password *</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('prof_lbl_new_pass')}</label>
               <input
                 type="password"
                 required
@@ -287,7 +289,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Confirm New Password *</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('prof_lbl_confirm_pass')}</label>
               <input
                 type="password"
                 required
@@ -303,7 +305,7 @@ export default function ProfilePage() {
                 type="submit"
                 className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-lg transition shadow-sm text-xs"
               >
-                Update Password
+                {t('prof_btn_update_pass')}
               </button>
             </div>
           </form>

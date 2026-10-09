@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { initializeStore, login, isLoggedIn } from '@/lib/store';
-
+import { useLanguage } from '@/components/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -88,29 +90,34 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col justify-between bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Top Bar with Language Switcher */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <LanguageSwitcher />
+      </div>
+
       {/* Top Brand Link */}
-      <div className="text-center">
+      <div className="text-center pt-2">
         <Link href="/" className="inline-flex items-center gap-2.5 mb-2">
           <Logo size={42} variant="icon" className="shrink-0 drop-shadow-sm" />
-          <span className="font-extrabold text-slate-900 text-lg tracking-tight">Recovery Credit</span>
+          <span className="font-extrabold text-slate-900 text-lg tracking-tight">{t('app_name')}</span>
         </Link>
-        <p className="text-xs text-slate-500">Authorized Personnel & Recovery Agent Security Portal</p>
+        <p className="text-xs text-slate-500">{t('login_portal_subtitle')}</p>
       </div>
 
       {/* Main Card */}
       <div className="w-full max-w-md mx-auto my-6">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 space-y-6">
           <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Agent Sign In</h2>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">{t('login_card_title')}</h2>
             <p className="text-xs text-slate-500 mt-1">
-              Access to debtor records is monitored and logged in compliance with data protection laws.
+              {t('login_card_desc')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Agent Username / ID</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('login_lbl_username')}</label>
               <input
                 type="text"
                 disabled={isLocked}
@@ -123,7 +130,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block font-medium text-slate-700 mb-1">Access Key / Password</label>
+              <label className="block font-medium text-slate-700 mb-1">{t('login_lbl_pass')}</label>
               <input
                 type="password"
                 disabled={isLocked}
@@ -146,15 +153,15 @@ export default function LoginPage() {
                   required
                 />
                 <span className="text-[11px] text-slate-600 leading-snug">
-                  I certify that I am an authorized recovery officer. I agree to the{' '}
+                  {t('login_terms_certify')}{' '}
                   <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
-                    Terms of Service
+                    {t('login_terms')}
                   </Link>{' '}
-                  and acknowledge the{' '}
+                  {t('login_terms_and')}{' '}
                   <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
-                    Privacy Notice
+                    {t('login_privacy')}
                   </Link>
-                  . All access is logged.
+                  {t('login_terms_logged')}
                 </span>
               </label>
             </div>
@@ -170,7 +177,7 @@ export default function LoginPage() {
               disabled={isLocked}
               className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition shadow-sm text-xs mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLocked ? `Locked (${lockTimer}s)` : 'Verify Credentials & Enter'}
+              {isLocked ? `Locked (${lockTimer}s)` : t('login_btn_submit')}
             </button>
           </form>
 
@@ -178,22 +185,22 @@ export default function LoginPage() {
           <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
             <span className="flex items-center gap-1.5 text-emerald-600 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              256-Bit SSL Enforced
+              {t('login_ssl_badge')}
             </span>
-            <span>Default: admin / admin123</span>
+            <span>{t('login_demo_hint')}</span>
           </div>
         </div>
       </div>
 
       {/* Footer Navigation */}
       <div className="text-center text-xs text-slate-400 space-x-4">
-        <Link href="/" className="hover:text-slate-600 transition">Back to Home</Link>
+        <Link href="/" className="hover:text-slate-600 transition">{t('login_back_home')}</Link>
         <span>•</span>
-        <Link href="/privacy" className="hover:text-slate-600 transition">Privacy</Link>
+        <Link href="/privacy" className="hover:text-slate-600 transition">{t('login_privacy')}</Link>
         <span>•</span>
-        <Link href="/terms" className="hover:text-slate-600 transition">Terms</Link>
+        <Link href="/terms" className="hover:text-slate-600 transition">{t('login_terms')}</Link>
         <span>•</span>
-        <Link href="/security" className="hover:text-slate-600 transition">Security</Link>
+        <Link href="/security" className="hover:text-slate-600 transition">{t('login_security')}</Link>
       </div>
     </div>
   );

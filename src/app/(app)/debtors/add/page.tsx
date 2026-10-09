@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { addDebtor, getCurrentUser } from '@/lib/store';
+import { useLanguage } from '@/components/LanguageContext';
 import DebtorFormFields from '@/components/DebtorFormFields';
 import type { User } from '@/lib/types';
 
 export default function AddDebtorPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isClientLoaded, setIsClientLoaded] = useState(false);
 
@@ -49,14 +51,14 @@ export default function AddDebtorPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Add Debtor</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Register a new client or debtor file.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('form_add_title')}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{t('form_add_subtitle')}</p>
         </div>
         <button 
           onClick={() => router.back()}
           className="text-xs font-medium text-slate-500 hover:text-slate-800 transition px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50"
         >
-          Cancel
+          {t('form_cancel')}
         </button>
       </div>
 
