@@ -4,6 +4,8 @@ import AuthGuard from '@/components/AuthGuard';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import Logo from '@/components/Logo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/components/LanguageContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/store';
@@ -17,6 +19,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const currentUser = useSyncExternalStore(
     subscribe,
     () => getCurrentUser(),
@@ -62,7 +65,7 @@ export default function AppLayout({
               </span>
               <input
                 type="text"
-                placeholder="Search debtors, accounts, banks..."
+                placeholder={t('nav_search_placeholder')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     router.push(`/debtors?search=${(e.target as HTMLInputElement).value}`);
@@ -75,6 +78,9 @@ export default function AppLayout({
 
           {/* Right actions */}
           <div className="flex items-center gap-2.5">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {/* Notification Bell */}
             <NotificationBell />
 
@@ -85,14 +91,14 @@ export default function AppLayout({
                 className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition shadow-sm flex items-center gap-1.5"
               >
                 <span>+</span>
-                <span className="hidden sm:inline">New Debtor</span>
+                <span className="hidden sm:inline">{t('nav_new_debtor')}</span>
               </Link>
             )}
 
             {/* Profile Avatar & Link */}
             <Link
               href="/profile"
-              title="My Profile & Settings"
+              title={t('nav_profile')}
               className="w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-semibold tracking-wider border border-blue-200 transition uppercase shadow-sm"
             >
               {username.substring(0, 2)}

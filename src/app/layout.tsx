@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { LanguageProvider } from '@/components/LanguageContext';
+
 export default function RootLayout({
   children,
 }: {
@@ -22,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-gray-50 text-gray-900`} suppressHydrationWarning>
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );
