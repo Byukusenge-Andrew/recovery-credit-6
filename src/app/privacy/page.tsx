@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 
 export default function PrivacyPage() {
   return (
@@ -6,10 +7,8 @@ export default function PrivacyPage() {
       <header className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
-              RC6
-            </div>
-            <span className="font-bold text-slate-900 text-sm">Recovery Credit 6</span>
+            <Logo size={32} variant="icon" className="shrink-0 drop-shadow-sm" />
+            <span className="font-bold text-slate-900 text-sm">Recovery Credit</span>
           </Link>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
             <Link href="/" className="hover:text-blue-600 transition">Home</Link>

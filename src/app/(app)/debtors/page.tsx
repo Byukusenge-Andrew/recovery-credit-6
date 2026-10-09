@@ -70,11 +70,9 @@ export default function DebtorsPage() {
             {isCollector ? 'My Assigned Debtors' : 'Debtors Portfolio'}
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            {isCollector ? (
-              <>Debtor files assigned to you for recovery • Logged in as: <span className="font-semibold text-blue-600">{currentUser?.fullName}</span></>
-            ) : (
-              <>Bank clients assigned across Recovery Collectors • Signed in as: <span className="font-semibold text-blue-600">{currentUser?.fullName}</span></>
-            )}
+            {isCollector
+              ? 'Your assigned debt recovery portfolio and active debtor accounts.'
+              : 'Overview and management of institutional client portfolios and debtor files.'}
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -5,8 +5,13 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Recovery Credit 6',
-  description: 'Debt Collection Management System',
+  title: 'Recovery Credit | Debt Collection Management System',
+  description: 'Enterprise Debt Collection, Bank Client Portfolios & Recovery Tracking',
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({

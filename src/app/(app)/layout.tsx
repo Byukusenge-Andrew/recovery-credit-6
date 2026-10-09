@@ -3,6 +3,7 @@
 import AuthGuard from '@/components/AuthGuard';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
+import Logo from '@/components/Logo';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/store';
@@ -16,11 +17,13 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const username = useSyncExternalStore(
+  const currentUser = useSyncExternalStore(
     subscribe,
-    () => getCurrentUser()?.username ?? 'Admin',
-    () => 'Admin'
+    () => getCurrentUser(),
+    () => null
   );
+  const username = currentUser?.username ?? 'Admin';
+  const isAdmin = currentUser?.role === 'admin';
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   return (
@@ -42,10 +45,8 @@ export default function AppLayout({
             </button>
 
             <Link href="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs tracking-tight">
-                RC
-              </div>
-              <span className="font-semibold text-slate-900 text-sm tracking-tight hidden sm:inline">
+              <Logo size={34} variant="icon" className="shrink-0 drop-shadow-sm" />
+              <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:inline">
                 Recovery Credit
               </span>
             </Link>
@@ -77,18 +78,25 @@ export default function AppLayout({
             {/* Notification Bell */}
             <NotificationBell />
 
-            <Link
-              href="/debtors/add"
-              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition shadow-sm flex items-center gap-1.5"
-            >
-              <span>+</span>
-              <span className="hidden sm:inline">New Debtor</span>
-            </Link>
+            {/* Admin Add Debtor Shortcut */}
+            {isAdmin && (
+              <Link
+                href="/debtors/add"
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition shadow-sm flex items-center gap-1.5"
+              >
+                <span>+</span>
+                <span className="hidden sm:inline">New Debtor</span>
+              </Link>
+            )}
 
-            {/* Profile Avatar */}
-            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 text-xs font-semibold tracking-wider border border-slate-200 uppercase">
+            {/* Profile Avatar & Link */}
+            <Link
+              href="/profile"
+              title="My Profile & Settings"
+              className="w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-semibold tracking-wider border border-blue-200 transition uppercase shadow-sm"
+            >
               {username.substring(0, 2)}
-            </div>
+            </Link>
           </div>
         </header>
 

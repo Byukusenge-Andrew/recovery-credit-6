@@ -146,31 +146,39 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Collector Specialized Performance Card */}
-      {isCollector && stats && (
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl p-5 text-white shadow-sm">
+      {/* Recovery Performance Card with clean white background & light blue styling */}
+      {stats && (
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs uppercase tracking-wider text-blue-200 font-semibold">Collector Performance Tracker</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-800/80 text-[10px] font-medium text-blue-100">
-                  {stats.totalDebtors} Assigned Accounts
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-semibold">
+                  {isCollector ? 'Personal Collection Target' : 'Portfolio Recovery Tracker'}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  {stats.totalDebtors} {isCollector ? 'Assigned Accounts' : 'Active Debtor Files'}
                 </span>
               </div>
-              <h2 className="text-xl font-bold mt-1">Personal Collection Rate: {recoveryRate}%</h2>
-              <p className="text-xs text-blue-200/90 mt-0.5">
-                {formatCurrency(stats.totalPaid)} collected out of {formatCurrency(stats.totalOutstanding)} total assigned exposure.
+              <h2 className="text-xl font-bold text-slate-900 mt-2">
+                {isCollector ? 'Recovery Rate: ' : 'Agency Recovery Progress: '}
+                <span className="text-blue-600">{recoveryRate}%</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                <span className="font-semibold text-slate-700">{formatCurrency(stats.totalPaid)}</span> recovered out of{' '}
+                <span className="font-semibold text-slate-700">{formatCurrency(stats.totalOutstanding)}</span> total claim exposure.
               </p>
             </div>
-            <div className="sm:text-right shrink-0">
-              <span className="text-xs text-blue-200">Remaining Balance:</span>
-              <p className="text-lg font-bold text-emerald-300">{formatCurrency(stats.totalBalance)}</p>
+            <div className="sm:text-right shrink-0 bg-slate-50/70 rounded-xl p-3 border border-slate-100 sm:min-w-[180px]">
+              <span className="text-[11px] font-medium text-slate-400 block">Remaining Due Balance</span>
+              <p className="text-base font-bold text-slate-900 mt-0.5">{formatCurrency(stats.totalBalance)}</p>
+              <span className="text-[10px] text-blue-600 font-medium">{100 - recoveryRate}% remaining</span>
             </div>
           </div>
-          {/* Progress Bar */}
-          <div className="w-full bg-blue-950/60 rounded-full h-2.5 mt-4 overflow-hidden">
+
+          {/* Progress Bar with Light Blue styling */}
+          <div className="w-full bg-blue-50/80 border border-blue-100/70 rounded-full h-3 mt-4 overflow-hidden p-0.5">
             <div
-              className="bg-emerald-400 h-2.5 rounded-full transition-all duration-500 ease-out"
+              className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out shadow-sm"
               style={{ width: `${recoveryRate}%` }}
             ></div>
           </div>

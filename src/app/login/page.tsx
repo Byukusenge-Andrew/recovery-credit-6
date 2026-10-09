@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { initializeStore, login, isLoggedIn } from '@/lib/store';
 
+import Logo from '@/components/Logo';
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -89,13 +91,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col justify-between bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       {/* Top Brand Link */}
       <div className="text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-            RC6
-          </div>
-          <span className="font-bold text-slate-900 text-base">Recovery Credit 6</span>
+        <Link href="/" className="inline-flex items-center gap-2.5 mb-2">
+          <Logo size={42} variant="icon" className="shrink-0 drop-shadow-sm" />
+          <span className="font-extrabold text-slate-900 text-lg tracking-tight">Recovery Credit</span>
         </Link>
-        <p className="text-xs text-slate-500">Authorized Personnel & Agent Security Portal</p>
+        <p className="text-xs text-slate-500">Authorized Personnel & Recovery Agent Security Portal</p>
       </div>
 
       {/* Main Card */}

@@ -108,6 +108,40 @@ export function getCollectors(): User[] {
   return getUsers().filter(u => u.role === 'collector');
 }
 
+export function updateUserProfile(updates: { fullName?: string; email?: string; password?: string }): { success: boolean; message: string; user?: User } {
+  const current = getCurrentUser();
+  if (!current) return { success: false, message: 'No active session found' };
+
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === current.id || u.username.toLowerCase() === current.username.toLowerCase());
+  if (index === -1) return { success: false, message: 'User record not found' };
+
+  // Check email collision if email changed
+  if (updates.email && updates.email.toLowerCase() !== current.email?.toLowerCase()) {
+    const existing = users.find(u => u.id !== users[index].id && u.email?.toLowerCase() === updates.email?.toLowerCase());
+    if (existing) {
+      return { success: false, message: 'Email address is already in use by another account' };
+    }
+  }
+
+  const updatedUser: User = {
+    ...users[index],
+    ...(updates.fullName !== undefined ? { fullName: updates.fullName.trim() } : {}),
+    ...(updates.email !== undefined ? { email: updates.email.trim().toLowerCase() } : {}),
+    ...(updates.password ? { password: updates.password.trim() } : {}),
+  };
+
+  users[index] = updatedUser;
+  setStorage(KEYS.USERS, users);
+
+  // Synchronize active session
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(KEYS.SESSION, JSON.stringify(updatedUser));
+  }
+
+  return { success: true, message: 'Profile updated successfully', user: updatedUser };
+}
+
 // ---------------------------------------------------------------------
 // NOTIFICATION SYSTEM
 // ---------------------------------------------------------------------

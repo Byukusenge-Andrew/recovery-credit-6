@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 
 export default function LandingPage() {
   return (
@@ -7,10 +8,8 @@ export default function LandingPage() {
       <header className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-sm">
-              RC
-            </div>
-            <span className="font-bold text-slate-900 text-base tracking-tight">Recovery Credit</span>
+            <Logo size={36} variant="icon" className="shrink-0 drop-shadow-sm" />
+            <span className="font-extrabold text-slate-900 text-base tracking-tight">Recovery Credit</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-slate-600">
@@ -166,10 +165,8 @@ export default function LandingPage() {
       <footer className="mt-auto border-t border-slate-100 bg-white py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center">
-              RC6
-            </div>
-            <span className="font-semibold text-slate-800">Recovery Credit 6</span>
+            <Logo size={26} variant="icon" className="shrink-0" />
+            <span className="font-bold text-slate-800">Recovery Credit</span>
             <span>© {new Date().getFullYear()} All rights reserved.</span>
           </div>
 
