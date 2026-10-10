@@ -39,5 +39,6 @@ export function getFlagInfo(flag: ColorFlag) {
 }
 
 export function formatCurrency(amount: number): string {
-  return 'R ' + (amount || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const val = Number(amount) || 0;
+  return 'R ' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
 }

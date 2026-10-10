@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
@@ -7,9 +8,22 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function TermsPage() {
   const { t, language } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div suppressHydrationWarning className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div suppressHydrationWarning className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <header className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">

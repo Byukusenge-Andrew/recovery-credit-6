@@ -66,3 +66,32 @@ export type Category = 'completed' | 'paying' | 'promise_to_pay' | 'schedule_mee
 export type ColorFlag = 'none' | 'red' | 'blue' | 'yellow' | 'green';
 
 export type ActivityType = 'note' | 'meeting_scheduled' | 'reminder_sent' | 'call_made' | 'email_sent' | 'letter_sent' | 'status_change' | 'payment_recorded';
+
+export type AuditAction = 
+  | 'create_debtor'
+  | 'update_debtor'
+  | 'delete_debtor'
+  | 'record_payment'
+  | 'update_payment'
+  | 'delete_payment'
+  | 'log_activity'
+  | 'import_csv'
+  | 'add_collector'
+  | 'update_user'
+  | 'login'
+  | 'logout';
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  actorId: string;
+  actorUsername: string;
+  actorFullName: string;
+  actorRole: 'admin' | 'collector';
+  action: AuditAction;
+  targetType: 'debtor' | 'payment' | 'user' | 'system';
+  targetId?: string;
+  targetDescription: string;
+  details: string;
+  ipAddress?: string;
+}

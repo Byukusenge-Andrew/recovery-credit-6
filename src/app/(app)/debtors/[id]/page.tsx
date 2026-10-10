@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getDebtor, getPayments, getActivities, addPayment, addActivity, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { getDebtor, getPayments, getActivities, addPayment, updatePayment, deletePayment, addActivity, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
@@ -25,6 +25,7 @@ export default function DebtorDetailPage() {
   const [payAmount, setPayAmount] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
   const [payNotes, setPayNotes] = useState('');
+  const [payError, setPayError] = useState('');
 
   // Activity form
   const [actType, setActType] = useState<ActivityType>(ACTIVITY_TYPES[0].value);
@@ -58,11 +59,23 @@ export default function DebtorDetailPage() {
 
   const handleRecordPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!payAmount || isNaN(Number(payAmount))) return;
+    setPayError('');
+    const amt = Number(payAmount);
+    if (!payAmount || isNaN(amt) || amt <= 0) {
+      setPayError('Please enter a valid positive payment amount.');
+      return;
+    }
+
+    if (amt > debtor.outstandingBalance) {
+      setPayError(
+        `Payment amount (R ${amt.toFixed(2)}) cannot exceed the remaining loan balance (R ${debtor.outstandingBalance.toFixed(2)}).`
+      );
+      return;
+    }
 
     addPayment({
       debtorId: id,
-      amountPaid: Number(payAmount),
+      amountPaid: amt,
       paymentDate: payDate,
       recordedBy: currentUser?.fullName || 'Collector',
       notes: payNotes
@@ -70,7 +83,55 @@ export default function DebtorDetailPage() {
 
     setPayAmount('');
     setPayNotes('');
+    setPayError('');
     loadData();
+  };
+
+  // Admin Payment Edit State & Handlers
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editPayAmount, setEditPayAmount] = useState('');
+  const [editPayDate, setEditPayDate] = useState('');
+  const [editPayNotes, setEditPayNotes] = useState('');
+  const [editPayError, setEditPayError] = useState('');
+
+  const openEditPayment = (p: Payment) => {
+    setEditingPayment(p);
+    setEditPayAmount(String(p.amountPaid));
+    setEditPayDate(p.paymentDate.split('T')[0]);
+    setEditPayNotes(p.notes || '');
+    setEditPayError('');
+  };
+
+  const handleUpdatePayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+    const amt = Number(editPayAmount);
+    if (isNaN(amt) || amt < 0) {
+      setEditPayError('Please enter a valid amount.');
+      return;
+    }
+    const res = updatePayment(editingPayment.id, {
+      amountPaid: amt,
+      paymentDate: editPayDate,
+      notes: editPayNotes
+    });
+    if (!res.success) {
+      setEditPayError(res.error || 'Failed to update payment.');
+      return;
+    }
+    setEditingPayment(null);
+    loadData();
+  };
+
+  const handleDeletePayment = (paymentId: string, amount: number) => {
+    if (window.confirm(`Are you sure you want to remove this payment of R ${amount.toFixed(2)}? This action is logged in the audit trail.`)) {
+      const res = deletePayment(paymentId);
+      if (!res.success) {
+        alert(res.error || 'Failed to delete payment.');
+      } else {
+        loadData();
+      }
+    }
   };
 
   const handleAddActivity = (e: React.FormEvent) => {
@@ -179,6 +240,14 @@ export default function DebtorDetailPage() {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_record_payment')}</h3>
+            {payError && (
+              <div className="mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center gap-2">
+                <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{payError}</span>
+              </div>
+            )}
             <form onSubmit={handleRecordPayment} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -186,9 +255,13 @@ export default function DebtorDetailPage() {
                   <input
                     type="number"
                     step="0.01"
-                    min="0"
+                    min="0.01"
+                    max={debtor.outstandingBalance}
                     value={payAmount}
-                    onChange={(e) => setPayAmount(e.target.value)}
+                    onChange={(e) => {
+                      setPayError('');
+                      setPayAmount(e.target.value);
+                    }}
                     required
                     className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
                   />
@@ -224,7 +297,14 @@ export default function DebtorDetailPage() {
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_payment_history')}</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-900">{t('detail_payment_history')}</h3>
+              {currentUser?.role === 'collector' && (
+                <span className="text-[10px] text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+                  Immutable (Admin edit only)
+                </span>
+              )}
+            </div>
             {payments.length === 0 ? (
               <p className="text-slate-400 text-xs italic">{t('detail_no_payments')}</p>
             ) : (
@@ -232,7 +312,28 @@ export default function DebtorDetailPage() {
                 {payments.map((p) => (
                   <div key={p.id} className="py-2.5 flex items-center justify-between text-xs">
                     <div>
-                      <p className="font-semibold text-slate-800">{formatCurrency(p.amountPaid)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-slate-800">{formatCurrency(p.amountPaid)}</p>
+                        {currentUser?.role === 'admin' && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => openEditPayment(p)}
+                              className="text-[10px] text-blue-600 hover:text-blue-800 font-medium px-1.5 py-0.5 rounded hover:bg-blue-50 transition"
+                              title="Edit this payment (Admin only)"
+                            >
+                              Edit
+                            </button>
+                            <span className="text-slate-300">•</span>
+                            <button
+                              onClick={() => handleDeletePayment(p.id, p.amountPaid)}
+                              className="text-[10px] text-rose-600 hover:text-rose-800 font-medium px-1.5 py-0.5 rounded hover:bg-rose-50 transition"
+                              title="Delete this payment (Admin only)"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <p className="text-[11px] text-slate-400">{p.notes || 'No reference'} • Recorded by: {p.recordedBy}</p>
                     </div>
                     <span className="text-slate-500 text-[11px]">{new Date(p.paymentDate).toLocaleDateString()}</span>
@@ -242,6 +343,85 @@ export default function DebtorDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Modal: Admin Edit Payment */}
+        {editingPayment && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Edit Payment Record</h3>
+                  <p className="text-[11px] text-slate-400">Admin Authorization Required</p>
+                </div>
+                <button
+                  onClick={() => setEditingPayment(null)}
+                  className="text-slate-400 hover:text-slate-600 text-sm p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {editPayError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs">
+                  {editPayError}
+                </div>
+              )}
+
+              <form onSubmit={handleUpdatePayment} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Amount Paid (R) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editPayAmount}
+                    onChange={(e) => setEditPayAmount(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Payment Date *</label>
+                  <input
+                    type="date"
+                    value={editPayDate}
+                    onChange={(e) => setEditPayDate(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Notes / Reason for Adjustment</label>
+                  <input
+                    type="text"
+                    value={editPayNotes}
+                    onChange={(e) => setEditPayNotes(e.target.value)}
+                    placeholder="E.g., Adjusted bank transaction fee"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingPayment(null)}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-xs shadow-sm"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Activity Column */}
         <div className="space-y-6">

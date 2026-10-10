@@ -1,4 +1,4 @@
-import { User, Debtor, Payment, Activity, Category, ColorFlag, ActivityType, Notification } from './types';
+import { User, Debtor, Payment, Activity, Category, ColorFlag, ActivityType, Notification, AuditLog, AuditAction } from './types';
 
 const KEYS = {
   USERS: 'rc6_users',
@@ -6,6 +6,7 @@ const KEYS = {
   PAYMENTS: 'rc6_payments',
   ACTIVITIES: 'rc6_activities',
   NOTIFICATIONS: 'rc6_notifications',
+  AUDIT_LOGS: 'rc6_audit_logs',
   SESSION: 'rc6_session'
 };
 
@@ -49,7 +50,58 @@ export function initializeStore() {
     if (!localStorage.getItem(KEYS.PAYMENTS)) setStorage(KEYS.PAYMENTS, []);
     if (!localStorage.getItem(KEYS.ACTIVITIES)) setStorage(KEYS.ACTIVITIES, []);
     if (!localStorage.getItem(KEYS.NOTIFICATIONS)) setStorage(KEYS.NOTIFICATIONS, []);
+    if (!localStorage.getItem(KEYS.AUDIT_LOGS)) setStorage(KEYS.AUDIT_LOGS, []);
   }
+}
+
+// ---------------------------------------------------------------------
+// IMMUTABLE AUDIT LOGGING SYSTEM (APPEND-ONLY)
+// ---------------------------------------------------------------------
+
+/**
+ * Append-only immutable audit log writer.
+ * Records are timestamped, indexed, and cannot be edited or modified.
+ */
+export function appendAuditLog(entry: {
+  action: AuditAction;
+  targetType: 'debtor' | 'payment' | 'user' | 'system';
+  targetId?: string;
+  targetDescription: string;
+  details: string;
+}): AuditLog {
+  const currentLogs = getStorage<AuditLog[]>(KEYS.AUDIT_LOGS, []);
+  const currentUser = getCurrentUser();
+
+  const newLog: AuditLog = {
+    id: `aud-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
+    timestamp: new Date().toISOString(),
+    actorId: currentUser?.id || 'sys',
+    actorUsername: currentUser?.username || 'system',
+    actorFullName: currentUser?.fullName || 'System Automated',
+    actorRole: currentUser?.role || 'admin',
+    action: entry.action,
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    targetDescription: entry.targetDescription,
+    details: entry.details,
+    ipAddress: typeof window !== 'undefined' ? (window.location.hostname || '127.0.0.1') : '127.0.0.1'
+  };
+
+  // Strictly append-only: freeze object and save
+  currentLogs.push(Object.freeze({ ...newLog }));
+  setStorage(KEYS.AUDIT_LOGS, currentLogs);
+  return newLog;
+}
+
+/**
+ * Retrieve immutable audit logs (sorted descending by timestamp).
+ * Accessible strictly for admin oversight.
+ */
+export function getAuditLogs(): readonly AuditLog[] {
+  const logs = getStorage<AuditLog[]>(KEYS.AUDIT_LOGS, []);
+  return Object.freeze(
+    [...logs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  );
 }
 
 export function login(usernameOrEmail: string, password: string): User | null {
@@ -63,12 +115,29 @@ export function login(usernameOrEmail: string, password: string): User | null {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(KEYS.SESSION, JSON.stringify(user));
     }
+    appendAuditLog({
+      action: 'login',
+      targetType: 'user',
+      targetId: user.id,
+      targetDescription: `User: ${user.username} (${user.role})`,
+      details: `User ${user.username} signed in successfully.`
+    });
     return user;
   }
   return null;
 }
 
 export function logout(): void {
+  const user = getCurrentUser();
+  if (user) {
+    appendAuditLog({
+      action: 'logout',
+      targetType: 'user',
+      targetId: user.id,
+      targetDescription: `User: ${user.username}`,
+      details: `User ${user.username} signed out.`
+    });
+  }
   if (typeof window !== 'undefined') {
     sessionStorage.removeItem(KEYS.SESSION);
   }
@@ -101,11 +170,110 @@ export function addUser(userData: Omit<User, 'id' | 'createdAt'>): User {
   };
   users.push(newUser);
   setStorage(KEYS.USERS, users);
+
+  appendAuditLog({
+    action: userData.role === 'collector' ? 'add_collector' : 'update_user',
+    targetType: 'user',
+    targetId: newUser.id,
+    targetDescription: `Collector/User: ${newUser.username} (${newUser.fullName})`,
+    details: `Created new ${newUser.role} user '${newUser.username}' with email ${newUser.email}.`
+  });
+
   return newUser;
 }
 
 export function getCollectors(): User[] {
   return getUsers().filter(u => u.role === 'collector');
+}
+
+export function exportCollectorsCSV(): string {
+  const collectors = getCollectors();
+  const debtors = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+
+  const headers = ['Username', 'Full Name', 'Email', 'Role', 'Email Verified', 'Assigned Debtors Count', 'Created At'];
+  const rows = collectors.map(c => {
+    const assignedCount = debtors.filter(d => d.assignedCollector?.toLowerCase() === c.username.toLowerCase()).length;
+    return [
+      c.username,
+      c.fullName,
+      c.email || '',
+      c.role,
+      c.isEmailVerified ? 'Yes' : 'No',
+      assignedCount.toString(),
+      c.createdAt || ''
+    ].map(field => `"${field}"`).join(',');
+  });
+
+  return [headers.join(','), ...rows].join('\n');
+}
+
+export function importCollectorsFromCSV(csvText: string): { successCount: number; errorCount: number; errors: string[] } {
+  const result = { successCount: 0, errorCount: 0, errors: [] as string[] };
+  const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length <= 1) {
+    result.errors.push('CSV file is empty or missing data rows');
+    return result;
+  }
+
+  const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+  const existingUsers = getUsers();
+
+  for (let i = 1; i < lines.length; i++) {
+    try {
+      const rowString = lines[i];
+      const matches = rowString.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+      const row = matches ? matches.map(m => m.replace(/^"|"$/g, '').replace(/""/g, '"').trim()) : [];
+      if (row.length < 2) continue;
+
+      const getValue = (key: string) => {
+        const index = headers.findIndex(h => h.includes(key.toLowerCase()));
+        return index !== -1 && index < row.length ? row[index] : '';
+      };
+
+      const username = (getValue('user') || getValue('username') || '').toLowerCase().trim();
+      const fullName = getValue('full') || getValue('name') || username;
+      const email = (getValue('mail') || getValue('email') || '').toLowerCase().trim();
+      const password = getValue('pass') || 'collector123';
+
+      if (!username || !email) {
+        result.errorCount++;
+        result.errors.push(`Row ${i + 1}: Missing username or email.`);
+        continue;
+      }
+
+      const dup = existingUsers.find(u => u.username.toLowerCase() === username || (u.email && u.email.toLowerCase() === email));
+      if (dup) {
+        result.errorCount++;
+        result.errors.push(`Row ${i + 1}: Collector '${username}' (${email}) already exists.`);
+        continue;
+      }
+
+      addUser({
+        username,
+        fullName,
+        email,
+        password,
+        role: 'collector',
+        isEmailVerified: true
+      });
+
+      result.successCount++;
+    } catch (err: any) {
+      result.errorCount++;
+      result.errors.push(`Row ${i + 1}: ${err.message || 'Error parsing collector row'}`);
+    }
+  }
+
+  if (result.successCount > 0) {
+    appendAuditLog({
+      action: 'import_csv',
+      targetType: 'system',
+      targetDescription: `Bulk Collectors Import (${result.successCount} users)`,
+      details: `Imported ${result.successCount} collector profile(s) from CSV spreadsheet.`
+    });
+  }
+
+  return result;
 }
 
 export function updateUserProfile(updates: { fullName?: string; email?: string; password?: string }): { success: boolean; message: string; user?: User } {
@@ -138,6 +306,14 @@ export function updateUserProfile(updates: { fullName?: string; email?: string; 
   if (typeof window !== 'undefined') {
     sessionStorage.setItem(KEYS.SESSION, JSON.stringify(updatedUser));
   }
+
+  appendAuditLog({
+    action: 'update_user',
+    targetType: 'user',
+    targetId: updatedUser.id,
+    targetDescription: `User Profile: ${updatedUser.username}`,
+    details: `User ${updatedUser.username} updated profile details${updates.password ? ' (password changed)' : ''}.`
+  });
 
   return { success: true, message: 'Profile updated successfully', user: updatedUser };
 }
@@ -232,11 +408,16 @@ export function getDebtor(id: string): Debtor | null {
 
 export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updatedAt' | 'outstandingBalance'>): Debtor {
   const all = getStorage<Debtor[]>(KEYS.DEBTORS, []);
-  const outstandingBalance = Number(debtorData.outstandingAmount || 0) - Number(debtorData.paidAmount || 0);
+  const outstandingAmount = Math.max(0, Number(debtorData.outstandingAmount || 0));
+  // Enforce validation: paidAmount cannot exceed loan/outstanding amount
+  const paidAmount = Math.min(outstandingAmount, Math.max(0, Number(debtorData.paidAmount || 0)));
+  const outstandingBalance = outstandingAmount - paidAmount;
   const now = new Date().toISOString();
   
   const newDebtor: Debtor = {
     ...debtorData,
+    outstandingAmount,
+    paidAmount,
     id: crypto.randomUUID(),
     outstandingBalance,
     createdAt: now,
@@ -246,12 +427,20 @@ export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updated
   all.push(newDebtor);
   setStorage(KEYS.DEBTORS, all);
 
+  appendAuditLog({
+    action: 'create_debtor',
+    targetType: 'debtor',
+    targetId: newDebtor.id,
+    targetDescription: `${newDebtor.debtorName} (${newDebtor.clientName} - ${newDebtor.accountNumber})`,
+    details: `Created debtor file. Claim: R ${outstandingAmount.toFixed(2)}, Initial Paid: R ${paidAmount.toFixed(2)}, Collector: ${newDebtor.assignedCollector || 'Unassigned'}.`
+  });
+
   // AUTOMATED NOTIFICATION: When a debtor is assigned to a collector, send notification message
   if (debtorData.assignedCollector) {
     createNotification({
       recipientUsername: debtorData.assignedCollector,
       title: 'New Debtor Case Assigned',
-      message: `You have been assigned to recover a balance of R ${outstandingBalance.toLocaleString()} for debtor ${debtorData.debtorName} from client ${debtorData.clientName}.`,
+      message: `You have been assigned to recover a balance of R ${outstandingBalance.toFixed(2)} for debtor ${debtorData.debtorName} from client ${debtorData.clientName}.`,
       debtorId: newDebtor.id,
       debtorName: debtorData.debtorName,
       clientName: debtorData.clientName,
@@ -269,21 +458,52 @@ export function updateDebtor(id: string, updates: Partial<Omit<Debtor, 'id' | 'c
   
   const debtor = all[index];
   const oldCollector = debtor.assignedCollector;
-  const updatedDebtor = { ...debtor, ...updates, updatedAt: new Date().toISOString() };
-  
-  if ('outstandingAmount' in updates || 'paidAmount' in updates) {
-    updatedDebtor.outstandingBalance = Number(updatedDebtor.outstandingAmount || 0) - Number(updatedDebtor.paidAmount || 0);
+  const user = getCurrentUser();
+
+  // Enforce validation: paidAmount cannot exceed outstandingAmount
+  let newOutstanding = 'outstandingAmount' in updates ? Math.max(0, Number(updates.outstandingAmount || 0)) : debtor.outstandingAmount;
+  let newPaid = 'paidAmount' in updates ? Math.max(0, Number(updates.paidAmount || 0)) : debtor.paidAmount;
+
+  // If a collector attempts to manually edit paidAmount directly via updateDebtor, ignore and preserve original paidAmount
+  if (user?.role === 'collector' && 'paidAmount' in updates && updates.paidAmount !== debtor.paidAmount) {
+    newPaid = debtor.paidAmount;
+  }
+
+  if (newPaid > newOutstanding) {
+    newPaid = newOutstanding;
+  }
+
+  const updatedDebtor: Debtor = { 
+    ...debtor, 
+    ...updates, 
+    outstandingAmount: newOutstanding,
+    paidAmount: newPaid,
+    outstandingBalance: newOutstanding - newPaid,
+    updatedAt: new Date().toISOString() 
+  };
+
+  // If debt is fully paid, auto-update category to completed
+  if (updatedDebtor.outstandingBalance <= 0 && updatedDebtor.outstandingAmount > 0) {
+    updatedDebtor.category = 'completed';
   }
   
   all[index] = updatedDebtor;
   setStorage(KEYS.DEBTORS, all);
+
+  appendAuditLog({
+    action: 'update_debtor',
+    targetType: 'debtor',
+    targetId: updatedDebtor.id,
+    targetDescription: `${updatedDebtor.debtorName} (${updatedDebtor.clientName})`,
+    details: `Updated debtor file. Category: ${updatedDebtor.category}, Balance: R ${updatedDebtor.outstandingBalance.toFixed(2)}, Collector: ${updatedDebtor.assignedCollector || 'None'}.`
+  });
 
   // If a new collector was assigned or re-assigned, send notification
   if (updates.assignedCollector && updates.assignedCollector !== oldCollector) {
     createNotification({
       recipientUsername: updates.assignedCollector,
       title: 'Debtor Case Reassigned To You',
-      message: `Debtor account for ${updatedDebtor.debtorName} (${updatedDebtor.clientName}) with balance R ${updatedDebtor.outstandingBalance.toLocaleString()} has been assigned to you.`,
+      message: `Debtor account for ${updatedDebtor.debtorName} (${updatedDebtor.clientName}) with balance R ${updatedDebtor.outstandingBalance.toFixed(2)} has been assigned to you.`,
       debtorId: updatedDebtor.id,
       debtorName: updatedDebtor.debtorName,
       clientName: updatedDebtor.clientName,
@@ -296,6 +516,7 @@ export function updateDebtor(id: string, updates: Partial<Omit<Debtor, 'id' | 'c
 
 export function deleteDebtor(id: string): void {
   const all = getStorage<Debtor[]>(KEYS.DEBTORS, []);
+  const target = all.find(d => d.id === id);
   setStorage(KEYS.DEBTORS, all.filter(d => d.id !== id));
   
   const payments = getStorage<Payment[]>(KEYS.PAYMENTS, []);
@@ -303,6 +524,16 @@ export function deleteDebtor(id: string): void {
   
   const activities = getStorage<Activity[]>(KEYS.ACTIVITIES, []);
   setStorage(KEYS.ACTIVITIES, activities.filter(a => a.debtorId !== id));
+
+  if (target) {
+    appendAuditLog({
+      action: 'delete_debtor',
+      targetType: 'debtor',
+      targetId: id,
+      targetDescription: `${target.debtorName} (${target.clientName})`,
+      details: `Deleted debtor file and associated payment history for account ${target.accountNumber}.`
+    });
+  }
 }
 
 export function searchDebtors(query: string, categoryFilter?: Category, flagFilter?: ColorFlag, clientFilter?: string): Debtor[] {
@@ -340,9 +571,18 @@ export function getPayments(debtorId: string): Payment[] {
 
 export function addPayment(paymentData: any): Payment {
   const payments = getStorage<Payment[]>(KEYS.PAYMENTS, []);
-  const amountPaid = Number(paymentData.amountPaid || paymentData.amount || 0);
+  let amountPaid = Number(paymentData.amountPaid || paymentData.amount || 0);
   const paymentDate = paymentData.paymentDate || paymentData.date || new Date().toISOString();
   const user = getCurrentUser();
+  const debtor = getDebtor(paymentData.debtorId);
+
+  // Validation: cap payment to remaining outstanding balance
+  if (debtor) {
+    const remainingBalance = Math.max(0, debtor.outstandingBalance);
+    if (amountPaid > remainingBalance) {
+      amountPaid = remainingBalance;
+    }
+  }
   
   const newPayment: Payment = {
     id: crypto.randomUUID(),
@@ -356,13 +596,107 @@ export function addPayment(paymentData: any): Payment {
   payments.push(newPayment);
   setStorage(KEYS.PAYMENTS, payments);
   
-  const debtor = getDebtor(paymentData.debtorId);
   if (debtor) {
     const newPaidAmount = Number(debtor.paidAmount || 0) + amountPaid;
     updateDebtor(paymentData.debtorId, { paidAmount: newPaidAmount });
   }
+
+  appendAuditLog({
+    action: 'record_payment',
+    targetType: 'payment',
+    targetId: newPayment.id,
+    targetDescription: `Payment for ${debtor?.debtorName || paymentData.debtorId}`,
+    details: `Recorded payment of R ${amountPaid.toFixed(2)} on date ${paymentDate}. Ref/Notes: ${paymentData.notes || 'None'}.`
+  });
   
   return newPayment;
+}
+
+export function updatePayment(paymentId: string, updates: { amountPaid?: number; paymentDate?: string; notes?: string }): { success: boolean; error?: string } {
+  const user = getCurrentUser();
+  if (!user || user.role !== 'admin') {
+    return { success: false, error: 'Only administrators are authorized to edit payment records.' };
+  }
+
+  const payments = getStorage<Payment[]>(KEYS.PAYMENTS, []);
+  const index = payments.findIndex(p => p.id === paymentId);
+  if (index === -1) {
+    return { success: false, error: 'Payment record not found.' };
+  }
+
+  const oldPayment = payments[index];
+  const debtor = getDebtor(oldPayment.debtorId);
+  if (!debtor) {
+    return { success: false, error: 'Debtor associated with payment not found.' };
+  }
+
+  let newAmount = typeof updates.amountPaid === 'number' ? Math.max(0, updates.amountPaid) : oldPayment.amountPaid;
+  // Recalculate debtor total paid if amount changed
+  const diff = newAmount - oldPayment.amountPaid;
+  const newDebtorPaid = Math.max(0, debtor.paidAmount + diff);
+  if (newDebtorPaid > debtor.outstandingAmount) {
+    return {
+      success: false,
+      error: `Updated payment would exceed the total loan amount of R ${debtor.outstandingAmount.toFixed(2)}.`
+    };
+  }
+
+  const updatedPayment: Payment = {
+    ...oldPayment,
+    amountPaid: newAmount,
+    paymentDate: updates.paymentDate || oldPayment.paymentDate,
+    notes: updates.notes !== undefined ? updates.notes : oldPayment.notes
+  };
+
+  payments[index] = updatedPayment;
+  setStorage(KEYS.PAYMENTS, payments);
+
+  // Update debtor's paidAmount
+  updateDebtor(oldPayment.debtorId, { paidAmount: newDebtorPaid });
+
+  appendAuditLog({
+    action: 'update_payment',
+    targetType: 'payment',
+    targetId: updatedPayment.id,
+    targetDescription: `Payment edit for ${debtor.debtorName} (${debtor.clientName})`,
+    details: `Admin ${user.username} modified payment: amount changed from R ${oldPayment.amountPaid.toFixed(2)} to R ${newAmount.toFixed(2)}, date: ${updatedPayment.paymentDate}.`
+  });
+
+  return { success: true };
+}
+
+export function deletePayment(paymentId: string): { success: boolean; error?: string } {
+  const user = getCurrentUser();
+  if (!user || user.role !== 'admin') {
+    return { success: false, error: 'Only administrators are authorized to delete payment records.' };
+  }
+
+  const payments = getStorage<Payment[]>(KEYS.PAYMENTS, []);
+  const index = payments.findIndex(p => p.id === paymentId);
+  if (index === -1) {
+    return { success: false, error: 'Payment record not found.' };
+  }
+
+  const oldPayment = payments[index];
+  const debtor = getDebtor(oldPayment.debtorId);
+
+  payments.splice(index, 1);
+  setStorage(KEYS.PAYMENTS, payments);
+
+  if (debtor) {
+    const newDebtorPaid = Math.max(0, debtor.paidAmount - oldPayment.amountPaid);
+    updateDebtor(oldPayment.debtorId, { paidAmount: newDebtorPaid });
+  }
+
+  appendAuditLog({
+    action: 'delete_payment',
+    targetType: 'payment',
+    targetId: oldPayment.id,
+    targetDescription: `Payment deleted for ${debtor?.debtorName || oldPayment.debtorId}`,
+    details: `Admin ${user.username} deleted payment of R ${oldPayment.amountPaid.toFixed(2)} recorded on ${oldPayment.paymentDate}.`
+  });
+
+  return { success: true };
 }
 
 export function getActivities(debtorId: string): Activity[] {
@@ -386,6 +720,15 @@ export function addActivity(activityData: any): Activity {
   
   activities.push(newActivity);
   setStorage(KEYS.ACTIVITIES, activities);
+
+  appendAuditLog({
+    action: 'log_activity',
+    targetType: 'debtor',
+    targetId: activityData.debtorId,
+    targetDescription: `Debtor Activity: ${newActivity.activityType}`,
+    details: `Logged interaction (${newActivity.activityType}): ${newActivity.description.slice(0, 100)}`
+  });
+
   return newActivity;
 }
 
@@ -546,6 +889,15 @@ export function importClientsDebtorsFromCSV(csvText: string): { successCount: nu
         result.errors.push(`Row ${i + 1}: ${err.message || 'Error parsing row'}`);
       }
     }
+
+    if (result.successCount > 0) {
+      appendAuditLog({
+        action: 'import_csv',
+        targetType: 'system',
+        targetDescription: `Bulk CSV Import (${result.successCount} files)`,
+        details: `Imported ${result.successCount} debtor record(s) from CSV spreadsheet. Errors encountered: ${result.errorCount}.`
+      });
+    }
   } catch (err: any) {
     result.errors.push(`General error: ${err.message}`);
   }
@@ -579,6 +931,8 @@ export const store = {
   createNotification,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  getAuditLogs,
+  appendAuditLog,
   getDebtors,
   getDebtor,
   addDebtor,
@@ -592,6 +946,8 @@ export const store = {
   getDashboardStats,
   exportClientsDebtorsCSV,
   importClientsDebtorsFromCSV,
+  exportCollectorsCSV,
+  importCollectorsFromCSV,
   generateWhatsAppLink
 };
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getDebtor, updateDebtor } from '@/lib/store';
+import { getDebtor, updateDebtor, getCurrentUser } from '@/lib/store';
 import { useLanguage } from '@/components/LanguageContext';
 import DebtorFormFields from '@/components/DebtorFormFields';
 import type { Debtor } from '@/lib/types';
@@ -32,7 +32,13 @@ export default function EditDebtorPage() {
   }
 
   const handleSubmit = (data: any) => {
-    updateDebtor(id, data);
+    const currentUser = getCurrentUser();
+    // If the user is a collector, enforce that the existing paidAmount cannot be overwritten via edit form
+    const payload = { ...data };
+    if (currentUser?.role === 'collector') {
+      payload.paidAmount = debtor.paidAmount;
+    }
+    updateDebtor(id, payload);
     router.push(`/debtors/${id}`);
   };
 

@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUsers, addUser, getCurrentUser } from '@/lib/store';
+import { getUsers, addUser, getCurrentUser, exportCollectorsCSV, importCollectorsFromCSV } from '@/lib/store';
 import { useLanguage } from '@/components/LanguageContext';
 import type { User } from '@/lib/types';
 
 export default function CollectorsPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [collectors, setCollectors] = useState<User[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{ success: number; errors: string[] } | null>(null);
 
   // New collector form fields
   const [username, setUsername] = useState('');
@@ -35,6 +37,47 @@ export default function CollectorsPage() {
     }
     loadCollectors();
   }, [router]);
+
+  const handleDownloadCollectors = () => {
+    const csv = exportCollectorsCSV();
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `collectors_roster_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadTemplate = () => {
+    const template = 'username,fullName,email,password\n"alex_collector","Alex Smith","alex@recoverycredit.internal","collector123"\n"sarah_collector","Sarah Ndlovu","sarah@recoverycredit.internal","collector123"';
+    const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_collectors_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const res = importCollectorsFromCSV(content);
+        setUploadResult({ success: res.successCount, errors: res.errors });
+        loadCollectors();
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleAddCollector = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +144,15 @@ export default function CollectorsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        accept=".csv"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -110,13 +162,73 @@ export default function CollectorsPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-sm self-start flex items-center gap-1.5"
-        >
-          <span>{showAddForm ? t('coll_btn_close') : t('coll_btn_add')}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Download Collectors CSV */}
+          <button
+            onClick={handleDownloadCollectors}
+            className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
+            title="Download Collectors CSV"
+          >
+            <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            <span>Download CSV</span>
+          </button>
+
+          {/* Bulk Upload Collectors CSV */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
+            title="Bulk Upload Collectors CSV"
+          >
+            <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span>Bulk Upload CSV</span>
+          </button>
+
+          <button
+            onClick={handleDownloadTemplate}
+            className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-medium rounded-lg transition shadow-sm"
+            title="Download CSV Template"
+          >
+            CSV Template
+          </button>
+
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-sm flex items-center gap-1.5"
+          >
+            <span>{showAddForm ? t('coll_btn_close') : t('coll_btn_add')}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Upload Notification Banner */}
+      {uploadResult && (
+        <div className={`p-4 rounded-xl border text-xs flex items-start justify-between ${
+          uploadResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-800'
+        }`}>
+          <div>
+            <p className="font-semibold">
+              Bulk Upload Finished: {uploadResult.success} collector account(s) created successfully.
+            </p>
+            {uploadResult.errors.length > 0 && (
+              <ul className="mt-1.5 list-disc pl-4 text-red-600 space-y-0.5">
+                {uploadResult.errors.map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button 
+            onClick={() => setUploadResult(null)}
+            className="text-slate-400 hover:text-slate-600 font-bold ml-4"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Add New Collector Card */}
       {showAddForm && (

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { searchDebtors, deleteDebtor, exportClientsDebtorsCSV, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { searchDebtors, deleteDebtor, exportClientsDebtorsCSV, importClientsDebtorsFromCSV, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
@@ -14,12 +14,14 @@ export default function DebtorsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [debtors, setDebtors] = useState<Debtor[]>([]);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get('category') || '');
   const [flagFilter, setFlagFilter] = useState<string>(searchParams.get('flag') || '');
   const [clientFilter, setClientFilter] = useState<string>(searchParams.get('client') || '');
+  const [uploadResult, setUploadResult] = useState<{ success: number; errors: string[] } | null>(null);
 
   const loadDebtors = useCallback(() => {
     const cat = categoryFilter ? (categoryFilter as Category) : undefined;
@@ -56,6 +58,36 @@ export default function DebtorsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadTemplate = () => {
+    const templateHeaders = 'client,debtor,accountNumber,customerId,outstandingAmount,paidAmount,dateOfPayment,whatsappNumber,category,colorFlag,collector,notes\n"Standard Bank","John Doe","SB-100293","CUST-001",50000,10000,"2026-10-15","+27821234567","paying","blue","David","Case active"';
+    const blob = new Blob([templateHeaders], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_debtors_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const res = importClientsDebtorsFromCSV(content);
+        setUploadResult({ success: res.successCount, errors: res.errors });
+        loadDebtors();
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleWhatsApp = (debtor: Debtor) => {
     const link = generateWhatsAppLink(debtor);
     window.open(link, '_blank');
@@ -65,6 +97,15 @@ export default function DebtorsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input for bulk upload */}
+      <input
+        type="file"
+        accept=".csv"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -77,7 +118,7 @@ export default function DebtorsPage() {
               : t('debtors_sub_admin')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Download Information Button */}
           <button
             onClick={handleDownloadClientsDebtors}
@@ -93,15 +134,24 @@ export default function DebtorsPage() {
           {/* Admin-only Upload & Add Buttons */}
           {!isCollector && (
             <>
-              <Link
-                href="/upload"
+              <button
+                onClick={() => fileInputRef.current?.click()}
                 className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
+                title="Bulk Upload Debtors CSV"
               >
                 <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <span>{t('debtors_btn_upload')}</span>
-              </Link>
+                <span>Bulk Upload CSV</span>
+              </button>
+
+              <button
+                onClick={handleDownloadTemplate}
+                className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-medium rounded-lg transition shadow-sm"
+                title="Download CSV Template"
+              >
+                CSV Template
+              </button>
 
               <Link
                 href="/debtors/add"
@@ -113,6 +163,30 @@ export default function DebtorsPage() {
           )}
         </div>
       </div>
+
+      {/* Upload Notification Banner */}
+      {uploadResult && (
+        <div className={`p-4 rounded-xl border text-xs flex items-start justify-between ${
+          uploadResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-800'
+        }`}>
+          <div>
+            <p className="font-semibold">
+              Bulk Upload Finished: {uploadResult.success} debtor file(s) imported successfully.
+            </p>
+            {uploadResult.errors.length > 0 && (
+              <p className="mt-1 text-red-600">
+                {uploadResult.errors.length} error(s) encountered during import.
+              </p>
+            )}
+          </div>
+          <button 
+            onClick={() => setUploadResult(null)}
+            className="text-slate-400 hover:text-slate-600 font-bold ml-4"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Filter Row */}
       <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">

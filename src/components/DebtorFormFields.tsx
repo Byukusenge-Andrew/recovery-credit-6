@@ -53,23 +53,54 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
     notes: debtor?.notes || '',
   });
 
+  const [validationError, setValidationError] = useState<string>('');
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
-    }));
+    setValidationError('');
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: type === 'number' ? (value === '' ? 0 : parseFloat(value) || 0) : value
+      };
+
+      if (name === 'paidAmount' && updated.paidAmount > updated.outstandingAmount) {
+        setValidationError(
+          `Amount paid (R ${updated.paidAmount.toFixed(2)}) cannot exceed the loan amount (R ${updated.outstandingAmount.toFixed(2)}).`
+        );
+      } else if (name === 'outstandingAmount' && updated.paidAmount > updated.outstandingAmount) {
+        setValidationError(
+          `Amount paid (R ${updated.paidAmount.toFixed(2)}) cannot exceed the loan amount (R ${updated.outstandingAmount.toFixed(2)}).`
+        );
+      }
+
+      return updated;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.paidAmount > formData.outstandingAmount) {
+      setValidationError(
+        `Amount paid (R ${formData.paidAmount.toFixed(2)}) cannot exceed the loan amount (R ${formData.outstandingAmount.toFixed(2)}). Please adjust the payment.`
+      );
+      return;
+    }
     onSubmit(formData);
   };
 
-  const balance = (formData.outstandingAmount || 0) - (formData.paidAmount || 0);
+  const balance = Math.max(0, (formData.outstandingAmount || 0) - (formData.paidAmount || 0));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-xs">
+      {validationError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
+          <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span className="font-semibold">{validationError}</span>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label className="block font-medium text-slate-700 mb-1">
@@ -145,15 +176,28 @@ export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: P
         </div>
 
         <div>
-          <label className="block font-medium text-slate-700 mb-1">{t('form_paid')}</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block font-medium text-slate-700">{t('form_paid')}</label>
+            {isEdit && isCollector && (
+              <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium">
+                Admin edit only
+              </span>
+            )}
+          </div>
           <input
             type="number"
             step="0.01"
             name="paidAmount"
+            disabled={isEdit && isCollector}
             value={formData.paidAmount}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
           />
+          {isEdit && isCollector && (
+            <p className="text-[10px] text-slate-400 mt-1">
+              Collectors can record new client payments via the file page, but cannot edit previously recorded amounts.
+            </p>
+          )}
         </div>
 
         <div>

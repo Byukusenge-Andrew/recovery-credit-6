@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
@@ -8,16 +8,32 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function LandingPage() {
   const { t, setLang } = useLanguage();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem('rc6_language');
     if (!stored) {
       setLang('rw');
     }
   }, [setLang]);
 
+  if (!mounted) {
+    return (
+      <div 
+        suppressHydrationWarning 
+        className="min-h-screen bg-white text-slate-900 flex items-center justify-center font-sans"
+      >
+        <div className="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div 
+      suppressHydrationWarning
+      className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900"
+    >
       {/* Header / Nav */}
       <header className="border-b border-slate-100 bg-white/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
