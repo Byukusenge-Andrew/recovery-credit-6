@@ -665,6 +665,8 @@ export function setStoredLanguage(lang: Language): void {
 }
 
 export function translate(key: TranslationKey, lang: Language = 'rw'): string {
-  const dict = translations[lang] || translations.rw || translations.en;
-  return (dict as any)[key] || (translations.rw as any)[key] || (translations.en as any)[key] || key;
+  const dict = translations[lang] as Record<string, string> | undefined;
+  const rwDict = translations.rw as Record<string, string>;
+  const enDict = translations.en as Record<string, string>;
+  return dict?.[key] || rwDict[key] || enDict[key] || key;
 }

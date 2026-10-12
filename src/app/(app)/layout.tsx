@@ -107,7 +107,7 @@ export default function AppLayout({
         </header>
 
         {/* Sidebar */}
-        <Sidebar expanded={sidebarExpanded} />
+        <Sidebar expanded={sidebarExpanded} onExpand={() => setSidebarExpanded(true)} />
 
         {/* Main Content */}
         <main

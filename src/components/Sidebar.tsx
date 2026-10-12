@@ -9,9 +9,10 @@ import type { User } from '@/lib/types';
 
 interface SidebarProps {
   expanded?: boolean;
+  onExpand?: () => void;
 }
 
-export default function Sidebar({ expanded = false }: SidebarProps) {
+export default function Sidebar({ expanded = false, onExpand }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
@@ -81,8 +82,16 @@ export default function Sidebar({ expanded = false }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-16 bottom-0 bg-white border-r border-slate-100 flex flex-col py-4 z-20 transition-all duration-200 ${
-        expanded ? 'w-56 px-3' : 'w-16 items-center'
+      onClick={() => {
+        if (!expanded && onExpand) {
+          onExpand();
+        }
+      }}
+      title={!expanded ? "Click to expand sidebar" : undefined}
+      className={`fixed left-0 top-16 bottom-0 bg-white border-r border-slate-100 flex flex-col py-4 z-20 transition-all duration-200 select-none ${
+        expanded
+          ? 'w-56 px-3'
+          : 'w-16 items-center cursor-pointer hover:bg-slate-50/80 hover:border-slate-200'
       }`}
     >
       <div className="flex-1 flex flex-col gap-1.5 w-full">
