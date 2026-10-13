@@ -11,19 +11,34 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const loadData = () => {
+  const loadData = async () => {
     const user = getCurrentUser();
     if (user) {
+      // Immediate local state
       const items = getNotifications(user.username);
       setNotifications(items);
       setUnreadCount(getUnreadNotificationsCount(user.username));
+
+      // Live Neon DB query
+      try {
+        const res = await fetch(`/api/notifications?username=${encodeURIComponent(user.username)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.notifications && Array.isArray(data.notifications)) {
+            setNotifications(data.notifications);
+            setUnreadCount(data.notifications.filter((n: Notification) => !n.isRead).length);
+          }
+        }
+      } catch (err) {
+        console.warn('Neon notifications error:', err);
+      }
     }
   };
 
   useEffect(() => {
     loadData();
-    // Refresh notifications every 4 seconds to catch new assignments
-    const interval = setInterval(loadData, 4000);
+    // Refresh notifications every 6 seconds to catch new assignments
+    const interval = setInterval(loadData, 6000);
     return () => clearInterval(interval);
   }, []);
 
@@ -38,15 +53,33 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     const user = getCurrentUser();
     if (user) {
+      try {
+        await fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user.username, markAll: true })
+        });
+      } catch (err) {
+        console.warn('Neon markAllRead error:', err);
+      }
       markAllNotificationsAsRead(user.username);
       loadData();
     }
   };
 
-  const handleItemClick = (notification: Notification) => {
+  const handleItemClick = async (notification: Notification) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: notification.id })
+      });
+    } catch (err) {
+      console.warn('Neon markRead error:', err);
+    }
     markNotificationAsRead(notification.id);
     loadData();
     setIsOpen(false);

@@ -31,13 +31,29 @@ export default function EditDebtorPage() {
     );
   }
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = async (data: any) => {
     const currentUser = getCurrentUser();
     // If the user is a collector, enforce that the existing paidAmount cannot be overwritten via edit form
     const payload = { ...data };
     if (currentUser?.role === 'collector') {
       payload.paidAmount = debtor.paidAmount;
     }
+
+    try {
+      await fetch(`/api/debtors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          actorUsername: currentUser?.username || 'admin',
+          actorFullName: currentUser?.fullName || 'User',
+          actorRole: currentUser?.role || 'admin'
+        })
+      });
+    } catch (err) {
+      console.warn('Neon edit debtor error:', err);
+    }
+
     updateDebtor(id, payload);
     router.push(`/debtors/${id}`);
   };

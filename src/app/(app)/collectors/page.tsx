@@ -79,7 +79,7 @@ export default function CollectorsPage() {
     }
   };
 
-  const handleAddCollector = (e: React.FormEvent) => {
+  const handleAddCollector = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -118,6 +118,21 @@ export default function CollectorsPage() {
     if (existingEmail) {
       setError(`A user with email "${email}" already exists.`);
       return;
+    }
+
+    try {
+      await fetch('/api/collectors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim().toLowerCase(),
+          fullName: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          password: password.trim()
+        })
+      });
+    } catch (err) {
+      console.warn('Neon add collector error:', err);
     }
 
     addUser({

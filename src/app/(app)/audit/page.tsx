@@ -23,6 +23,16 @@ export default function AuditPage() {
       return;
     }
     setLogs(getAuditLogs());
+
+    // Fetch directly from Neon database audit table
+    fetch('/api/audit')
+      .then(res => res.json())
+      .then(data => {
+        if (data.logs && Array.isArray(data.logs)) {
+          setLogs(data.logs);
+        }
+      })
+      .catch(err => console.warn('Neon audit fetch error:', err));
   }, [router]);
 
   if (!currentUser || currentUser.role !== 'admin') {

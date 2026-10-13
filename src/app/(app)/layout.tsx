@@ -106,11 +106,29 @@ export default function AppLayout({
           </div>
         </header>
 
+        {/* Mobile Backdrop when Sidebar is pinned expanded */}
+        {sidebarExpanded && (
+          <div
+            onClick={() => setSidebarExpanded(false)}
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-[1px] z-10 md:hidden"
+            aria-hidden="true"
+          />
+        )}
+
         {/* Sidebar */}
-        <Sidebar expanded={sidebarExpanded} onExpand={() => setSidebarExpanded(true)} />
+        <Sidebar
+          expanded={sidebarExpanded}
+          onExpand={() => setSidebarExpanded(true)}
+          onCollapse={() => setSidebarExpanded(false)}
+        />
 
         {/* Main Content */}
         <main
+          onClick={() => {
+            if (sidebarExpanded) {
+              setSidebarExpanded(false);
+            }
+          }}
           className={`pt-16 min-h-screen transition-all duration-200 ${
             sidebarExpanded ? 'pl-56' : 'pl-16'
           }`}

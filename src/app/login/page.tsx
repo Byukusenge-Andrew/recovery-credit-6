@@ -49,7 +49,7 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [lockTimer]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -63,6 +63,28 @@ export default function LoginPage() {
       return;
     }
 
+    try {
+      // Authenticate directly with Neon PostgreSQL backend
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernameOrEmail: username, password })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          sessionStorage.setItem('rc6_session', JSON.stringify(data.user));
+          setFailedAttempts(0);
+          router.push('/dashboard');
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('API login failed, checking fallback:', err);
+    }
+
+    // Fallback verification
     const user = login(username, password);
     if (user) {
       setFailedAttempts(0);

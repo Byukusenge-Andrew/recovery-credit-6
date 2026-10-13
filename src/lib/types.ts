@@ -15,6 +15,7 @@ export interface Debtor {
   customerId: string;
   debtorName: string;       // Bank client (Debtor)
   clientName: string;       // Bank (Client)
+  bankName?: string;
   outstandingAmount: number;
   paidAmount: number;
   dateOfPayment: string;
@@ -95,3 +96,15 @@ export interface AuditLog {
   details: string;
   ipAddress?: string;
 }
+
+export interface DashboardStats {
+  totalDebtors: number;
+  totalOutstanding: number;
+  totalPaid: number;
+  totalBalance: number;
+  outstandingBalance: number;
+  categoryCounts: Record<Category, number>;
+  flagCounts: Record<ColorFlag, number>;
+  clientsCount: number;
+}
+

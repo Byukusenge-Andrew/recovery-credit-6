@@ -24,14 +24,38 @@ export default function DashboardPage() {
     setIsClientLoaded(true);
     const user = getCurrentUser();
     setCurrentUser(user);
-    const s = getDashboardStats();
-    setStats(s);
-    const debtors = getDebtors();
-    setRecentDebtors(debtors.slice(-8).reverse());
+
+    // Initial local fallback
+    setStats(getDashboardStats());
+    setRecentDebtors(getDebtors().slice(-8).reverse());
 
     if (user) {
-      const notes = getNotifications(user.username);
-      setRecentNotifications(notes.slice(0, 3));
+      setRecentNotifications(getNotifications(user.username).slice(0, 3));
+
+      // Fetch live data from Neon PostgreSQL Database
+      const roleParam = user.role;
+      const userParam = encodeURIComponent(user.username);
+      
+      fetch(`/api/dashboard/stats?role=${roleParam}&username=${userParam}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.stats) setStats(data.stats);
+        })
+        .catch(err => console.warn('Neon stats fetch error:', err));
+
+      fetch(`/api/debtors?role=${roleParam}&username=${userParam}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.debtors) setRecentDebtors(data.debtors.slice(0, 8));
+        })
+        .catch(err => console.warn('Neon debtors fetch error:', err));
+
+      fetch(`/api/notifications?username=${userParam}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.notifications) setRecentNotifications(data.notifications.slice(0, 3));
+        })
+        .catch(err => console.warn('Neon notifications fetch error:', err));
     }
   }, []);
 

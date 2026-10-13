@@ -32,12 +32,35 @@ export default function DebtorDetailPage() {
   const [actDesc, setActDesc] = useState('');
   const [actDate, setActDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const loadData = () => {
+  const loadData = async () => {
+    // Immediate fallback
     const d = getDebtor(id);
-    setDebtor(d);
     if (d) {
+      setDebtor(d);
       setPayments(getPayments(id));
       setActivities(getActivities(id));
+    }
+
+    try {
+      const res = await fetch(`/api/debtors/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.debtor) setDebtor(data.debtor);
+      }
+
+      const pRes = await fetch(`/api/debtors/${id}/payments`);
+      if (pRes.ok) {
+        const pData = await pRes.json();
+        if (pData.payments) setPayments(pData.payments);
+      }
+
+      const aRes = await fetch(`/api/debtors/${id}/activities`);
+      if (aRes.ok) {
+        const aData = await aRes.json();
+        if (aData.activities) setActivities(aData.activities);
+      }
+    } catch (err) {
+      console.warn('Neon detail load error:', err);
     }
   };
 
@@ -57,7 +80,7 @@ export default function DebtorDetailPage() {
     );
   }
 
-  const handleRecordPayment = (e: React.FormEvent) => {
+  const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setPayError('');
     const amt = Number(payAmount);
@@ -73,6 +96,24 @@ export default function DebtorDetailPage() {
       return;
     }
 
+    // Persist to Neon DB API
+    try {
+      await fetch(`/api/debtors/${id}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountPaid: amt,
+          paymentDate: payDate,
+          recordedBy: currentUser?.fullName || 'Collector',
+          role: currentUser?.role || 'collector',
+          notes: payNotes
+        })
+      });
+    } catch (err) {
+      console.warn('Neon payment record error:', err);
+    }
+
+    // Also update local store
     addPayment({
       debtorId: id,
       amountPaid: amt,
@@ -102,7 +143,7 @@ export default function DebtorDetailPage() {
     setEditPayError('');
   };
 
-  const handleUpdatePayment = (e: React.FormEvent) => {
+  const handleUpdatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPayment) return;
     const amt = Number(editPayAmount);
@@ -110,33 +151,67 @@ export default function DebtorDetailPage() {
       setEditPayError('Please enter a valid amount.');
       return;
     }
-    const res = updatePayment(editingPayment.id, {
+
+    try {
+      const res = await fetch(`/api/payments/${editingPayment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountPaid: amt,
+          paymentDate: editPayDate,
+          notes: editPayNotes,
+          adminUsername: currentUser?.username || 'admin'
+        })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setEditPayError(data.error || 'Failed to update payment in database.');
+        return;
+      }
+    } catch (err) {
+      console.warn('Neon payment update error:', err);
+    }
+
+    updatePayment(editingPayment.id, {
       amountPaid: amt,
       paymentDate: editPayDate,
       notes: editPayNotes
     });
-    if (!res.success) {
-      setEditPayError(res.error || 'Failed to update payment.');
-      return;
-    }
+
     setEditingPayment(null);
     loadData();
   };
 
-  const handleDeletePayment = (paymentId: string, amount: number) => {
+  const handleDeletePayment = async (paymentId: string, amount: number) => {
     if (window.confirm(`Are you sure you want to remove this payment of R ${amount.toFixed(2)}? This action is logged in the audit trail.`)) {
-      const res = deletePayment(paymentId);
-      if (!res.success) {
-        alert(res.error || 'Failed to delete payment.');
-      } else {
-        loadData();
+      try {
+        await fetch(`/api/payments/${paymentId}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn('Neon payment delete error:', err);
       }
+      deletePayment(paymentId);
+      loadData();
     }
   };
 
-  const handleAddActivity = (e: React.FormEvent) => {
+  const handleAddActivity = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!actDesc) return;
+
+    try {
+      await fetch(`/api/debtors/${id}/activities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          activityType: actType,
+          description: actDesc,
+          scheduledDate: actDate,
+          createdBy: currentUser?.fullName || 'Collector'
+        })
+      });
+    } catch (err) {
+      console.warn('Neon activity record error:', err);
+    }
 
     addActivity({
       debtorId: id,

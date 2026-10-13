@@ -23,11 +23,35 @@ export default function DebtorsPage() {
   const [clientFilter, setClientFilter] = useState<string>(searchParams.get('client') || '');
   const [uploadResult, setUploadResult] = useState<{ success: number; errors: string[] } | null>(null);
 
-  const loadDebtors = useCallback(() => {
+  const loadDebtors = useCallback(async () => {
+    const user = getCurrentUser();
+    // Default immediate view
     const cat = categoryFilter ? (categoryFilter as Category) : undefined;
     const flag = flagFilter ? (flagFilter as ColorFlag) : undefined;
-    const results = searchDebtors(search, cat, flag, clientFilter);
-    setDebtors(results);
+    setDebtors(searchDebtors(search, cat, flag, clientFilter));
+
+    // Live query from Neon PostgreSQL Database
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (categoryFilter) params.set('category', categoryFilter);
+      if (flagFilter) params.set('flag', flagFilter);
+      if (clientFilter) params.set('client', clientFilter);
+      if (user) {
+        params.set('role', user.role);
+        params.set('username', user.username);
+      }
+
+      const res = await fetch(`/api/debtors?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.debtors && Array.isArray(data.debtors)) {
+          setDebtors(data.debtors);
+        }
+      }
+    } catch (err) {
+      console.warn('Neon debtors fetch error:', err);
+    }
   }, [search, categoryFilter, flagFilter, clientFilter]);
 
   useEffect(() => {
@@ -36,8 +60,13 @@ export default function DebtorsPage() {
     loadDebtors();
   }, [loadDebtors]);
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete debtor record for: "${name}"?`)) {
+      try {
+        await fetch(`/api/debtors/${id}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn('Neon delete error:', err);
+      }
       deleteDebtor(id);
       loadDebtors();
     }

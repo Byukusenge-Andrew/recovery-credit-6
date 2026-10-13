@@ -23,6 +23,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              if(typeof MutationObserver!=='undefined'){
+                new MutationObserver(function(mutations){
+                  for(var i=0;i<mutations.length;i++){
+                    var m=mutations[i];
+                    if(m.type==='attributes'&&m.attributeName==='bis_skin_checked'){
+                      m.target.removeAttribute('bis_skin_checked');
+                    }
+                  }
+                }).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['bis_skin_checked']});
+              }
+            })();`,
+          }}
+        />
+      </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 text-gray-900`} suppressHydrationWarning>
         <LanguageProvider>
           {children}

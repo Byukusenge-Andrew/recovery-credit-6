@@ -10,22 +10,38 @@ import type { User } from '@/lib/types';
 interface SidebarProps {
   expanded?: boolean;
   onExpand?: () => void;
+  onCollapse?: () => void;
 }
 
-export default function Sidebar({ expanded = false, onExpand }: SidebarProps) {
+export default function Sidebar({ expanded = false, onExpand, onCollapse }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     setCurrentUser(getCurrentUser());
   }, []);
 
+  // Auto-retract on Escape key when pinned expanded
+  useEffect(() => {
+    if (!expanded || !onCollapse) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCollapse();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expanded, onCollapse]);
+
   const handleLogout = () => {
     logout();
     router.push('/');
   };
+
+  const isExpanded = expanded || isHovered;
 
   const navItems = [
     {
@@ -82,18 +98,49 @@ export default function Sidebar({ expanded = false, onExpand }: SidebarProps) {
 
   return (
     <aside
+      onMouseEnter={() => {
+        if (!expanded) setIsHovered(true);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
       onClick={() => {
-        if (!expanded && onExpand) {
+        if (!isExpanded && onExpand) {
           onExpand();
         }
       }}
-      title={!expanded ? "Click to expand sidebar" : undefined}
+      title={!isExpanded ? "Click or hover to expand sidebar" : undefined}
       className={`fixed left-0 top-16 bottom-0 bg-white border-r border-slate-100 flex flex-col py-4 z-20 transition-all duration-200 select-none ${
-        expanded
-          ? 'w-56 px-3'
+        isExpanded
+          ? `w-56 px-3 ${!expanded ? 'shadow-xl border-slate-200 z-30' : ''}`
           : 'w-16 items-center cursor-pointer hover:bg-slate-50/80 hover:border-slate-200'
       }`}
     >
+      {/* Top Header Row when Expanded */}
+      {isExpanded && (
+        <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-slate-100">
+          <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+            Menu
+          </span>
+          {expanded && onCollapse && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCollapse();
+              }}
+              title="Retract sidebar (Esc)"
+              className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition flex items-center gap-1 text-[11px]"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+              </svg>
+              <span>Retract</span>
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 flex flex-col gap-1.5 w-full">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -102,8 +149,14 @@ export default function Sidebar({ expanded = false, onExpand }: SidebarProps) {
               key={item.href}
               href={item.href}
               title={item.label}
+              onClick={() => {
+                setIsHovered(false);
+                if (typeof window !== 'undefined' && window.innerWidth < 768 && onCollapse) {
+                  onCollapse();
+                }
+              }}
               className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-xs font-medium ${
-                expanded ? 'w-full justify-start' : 'w-10 h-10 justify-center mx-auto'
+                isExpanded ? 'w-full justify-start' : 'w-10 h-10 justify-center mx-auto'
               } ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-sm'
@@ -111,23 +164,41 @@ export default function Sidebar({ expanded = false, onExpand }: SidebarProps) {
               }`}
             >
               <span className="shrink-0">{item.icon}</span>
-              {expanded && <span className="truncate">{item.label}</span>}
+              {isExpanded && <span className="truncate">{item.label}</span>}
             </Link>
           );
         })}
       </div>
 
+      {/* Retract button at the bottom when pinned expanded */}
+      {expanded && onCollapse && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCollapse();
+          }}
+          title="Retract sidebar"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors text-xs font-medium w-full justify-start mb-1"
+        >
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+          </svg>
+          <span className="truncate">Retract Sidebar</span>
+        </button>
+      )}
+
       <button
         onClick={handleLogout}
         title={t('nav_signout')}
         className={`flex items-center gap-3 px-3 py-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors text-xs font-medium ${
-          expanded ? 'w-full justify-start' : 'w-10 h-10 justify-center mx-auto'
+          isExpanded ? 'w-full justify-start' : 'w-10 h-10 justify-center mx-auto'
         }`}
       >
         <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
         </svg>
-        {expanded && <span className="truncate">{t('nav_signout')}</span>}
+        {isExpanded && <span className="truncate">{t('nav_signout')}</span>}
       </button>
     </aside>
   );

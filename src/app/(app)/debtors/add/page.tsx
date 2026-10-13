@@ -20,7 +20,17 @@ export default function AddDebtorPage() {
     setCurrentUser(u);
   }, []);
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = async (data: any) => {
+    try {
+      await fetch('/api/debtors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch (err) {
+      console.warn('Neon add debtor error:', err);
+    }
+
     addDebtor(data);
     router.push('/debtors');
   };

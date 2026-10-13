@@ -37,7 +37,7 @@ export default function ProfilePage() {
     }
   }, []);
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileMsg(null);
 
@@ -54,6 +54,21 @@ export default function ProfilePage() {
       }
     }
 
+    try {
+      await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentUser?.id,
+          username: currentUser?.username,
+          fullName: fullName.trim(),
+          email: email.trim() || undefined
+        })
+      });
+    } catch (err) {
+      console.warn('Neon profile update error:', err);
+    }
+
     const result = updateUserProfile({
       fullName: fullName.trim(),
       email: email.trim() || undefined,
@@ -67,17 +82,12 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordMsg(null);
 
     if (!currentPassword) {
       setPasswordMsg({ type: 'error', text: 'Please enter your current password.' });
-      return;
-    }
-
-    if (currentUser && currentUser.password !== currentPassword) {
-      setPasswordMsg({ type: 'error', text: 'Current password is incorrect.' });
       return;
     }
 
@@ -89,6 +99,27 @@ export default function ProfilePage() {
     if (newPassword !== confirmPassword) {
       setPasswordMsg({ type: 'error', text: 'New passwords do not match.' });
       return;
+    }
+
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentUser?.id,
+          username: currentUser?.username,
+          currentPassword,
+          newPassword
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setPasswordMsg({ type: 'error', text: data.error || 'Failed to update password.' });
+        return;
+      }
+    } catch (err) {
+      console.warn('Neon password update error:', err);
     }
 
     const result = updateUserProfile({ password: newPassword });
