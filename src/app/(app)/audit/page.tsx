@@ -18,23 +18,22 @@ interface StructuredExplanation {
 export default function AuditPage() {
   const router = useRouter();
   const { language } = useLanguage();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [logs, setLogs] = useState<readonly AuditLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [actorFilter, setActorFilter] = useState<string>('all');
 
+  const currentUser = getCurrentUser();
+
   useEffect(() => {
-    const user = getCurrentUser();
-    setCurrentUser(user);
-    if (!user || user.role !== 'admin') {
+    if (!currentUser || currentUser.role !== 'admin') {
       router.push('/dashboard');
       return;
     }
     auditApi.list()
       .then(data => setLogs(data))
       .catch(err => console.warn('Audit fetch error:', err));
-  }, [router]);
+  }, [currentUser, router]);
 
   if (!currentUser || currentUser.role !== 'admin') {
     return null;

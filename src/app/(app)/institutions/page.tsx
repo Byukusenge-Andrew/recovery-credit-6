@@ -31,10 +31,15 @@ export default function InstitutionsPage() {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadInstitutions = async () => {
+  const loadInstitutions = async (userParam?: User | null) => {
     try {
       setLoading(true);
-      const data = await institutionsApi.list();
+      const u = userParam !== undefined ? userParam : currentUser;
+      const data = await institutionsApi.list({
+        role: u?.role,
+        username: u?.username,
+        fullName: u?.fullName
+      });
       setInstitutions(data);
     } catch (err) {
       console.warn('Failed to load institutions:', err);
@@ -46,7 +51,7 @@ export default function InstitutionsPage() {
   useEffect(() => {
     const user = getCurrentUser();
     setCurrentUser(user);
-    loadInstitutions();
+    loadInstitutions(user);
   }, []);
 
   const handleCreateInstitution = async (e: React.FormEvent) => {
@@ -111,10 +116,12 @@ export default function InstitutionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {t('nav_institutions')}
+            {currentUser?.role === 'collector' ? 'My Assigned Institutions' : t('nav_institutions')}
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Manage partner banks, credit lenders, and portfolio debt collection performance by institution.
+            {currentUser?.role === 'collector'
+              ? 'Partner financial institutions and banks where you are assigned to collect debtor accounts.'
+              : 'Manage partner banks, credit lenders, and portfolio debt collection performance by institution.'}
           </p>
         </div>
 
@@ -133,7 +140,9 @@ export default function InstitutionsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-400">Institutions Enrolled</p>
+            <p className="text-xs font-medium text-slate-400">
+              {currentUser?.role === 'collector' ? 'Assigned Institutions' : 'Institutions Enrolled'}
+            </p>
             <p className="text-2xl font-bold text-slate-900 mt-1">{institutions.length}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
@@ -145,7 +154,9 @@ export default function InstitutionsPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-400">Total Institutional Debtors</p>
+            <p className="text-xs font-medium text-slate-400">
+              {currentUser?.role === 'collector' ? 'My Assigned Debtors' : 'Total Institutional Debtors'}
+            </p>
             <p className="text-2xl font-bold text-slate-900 mt-1">{totalPortfolioDebtors}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
@@ -157,7 +168,9 @@ export default function InstitutionsPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-400">Total Portfolio Value</p>
+            <p className="text-xs font-medium text-slate-400">
+              {currentUser?.role === 'collector' ? 'My Assigned Portfolio' : 'Total Portfolio Value'}
+            </p>
             <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalPortfolioClaim)}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
@@ -169,7 +182,9 @@ export default function InstitutionsPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-400">Overall Recovery Rate</p>
+            <p className="text-xs font-medium text-slate-400">
+              {currentUser?.role === 'collector' ? 'My Recovery Rate' : 'Overall Recovery Rate'}
+            </p>
             <p className="text-2xl font-bold text-emerald-600 mt-1">{overallRate}%</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
@@ -179,6 +194,7 @@ export default function InstitutionsPage() {
           </div>
         </div>
       </div>
+
 
       {/* Search & Filters */}
       <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">

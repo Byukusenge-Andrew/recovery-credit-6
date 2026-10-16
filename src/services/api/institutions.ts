@@ -32,11 +32,16 @@ export interface InstitutionFilterParams {
   flag?: string;
   collector?: string;
   sortBy?: string;
+  role?: string;
+  username?: string;
+  fullName?: string;
 }
 
 export const institutionsApi = {
-  list: async (): Promise<InstitutionWithMetrics[]> => {
-    const res = await apiClient.get<{ institutions: InstitutionWithMetrics[] }>('/institutions');
+  list: async (params?: { role?: string; username?: string; fullName?: string }): Promise<InstitutionWithMetrics[]> => {
+    const res = await apiClient.get<{ institutions: InstitutionWithMetrics[] }>('/institutions', {
+      params: params as Record<string, string | number | boolean | undefined>
+    });
     return res.institutions || [];
   },
 

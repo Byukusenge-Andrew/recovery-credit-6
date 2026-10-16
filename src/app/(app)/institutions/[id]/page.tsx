@@ -69,14 +69,16 @@ export default function InstitutionDetailPage({
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-
+      const user = getCurrentUser();
       const data = await institutionsApi.getById(id, {
         search,
         category: categoryFilter,
         flag: flagFilter,
         collector: collectorFilter,
-        sortBy
+        sortBy,
+        role: user?.role,
+        username: user?.username,
+        fullName: user?.fullName
       });
 
       setInstitution(data.institution);
@@ -529,7 +531,7 @@ export default function InstitutionDetailPage({
         {/* Total Debtors */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>{t('inst_total_debtors')}</span>
+            <span>{currentUser?.role === 'collector' ? 'My Assigned Debtors' : t('inst_total_debtors')}</span>
             <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
@@ -539,13 +541,15 @@ export default function InstitutionDetailPage({
           <div className="text-2xl font-black text-slate-900 mt-2">
             {metrics?.totalDebtors || debtors.length}
           </div>
-          <div className="text-xs text-slate-400 mt-1">Institutional accounts</div>
+          <div className="text-xs text-slate-400 mt-1">
+            {currentUser?.role === 'collector' ? 'My assigned debtor accounts' : 'Institutional accounts'}
+          </div>
         </div>
 
         {/* Total Claim Amount */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>{t('inst_total_claim')}</span>
+            <span>{currentUser?.role === 'collector' ? 'My Assigned Portfolio' : t('inst_total_claim')}</span>
             <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -555,13 +559,15 @@ export default function InstitutionDetailPage({
           <div className="text-2xl font-black text-slate-900 mt-2">
             {formatCurrency(metrics?.totalOutstanding || 0)}
           </div>
-          <div className="text-xs text-slate-400 mt-1">Total principal claims</div>
+          <div className="text-xs text-slate-400 mt-1">
+            {currentUser?.role === 'collector' ? 'My principal claim' : 'Total principal claims'}
+          </div>
         </div>
 
         {/* Total Paid Amount */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>{t('inst_total_paid')}</span>
+            <span>{currentUser?.role === 'collector' ? 'My Recovered Amount' : t('inst_total_paid')}</span>
             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
@@ -572,14 +578,14 @@ export default function InstitutionDetailPage({
             {formatCurrency(metrics?.totalPaid || 0)}
           </div>
           <div className="text-xs text-emerald-600 mt-1 font-medium">
-            Recovered portfolio
+            {currentUser?.role === 'collector' ? 'My recovered funds' : 'Recovered portfolio'}
           </div>
         </div>
 
         {/* Remaining Balance & Recovery Rate */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>{t('inst_balance_due')}</span>
+            <span>{currentUser?.role === 'collector' ? 'My Remaining Balance' : t('inst_balance_due')}</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{metrics?.recoveryRate || 0}%</span>
           </div>
           <div className="text-2xl font-black text-rose-600 mt-2">
@@ -593,6 +599,7 @@ export default function InstitutionDetailPage({
           </div>
         </div>
       </div>
+
 
       {/* Search and Advanced Filter Controls */}
       <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 space-y-4">
@@ -653,21 +660,30 @@ export default function InstitutionDetailPage({
             </select>
           </div>
 
-          {/* Assigned Collector Filter */}
-          <div className="md:col-span-2">
-            <select
-              value={collectorFilter}
-              onChange={e => setCollectorFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
-            >
-              <option value="all">{t('inst_all_collectors')}</option>
-              {metrics?.assignedCollectors?.map(col => (
-                <option key={col} value={col}>
-                  {col}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Assigned Collector Filter (Admin only) */}
+          {currentUser?.role === 'admin' ? (
+            <div className="md:col-span-2">
+              <select
+                value={collectorFilter}
+                onChange={e => setCollectorFilter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
+              >
+                <option value="all">{t('inst_all_collectors')}</option>
+                {metrics?.assignedCollectors?.map(col => (
+                  <option key={col} value={col}>
+                    {col}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="md:col-span-2">
+              <div className="w-full px-3 py-2 text-xs font-semibold border border-blue-200 bg-blue-50/70 text-blue-700 rounded-lg flex items-center justify-between truncate">
+                <span>Assigned Officer:</span>
+                <span className="font-bold truncate ml-1">{currentUser?.fullName || currentUser?.username}</span>
+              </div>
+            </div>
+          )}
 
           {/* Sort By Dropdown */}
           <div className="md:col-span-2">

@@ -15,6 +15,9 @@ export async function GET(
     const flag = searchParams.get('flag') || '';
     const collector = searchParams.get('collector') || '';
     const sortBy = searchParams.get('sortBy') || 'date_desc';
+    const role = (searchParams.get('role') || request.headers.get('x-user-role') || 'admin').toLowerCase();
+    const username = searchParams.get('username') || request.headers.get('x-username') || '';
+    const fullName = searchParams.get('fullName') || '';
 
     // 1. Fetch institution
     const instRows = await sql`
@@ -37,12 +40,50 @@ export async function GET(
       createdAt: r.created_at
     };
 
-    // 2. Fetch all debtors for this institution with dynamic filters
+    // Collector Access Control & Scoping
+    let collectorKeys: string[] = [];
+    if (role === 'collector') {
+      collectorKeys = [username.toLowerCase(), fullName.toLowerCase()].filter(Boolean);
+      if (username) {
+        const uRows = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = LOWER(${username}) LIMIT 1`;
+        if (uRows.length > 0) {
+          if (uRows[0].username) collectorKeys.push(uRows[0].username.toLowerCase());
+          if (uRows[0].full_name) collectorKeys.push(uRows[0].full_name.toLowerCase());
+        }
+      }
+      collectorKeys = Array.from(new Set(collectorKeys));
+
+      // Check if collector has any debtors for this institution
+      const accessCheck = await sql.query(`
+        SELECT 1 FROM debtors 
+        WHERE (institution_id = $1 OR LOWER(client_name) = LOWER($2))
+          AND (LOWER(assigned_collector) = ANY($3))
+        LIMIT 1
+      `, [institution.id, institution.name, collectorKeys]);
+
+      if (accessCheck.length === 0) {
+        return NextResponse.json(
+          { error: 'Access denied: You do not have any assigned debtor accounts for this financial institution.' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 2. Fetch debtors for this institution with dynamic filters
     let queryText = `
       SELECT * FROM debtors 
       WHERE (institution_id = $1 OR LOWER(client_name) = LOWER($2))
     `;
     const queryParams: any[] = [institution.id, institution.name];
+
+    // If collector, strictly restrict to their assigned debtors
+    if (role === 'collector') {
+      queryParams.push(collectorKeys);
+      queryText += ` AND (LOWER(assigned_collector) = ANY($${queryParams.length}))`;
+    } else if (collector && collector !== 'all') {
+      queryParams.push(collector.toLowerCase());
+      queryText += ` AND LOWER(assigned_collector) = $${queryParams.length}`;
+    }
 
     if (category && category !== 'all') {
       queryParams.push(category);
@@ -52,11 +93,6 @@ export async function GET(
     if (flag && flag !== 'none') {
       queryParams.push(flag);
       queryText += ` AND color_flag = $${queryParams.length}`;
-    }
-
-    if (collector && collector !== 'all') {
-      queryParams.push(collector.toLowerCase());
-      queryText += ` AND LOWER(assigned_collector) = $${queryParams.length}`;
     }
 
     if (search) {
@@ -118,12 +154,24 @@ export async function GET(
       updatedAt: d.updated_at
     }));
 
-    // 3. Overall Institution Metrics across ALL debtors of this institution
-    const allInstDebtors = await sql`
-      SELECT outstanding_amount, paid_amount, outstanding_balance, category, color_flag, assigned_collector
-      FROM debtors 
-      WHERE (institution_id = ${institution.id} OR LOWER(client_name) = LOWER(${institution.name}))
-    `;
+    // 3. Institution Metrics calculation
+    // If collector: metrics calculated STRICTLY on this collector's assigned debts
+    // If admin: metrics calculated across ALL debts for this institution
+    let allInstDebtors: any[] = [];
+    if (role === 'collector') {
+      allInstDebtors = await sql.query(`
+        SELECT outstanding_amount, paid_amount, outstanding_balance, category, color_flag, assigned_collector
+        FROM debtors 
+        WHERE (institution_id = $1 OR LOWER(client_name) = LOWER($2))
+          AND (LOWER(assigned_collector) = ANY($3))
+      `, [institution.id, institution.name, collectorKeys]);
+    } else {
+      allInstDebtors = await sql`
+        SELECT outstanding_amount, paid_amount, outstanding_balance, category, color_flag, assigned_collector
+        FROM debtors 
+        WHERE (institution_id = ${institution.id} OR LOWER(client_name) = LOWER(${institution.name}))
+      `;
+    }
 
     const metrics = {
       totalDebtors: allInstDebtors.length,
@@ -149,7 +197,7 @@ export async function GET(
       metrics.recoveryRate = Math.min(100, Math.round((metrics.totalPaid / metrics.totalOutstanding) * 100));
     }
 
-    return NextResponse.json({ institution, debtors, metrics });
+    return NextResponse.json({ institution, debtors, metrics, isCollectorScope: role === 'collector' });
   } catch (error: any) {
     console.error('API /api/institutions/[id] GET error:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -161,6 +209,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userRole = (request.headers.get('x-user-role') || '').toLowerCase();
+    if (userRole === 'collector') {
+      return NextResponse.json({ error: 'Permission denied: Collectors cannot edit financial institutions.' }, { status: 403 });
+    }
+
     const { id } = await params;
     const body = await request.json();
 
