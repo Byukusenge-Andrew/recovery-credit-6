@@ -95,6 +95,9 @@ export default function WhatsAppSettingsModal({
     }
   };
 
+  const isTokenExpired = Boolean(config?.userTokenStatus && !config.userTokenStatus.valid);
+  const isTokenActive = Boolean(config?.userTokenStatus && config.userTokenStatus.valid);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 overflow-y-auto max-h-[90vh] space-y-5">
@@ -107,11 +110,15 @@ export default function WhatsAppSettingsModal({
               </span>
               {config?.isCloudApiReady ? (
                 <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Cloud API Configured
+                  Cloud API Active
+                </span>
+              ) : isTokenExpired ? (
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                  Token Expired (Web Fallback Active)
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                  Incomplete Setup
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700">
+                  Web Mode Ready
                 </span>
               )}
             </div>
@@ -126,6 +133,41 @@ export default function WhatsAppSettingsModal({
             </svg>
           </button>
         </div>
+
+        {/* Token Expiration Alert if detected */}
+        {isTokenExpired && (
+          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-2">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="font-bold text-amber-900">Current Meta Access Token Has Expired</p>
+                <p className="text-amber-800 leading-relaxed mt-0.5">
+                  {config?.userTokenStatus?.error || 'The temporary token generated in Meta Console expired after 24 hours.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-amber-200/60 pl-6">
+              <a
+                href="https://developers.facebook.com/apps/27887479994259125/whatsapp-business/wa-dev-console/"
+                target="_blank"
+                rel="noreferrer"
+                className="px-2.5 py-1 bg-white border border-amber-300 rounded text-amber-800 font-semibold text-[11px] hover:bg-amber-100 transition inline-flex items-center gap-1"
+              >
+                <span>Generate New 24h Token in Meta Console &rarr;</span>
+              </a>
+              <a
+                href="https://business.facebook.com/settings/system-users"
+                target="_blank"
+                rel="noreferrer"
+                className="px-2.5 py-1 bg-white border border-amber-300 rounded text-amber-800 font-semibold text-[11px] hover:bg-amber-100 transition inline-flex items-center gap-1"
+              >
+                <span>Create Permanent System User Token &rarr;</span>
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Meta App Identity Card */}
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-3">
@@ -162,16 +204,18 @@ export default function WhatsAppSettingsModal({
             <svg className="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            How to get your WhatsApp Cloud API credentials:
+            How to get and keep your WhatsApp Cloud API credentials active:
           </p>
           <ol className="list-decimal list-inside space-y-1 text-slate-700 pl-1 leading-relaxed">
             <li>
-              Go to <a href="https://developers.facebook.com/apps/27887479994259125" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold underline">developers.facebook.com</a> and open <strong>RecoveryCredit</strong>.
+              Go to <a href="https://developers.facebook.com/apps/27887479994259125/whatsapp-business/wa-dev-console/" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold underline">Meta Developer Console (API Setup)</a>.
             </li>
-            <li>In the left sidebar, click <strong>WhatsApp</strong> &gt; <strong>API Setup</strong>.</li>
-            <li>Copy the <strong>Phone number ID</strong> and paste it into the field below.</li>
+            <li>Copy the <strong>Phone number ID</strong> (<code className="bg-slate-100 px-1 py-0.5 rounded font-mono">1354251641111404</code>) and paste it into the field below.</li>
             <li>
-              Copy the <strong>Temporary access token</strong> (or generate a permanent token via <em>Meta Business Settings &gt; System Users</em>) and paste it below.
+              <strong>Temporary Token:</strong> Click &quot;Generate Access Token&quot; on the API Setup page and paste it below (valid 24h).
+            </li>
+            <li>
+              <strong>Permanent Token:</strong> In <a href="https://business.facebook.com/settings/system-users" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold underline">Business Settings &gt; System Users</a>, create a System User and generate a token with <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">whatsapp_business_messaging</code> so it never expires.
             </li>
           </ol>
         </div>
@@ -187,7 +231,7 @@ export default function WhatsAppSettingsModal({
               required
               value={phoneNumberId}
               onChange={(e) => setPhoneNumberId(e.target.value)}
-              placeholder="e.g. 104928374650192"
+              placeholder="e.g. 1354251641111404"
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:bg-white focus:border-blue-500"
             />
             <p className="text-[11px] text-slate-400 mt-1">
@@ -198,7 +242,12 @@ export default function WhatsAppSettingsModal({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block font-semibold text-slate-700">
-                WhatsApp Access Token {config?.hasAccessToken && <span className="text-emerald-600 text-[11px] font-normal">(Already configured on server)</span>}
+                WhatsApp Access Token{' '}
+                {isTokenActive ? (
+                  <span className="text-emerald-600 text-[11px] font-normal">&bull; Active & Valid</span>
+                ) : isTokenExpired ? (
+                  <span className="text-rose-600 text-[11px] font-normal">&bull; Expired</span>
+                ) : null}
               </label>
               {accessToken && (
                 <button
@@ -215,7 +264,7 @@ export default function WhatsAppSettingsModal({
               rows={3}
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
-              placeholder={config?.hasAccessToken ? 'Paste a new token only if you want to replace the existing one...' : 'Paste EAAG... access token here'}
+              placeholder={config?.hasAccessToken ? 'Paste a new EAAG... token to replace the expired one...' : 'Paste EAAG... access token here'}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:bg-white focus:border-blue-500 text-xs"
             />
             <p className="text-[11px] text-slate-400 mt-1">
@@ -231,7 +280,7 @@ export default function WhatsAppSettingsModal({
               type="text"
               value={businessAccountId}
               onChange={(e) => setBusinessAccountId(e.target.value)}
-              placeholder="e.g. 293847562019283"
+              placeholder="e.g. 1389436526700139"
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:bg-white focus:border-blue-500"
             />
           </div>

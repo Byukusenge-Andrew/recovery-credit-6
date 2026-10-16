@@ -728,18 +728,31 @@ export const importDebtorsFromCSV = importClientsDebtorsFromCSV;
 // WHATSAPP MESSAGING LINK GENERATOR
 // ---------------------------------------------------------------------
 
-export function generateWhatsAppLink(debtor: Debtor): string {
-  let phone = debtor.whatsappNumber.replace(/[^0-9+]/g, '');
+export function generateWhatsAppLink(debtorOrPhone: Debtor | string, customMessage?: string): string {
+  let rawPhone = typeof debtorOrPhone === 'string' ? debtorOrPhone : (debtorOrPhone.whatsappNumber || '');
+  let phone = (rawPhone || '').replace(/[^0-9+]/g, '');
+  if (!phone) return '#';
+
   if (!phone.startsWith('+')) {
     if (phone.startsWith('0')) {
-      phone = '+250' + phone.slice(1);
+      if (phone.length === 10 && phone.startsWith('07')) {
+        phone = '+250' + phone.slice(1);
+      } else if (phone.length === 10 && (phone.startsWith('08') || phone.startsWith('06'))) {
+        phone = '+27' + phone.slice(1);
+      } else {
+        phone = '+250' + phone.slice(1);
+      }
     } else {
       phone = '+' + phone;
     }
   }
   const cleanPhone = phone.replace('+', '');
   
-  const msg = `Dear ${debtor.debtorName}, this is an official message from Recovery Credit regarding your ${debtor.clientName} account (${debtor.accountNumber}). The remaining balance due is R ${debtor.outstandingBalance.toFixed(2)}. Please contact your assigned recovery officer to arrange settlement or meeting. Thank you.`;
+  let msg = customMessage;
+  if (!msg && typeof debtorOrPhone !== 'string') {
+    msg = `Dear ${debtorOrPhone.debtorName}, this is an official message from Recovery Credit regarding your ${debtorOrPhone.clientName} account (${debtorOrPhone.accountNumber}). The remaining balance due is R ${debtorOrPhone.outstandingBalance.toFixed(2)}. Please contact your assigned recovery officer to arrange settlement or meeting. Thank you.`;
+  }
   
-  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg || '')}`;
 }
+

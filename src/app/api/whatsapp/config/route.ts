@@ -61,6 +61,9 @@ export async function GET() {
       }
     }
 
+    const isTokenValid = Boolean(userTokenStatus && userTokenStatus.valid);
+    const isCloudApiReady = Boolean(config.phoneNumberId && config.accessToken && isTokenValid);
+
     return NextResponse.json({
       metaAppId: config.metaAppId,
       metaAppSecretMasked: maskSecret(config.metaAppSecret),
@@ -70,7 +73,8 @@ export async function GET() {
       hasPhoneNumberId: Boolean(config.phoneNumberId),
       hasAccessToken: Boolean(config.accessToken),
       businessAccountId: config.businessAccountId,
-      isCloudApiReady: config.isCloudApiReady,
+      isCloudApiReady,
+      isTokenValid,
       metaAppStatus,
       userTokenStatus
     });

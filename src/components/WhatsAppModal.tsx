@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Debtor } from '@/lib/types';
 import { formatCurrency } from '@/lib/constants';
+import { generateWhatsAppLink } from '@/lib/store';
 import { whatsappApi, type WhatsAppConfigData } from '@/services/api';
 
 interface WhatsAppModalProps {
@@ -55,10 +56,16 @@ export default function WhatsAppModal({
     }
   }, [debtor, currentUser]);
 
-  if (!isOpen || !debtor) return null;
+  const collector = debtor?.assignedCollector || currentUser?.fullName || 'Recovery Officer';
+  const balanceStr = debtor ? formatCurrency(debtor.outstandingBalance) : 'R 0.00';
 
-  const collector = debtor.assignedCollector || currentUser?.fullName || 'Recovery Officer';
-  const balanceStr = formatCurrency(debtor.outstandingBalance);
+  // Compute 1-click direct link synchronously so browsers never block it
+  const currentWaLink = useMemo(() => {
+    if (!phone.trim()) return '#';
+    return generateWhatsAppLink(phone.trim(), message.trim());
+  }, [phone, message]);
+
+  if (!isOpen || !debtor) return null;
 
   const applyTemplate = (type: string) => {
     setSelectedTemplate(type);
@@ -89,6 +96,38 @@ export default function WhatsAppModal({
       case 'custom':
         break;
     }
+  };
+
+  const handleLaunchWhatsAppWeb = (e?: React.MouseEvent) => {
+    if (!phone.trim()) {
+      if (e) e.preventDefault();
+      setErrorMsg('Please enter a valid WhatsApp phone number.');
+      return;
+    }
+    if (!message.trim()) {
+      if (e) e.preventDefault();
+      setErrorMsg('Message content cannot be empty.');
+      return;
+    }
+
+    setSuccessMsg('WhatsApp Web opening with pre-filled message... Logging activity.');
+
+    // Asynchronously log debtor timeline activity & audit trail in database
+    whatsappApi.send({
+      debtorId: debtor.id,
+      recipientPhone: phone.trim(),
+      message: message.trim(),
+      mode: 'web',
+      collectorName: currentUser?.fullName || currentUser?.username || collector
+    }).then(() => {
+      if (onSuccess) onSuccess();
+    }).catch((err) => {
+      console.warn('Logging WhatsApp activity:', err);
+    });
+
+    setTimeout(() => {
+      onClose();
+    }, 1500);
   };
 
   const handleSendApi = async () => {
@@ -130,42 +169,8 @@ export default function WhatsAppModal({
     }
   };
 
-  const handleSendWebFallback = async () => {
-    if (!phone.trim()) {
-      setErrorMsg('Please enter a valid WhatsApp phone number.');
-      return;
-    }
-    if (!message.trim()) {
-      setErrorMsg('Message content cannot be empty.');
-      return;
-    }
-
-    setSending(true);
-    setErrorMsg('');
-
-    try {
-      const res = await whatsappApi.send({
-        debtorId: debtor.id,
-        recipientPhone: phone.trim(),
-        message: message.trim(),
-        mode: 'web',
-        collectorName: currentUser?.fullName || currentUser?.username || collector
-      });
-
-      if (res.waLink) {
-        window.open(res.waLink, '_blank', 'noopener,noreferrer');
-        setSuccessMsg('WhatsApp Web launched in a new tab & reminder logged to timeline!');
-        if (onSuccess) onSuccess();
-        setTimeout(() => {
-          onClose();
-        }, 1800);
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error generating WhatsApp Web link.');
-    } finally {
-      setSending(false);
-    }
-  };
+  const isTokenExpiredOrInvalid = config?.userTokenStatus && !config.userTokenStatus.valid;
+  const isCloudReady = Boolean(config?.isCloudApiReady && !isTokenExpiredOrInvalid);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
@@ -173,20 +178,24 @@ export default function WhatsAppModal({
         {/* Header */}
         <div className="flex items-start justify-between pb-3 border-b border-slate-100">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.187-2.59-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.181-.076.355.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.072.376-.044.102-.115.434-.506.549-.68.116-.173.232-.144.39-.086.159.058 1.012.477 1.185.564.173.086.289.13.332.202.043.072.043.419-.101.824z" />
                 </svg>
                 WhatsApp Business
               </span>
-              {config?.isCloudApiReady ? (
+              {isCloudReady ? (
                 <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800">
-                  Meta Cloud API Ready
+                  Meta Cloud API Active
+                </span>
+              ) : isTokenExpiredOrInvalid ? (
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                  Meta Token Expired &bull; 1-Click WhatsApp Web Available
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                  Direct API Setup Pending
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700">
+                  1-Click WhatsApp Web Ready
                 </span>
               )}
             </div>
@@ -233,7 +242,7 @@ export default function WhatsAppModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+250788000000 or +27820000000"
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 font-mono"
             />
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
@@ -312,41 +321,47 @@ export default function WhatsAppModal({
 
         {/* Feedback Alerts */}
         {errorMsg && (
-          <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 space-y-2">
+          <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 space-y-2.5">
             <div className="flex items-start gap-2">
               <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div className="flex-1">
-                <p className="font-bold text-red-900">Meta WhatsApp Delivery Notice</p>
+                <p className="font-bold text-red-900">Meta Delivery Notice</p>
                 <p className="mt-0.5 text-red-800 leading-relaxed">{errorMsg}</p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-red-200/60 pl-6">
-              <button
-                type="button"
-                onClick={handleSendWebFallback}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition flex items-center gap-1.5 shadow-sm"
+              {/* Direct Anchor to WhatsApp Web - 100% immune to popup blockers */}
+              <a
+                href={currentWaLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleLaunchWhatsAppWeb}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.187-2.59-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.181-.076.355.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.072.376-.044.102-.115.434-.506.549-.68.116-.173.232-.144.39-.086.159.058 1.012.477 1.185.564.173.086.289.13.332.202.043.072.043.419-.101.824z" />
                 </svg>
-                <span>Send via WhatsApp Web Instead</span>
-              </button>
-
-              <a
-                href="https://developers.facebook.com/apps/27887479994259125/whatsapp-business/wa-dev-console/"
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 py-1.5 bg-white border border-red-200 hover:bg-red-50 text-red-700 rounded-lg font-medium text-xs transition"
-              >
-                Open Meta "To" Allowed List &rarr;
+                <span>Send via WhatsApp Web Now &rarr;</span>
               </a>
+
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenSettings();
+                  }}
+                  className="px-2.5 py-1.5 bg-white border border-red-200 hover:bg-red-50 text-red-700 rounded-lg font-medium text-xs transition"
+                >
+                  Update Meta Token
+                </button>
+              )}
             </div>
           </div>
         )}
-
 
         {successMsg && (
           <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
@@ -354,21 +369,29 @@ export default function WhatsAppModal({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             <div className="flex-1">
-              <p className="font-semibold">Sent Successfully</p>
+              <p className="font-semibold">Launched Successfully</p>
               <p className="mt-0.5">{successMsg}</p>
             </div>
           </div>
         )}
 
-        {/* Cloud API Setup Notice if not yet fully ready */}
-        {!config?.isCloudApiReady && (
+        {/* Cloud API Setup Notice if expired or not fully ready */}
+        {(!config?.isCloudApiReady || isTokenExpiredOrInvalid) && (
           <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>
-                Meta App ID & Secret are active. To enable <strong>direct background sending</strong> without opening WhatsApp Web, add your WhatsApp Phone Number ID in settings.
+                {isTokenExpiredOrInvalid ? (
+                  <>
+                    Your 24-hour Meta developer token has expired. You can <strong>send immediately via WhatsApp Web</strong> below, or paste a new/permanent token in settings.
+                  </>
+                ) : (
+                  <>
+                    To send directly in the background via Meta Cloud API, configure your WhatsApp Phone Number ID & Token. Otherwise, use 1-Click WhatsApp Web.
+                  </>
+                )}
               </span>
             </div>
             {onOpenSettings && (
@@ -397,41 +420,61 @@ export default function WhatsAppModal({
           </button>
 
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            {/* 1-Click WhatsApp Web Fallback */}
-            <button
-              type="button"
-              disabled={sending}
-              onClick={handleSendWebFallback}
-              className="w-full sm:w-auto px-4 py-2 bg-white border border-emerald-300 text-emerald-700 rounded-xl text-xs font-semibold hover:bg-emerald-50 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+            {/* 1-Click WhatsApp Web Direct Anchor: Immune to popup blockers */}
+            <a
+              href={currentWaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleLaunchWhatsAppWeb}
+              className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm ${
+                isCloudReady
+                  ? 'bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              }`}
               title="Open pre-filled chat in WhatsApp Web or WhatsApp Desktop App"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.187-2.59-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.181-.076.355.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.072.376-.044.102-.115.434-.506.549-.68.116-.173.232-.144.39-.086.159.058 1.012.477 1.185.564.173.086.289.13.332.202.043.072.043.419-.101.824z" />
               </svg>
-              <span>Open in WhatsApp Web</span>
-            </button>
+              <span>{isCloudReady ? 'Open in WhatsApp Web' : 'Send via WhatsApp Web'}</span>
+            </a>
 
             {/* Direct Meta Cloud API Dispatch */}
-            <button
-              type="button"
-              disabled={sending}
-              onClick={handleSendApi}
-              className="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
-            >
-              {sending ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Sending via API...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  <span>Send via Cloud API</span>
-                </>
-              )}
-            </button>
+            {isCloudReady ? (
+              <button
+                type="button"
+                disabled={sending}
+                onClick={handleSendApi}
+                className="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+              >
+                {sending ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Sending via API...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    <span>Send via Cloud API</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={sending}
+                onClick={handleSendApi}
+                className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
+                title="Send via Cloud API (Token must be active)"
+              >
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Send via Cloud API</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

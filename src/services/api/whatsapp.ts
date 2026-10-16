@@ -29,6 +29,7 @@ export interface WhatsAppConfigData {
   hasAccessToken: boolean;
   businessAccountId: string;
   isCloudApiReady: boolean;
+  isTokenValid?: boolean;
   metaAppStatus: {
     connected: boolean;
     appName?: string;
