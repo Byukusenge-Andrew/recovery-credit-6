@@ -378,10 +378,10 @@ export default function AuditPage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-100 font-medium">
                 <tr>
-                  <th className="py-3 px-4 min-w-[140px]">{language === 'rw' ? 'Igihe (Timestamp)' : 'Timestamp'}</th>
-                  <th className="py-3 px-4 min-w-[180px]">{language === 'rw' ? 'Uwabikoze (Actor)' : 'Actor (User)'}</th>
-                  <th className="py-3 px-4 min-w-[150px]">{language === 'rw' ? 'Igikorwa' : 'Action'}</th>
-                  <th className="py-3 px-4 min-w-[180px]">{language === 'rw' ? 'Icyakozweho (Target)' : 'Target'}</th>
+                  <th className="py-3 px-4 min-w-35">{language === 'rw' ? 'Igihe (Timestamp)' : 'Timestamp'}</th>
+                  <th className="py-3 px-4 min-w-45">{language === 'rw' ? 'Uwabikoze (Actor)' : 'Actor (User)'}</th>
+                  <th className="py-3 px-4 min-w-37.5">{language === 'rw' ? 'Igikorwa' : 'Action'}</th>
+                  <th className="py-3 px-4 min-w-45">{language === 'rw' ? 'Icyakozweho (Target)' : 'Target'}</th>
                   <th className="py-3 px-4 min-w-[320px]">{language === 'rw' ? 'Ibisobanuro' : 'Details & Context'}</th>
                 </tr>
               </thead>
