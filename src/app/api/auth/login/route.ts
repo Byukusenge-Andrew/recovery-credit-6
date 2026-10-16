@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { createSessionToken } from '@/lib/auth';
 import type { User } from '@/lib/types';
 
 export async function POST(request: Request) {
@@ -33,6 +34,13 @@ export async function POST(request: Request) {
       createdAt: dbUser.created_at
     };
 
+    // Generate signed HMAC session token
+    const token = createSessionToken({
+      id: user.id,
+      username: user.username,
+      role: user.role
+    });
+
     // Log login audit directly to Neon PostgreSQL
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
     await sql`
@@ -48,12 +56,25 @@ export async function POST(request: Request) {
         'user',
         ${user.id},
         ${`User: ${user.username} (${user.role})`},
-        ${`User ${user.username} signed in successfully via Neon PostgreSQL.`},
+        ${`User @${user.username} authenticated successfully via web portal.`},
         ${ip}
       )
     `;
 
-    return NextResponse.json({ success: true, user });
+    const response = NextResponse.json({ success: true, token, user });
+
+    // Set secure httpOnly cookie (browser cannot read this via JavaScript, preventing XSS leaks)
+    response.cookies.set({
+      name: 'rc6_auth_token',
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    });
+
+    return response;
   } catch (error: any) {
     console.error('API /api/auth/login error:', error);
     const isTimeout = error?.message?.includes('fetch failed') || error?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT';

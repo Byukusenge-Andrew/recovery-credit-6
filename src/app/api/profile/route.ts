@@ -62,7 +62,7 @@ export async function PATCH(request: Request) {
         'user',
         ${user.id},
         ${`User Profile: ${user.username}`},
-        ${`Profile details updated in Neon PostgreSQL.${newPassword ? ' (Password changed)' : ''}`}
+        ${`Profile details updated.${newPassword ? ' (Password changed)' : ''}`}
       )
     `;
 

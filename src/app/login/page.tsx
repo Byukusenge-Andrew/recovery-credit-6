@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { initializeStore, login, isLoggedIn } from '@/lib/store';
+import { initializeStore, getCurrentUser, setAuthUser, setAuthToken } from '@/lib/store';
+import { authApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
@@ -24,11 +25,24 @@ export default function LoginPage() {
 
   useEffect(() => {
     initializeStore();
-    if (isLoggedIn()) {
-      router.push('/dashboard');
-    } else {
+    async function checkExistingAuth() {
+      if (getCurrentUser()) {
+        router.push('/dashboard');
+        return;
+      }
+      try {
+        const res = await authApi.me();
+        if (res.success && res.user) {
+          setAuthUser(res.user);
+          router.push('/dashboard');
+          return;
+        }
+      } catch {
+        // Not authenticated
+      }
       setLoading(false);
     }
+    checkExistingAuth();
   }, [router]);
 
   // Lockout countdown timer
@@ -64,32 +78,17 @@ export default function LoginPage() {
     }
 
     try {
-      // Authenticate directly with Neon PostgreSQL backend
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usernameOrEmail: username, password })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          sessionStorage.setItem('rc6_session', JSON.stringify(data.user));
-          setFailedAttempts(0);
-          router.push('/dashboard');
-          return;
+      const data = await authApi.login({ usernameOrEmail: username, password });
+      if (data.user) {
+        setAuthUser(data.user);
+        if (data.token) {
+          setAuthToken(data.token);
         }
+        setFailedAttempts(0);
+        router.push('/dashboard');
+        return;
       }
-    } catch (err) {
-      console.warn('API login failed, checking fallback:', err);
-    }
-
-    // Fallback verification
-    const user = login(username, password);
-    if (user) {
-      setFailedAttempts(0);
-      router.push('/dashboard');
-    } else {
+    } catch (err: any) {
       const nextFailures = failedAttempts + 1;
       setFailedAttempts(nextFailures);
 
@@ -98,7 +97,7 @@ export default function LoginPage() {
         setLockTimer(60); // 60 seconds lockout
         setError('Security threshold triggered: 5 failed attempts. Login locked for 60 seconds.');
       } else {
-        setError(`Invalid credentials. ${5 - nextFailures} attempt(s) remaining before security lockout.`);
+        setError(err.message || `Invalid credentials. ${5 - nextFailures} attempt(s) remaining before security lockout.`);
       }
     }
   };

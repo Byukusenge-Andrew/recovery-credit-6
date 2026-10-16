@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { resolveDebtorName } from '@/lib/debtorHealer';
 import type { Debtor } from '@/lib/types';
 
 export async function GET(
@@ -18,7 +19,7 @@ export async function GET(
       id: r.id,
       accountNumber: r.account_number,
       customerId: r.customer_id,
-      debtorName: r.debtor_name,
+      debtorName: resolveDebtorName(r.account_number, r.debtor_name, r.client_name, r.id),
       clientName: r.client_name,
       bankName: r.bank_name,
       outstandingAmount: Number(r.outstanding_amount || 0),
@@ -109,7 +110,7 @@ export async function PATCH(
         'debtor',
         ${id},
         ${`${existing.debtor_name} (${existing.client_name})`},
-        ${`Updated debtor in Neon. Category: ${category}, Balance: R ${outstandingBalance.toFixed(2)}.`}
+        ${`Updated debtor record. Category: ${category}, Outstanding Balance: R ${outstandingBalance.toFixed(2)}.`}
       )
     `;
 

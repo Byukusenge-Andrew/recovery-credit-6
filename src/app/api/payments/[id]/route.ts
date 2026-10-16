@@ -109,7 +109,7 @@ export async function DELETE(
         'payment',
         ${id},
         ${`Payment deleted: R ${Number(payment.amount_paid).toFixed(2)}`},
-        ${`Admin deleted payment record from Neon PostgreSQL.`}
+        ${`Payment record deleted by administrator.`}
       )
     `;
 

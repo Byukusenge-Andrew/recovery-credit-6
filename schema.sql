@@ -12,6 +12,20 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 1b. Financial Institutions Table
+CREATE TABLE IF NOT EXISTS financial_institutions (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  code TEXT,
+  institution_type TEXT DEFAULT 'commercial_bank',
+  contact_person TEXT,
+  email TEXT,
+  phone TEXT,
+  address TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 2. Debtors Table
 CREATE TABLE IF NOT EXISTS debtors (
   id TEXT PRIMARY KEY,
@@ -20,6 +34,7 @@ CREATE TABLE IF NOT EXISTS debtors (
   debtor_name TEXT NOT NULL,
   client_name TEXT NOT NULL,
   bank_name TEXT NOT NULL,
+  institution_id TEXT REFERENCES financial_institutions(id) ON DELETE SET NULL,
   outstanding_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
   paid_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
   outstanding_balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
@@ -93,3 +108,11 @@ CREATE INDEX IF NOT EXISTS idx_payments_debtor ON payments(debtor_id);
 CREATE INDEX IF NOT EXISTS idx_activities_debtor ON activities(debtor_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_username);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp DESC);
+
+-- 7. System Settings Table (WhatsApp Cloud API, Meta credentials, and system configs)
+CREATE TABLE IF NOT EXISTS system_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+

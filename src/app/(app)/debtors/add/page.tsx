@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { addDebtor, getCurrentUser } from '@/lib/store';
+import { getCurrentUser } from '@/lib/store';
+import { debtorsApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
 import DebtorFormFields from '@/components/DebtorFormFields';
 import type { User } from '@/lib/types';
@@ -22,16 +23,11 @@ export default function AddDebtorPage() {
 
   const handleSubmit = async (data: any) => {
     try {
-      await fetch('/api/debtors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      await debtorsApi.create(data);
     } catch (err) {
-      console.warn('Neon add debtor error:', err);
+      console.warn('Add debtor error:', err);
     }
 
-    addDebtor(data);
     router.push('/debtors');
   };
 

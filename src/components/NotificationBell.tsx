@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getNotifications, getUnreadNotificationsCount, markNotificationAsRead, markAllNotificationsAsRead, getCurrentUser } from '@/lib/store';
+import { getCurrentUser } from '@/lib/store';
+import { notificationsApi } from '@/services/api';
 import type { Notification } from '@/lib/types';
 
 export default function NotificationBell() {
@@ -14,23 +15,12 @@ export default function NotificationBell() {
   const loadData = async () => {
     const user = getCurrentUser();
     if (user) {
-      // Immediate local state
-      const items = getNotifications(user.username);
-      setNotifications(items);
-      setUnreadCount(getUnreadNotificationsCount(user.username));
-
-      // Live Neon DB query
       try {
-        const res = await fetch(`/api/notifications?username=${encodeURIComponent(user.username)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.notifications && Array.isArray(data.notifications)) {
-            setNotifications(data.notifications);
-            setUnreadCount(data.notifications.filter((n: Notification) => !n.isRead).length);
-          }
-        }
+        const notifs = await notificationsApi.list(user.username);
+        setNotifications(notifs);
+        setUnreadCount(notifs.filter((n: Notification) => !n.isRead).length);
       } catch (err) {
-        console.warn('Neon notifications error:', err);
+        console.warn('Notifications load error:', err);
       }
     }
   };
@@ -57,30 +47,20 @@ export default function NotificationBell() {
     const user = getCurrentUser();
     if (user) {
       try {
-        await fetch('/api/notifications', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username, markAll: true })
-        });
+        await notificationsApi.markAllRead(user.username);
       } catch (err) {
-        console.warn('Neon markAllRead error:', err);
+        console.warn('Notification markAllRead error:', err);
       }
-      markAllNotificationsAsRead(user.username);
       loadData();
     }
   };
 
   const handleItemClick = async (notification: Notification) => {
     try {
-      await fetch('/api/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: notification.id })
-      });
+      await notificationsApi.markRead(notification.id);
     } catch (err) {
-      console.warn('Neon markRead error:', err);
+      console.warn('Notification markRead error:', err);
     }
-    markNotificationAsRead(notification.id);
     loadData();
     setIsOpen(false);
   };

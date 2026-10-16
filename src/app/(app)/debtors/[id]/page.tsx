@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getDebtor, getPayments, getActivities, addPayment, updatePayment, deletePayment, addActivity, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { debtorsApi, paymentsApi, activitiesApi } from '@/services/api';
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
+import WhatsAppModal from '@/components/WhatsAppModal';
+import WhatsAppSettingsModal from '@/components/WhatsAppSettingsModal';
 import type { Debtor, Payment, Activity, User, ActivityType } from '@/lib/types';
 
 export default function DebtorDetailPage() {
@@ -20,6 +23,7 @@ export default function DebtorDetailPage() {
   const [debtor, setDebtor] = useState<Debtor | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Payment form
   const [payAmount, setPayAmount] = useState('');
@@ -32,35 +36,36 @@ export default function DebtorDetailPage() {
   const [actDesc, setActDesc] = useState('');
   const [actDate, setActDate] = useState(new Date().toISOString().split('T')[0]);
 
+  // Timeline Filters (Calendar date and activity type)
+  const [timelineDateFilter, setTimelineDateFilter] = useState('');
+  const [timelineTypeFilter, setTimelineTypeFilter] = useState('all');
+
+  // Admin Payment Edit State & Handlers
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editPayAmount, setEditPayAmount] = useState('');
+  const [editPayDate, setEditPayDate] = useState('');
+  const [editPayNotes, setEditPayNotes] = useState('');
+  const [editPayError, setEditPayError] = useState('');
+
+  // WhatsApp reminder modal & settings states
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [isWhatsAppSettingsOpen, setIsWhatsAppSettingsOpen] = useState(false);
+
   const loadData = async () => {
-    // Immediate fallback
-    const d = getDebtor(id);
-    if (d) {
-      setDebtor(d);
-      setPayments(getPayments(id));
-      setActivities(getActivities(id));
-    }
-
     try {
-      const res = await fetch(`/api/debtors/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.debtor) setDebtor(data.debtor);
-      }
-
-      const pRes = await fetch(`/api/debtors/${id}/payments`);
-      if (pRes.ok) {
-        const pData = await pRes.json();
-        if (pData.payments) setPayments(pData.payments);
-      }
-
-      const aRes = await fetch(`/api/debtors/${id}/activities`);
-      if (aRes.ok) {
-        const aData = await aRes.json();
-        if (aData.activities) setActivities(aData.activities);
-      }
+      setLoading(true);
+      const [d, pList, aList] = await Promise.all([
+        debtorsApi.getById(id),
+        paymentsApi.getByDebtorId(id),
+        activitiesApi.getByDebtorId(id)
+      ]);
+      setDebtor(d);
+      setPayments(pList);
+      setActivities(aList);
     } catch (err) {
-      console.warn('Neon detail load error:', err);
+      console.warn('Debtor detail load error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,19 +74,9 @@ export default function DebtorDetailPage() {
     loadData();
   }, [id]);
 
-  if (!debtor) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-base font-semibold text-slate-700">{t('detail_not_found')}</h2>
-        <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-blue-600 hover:underline">
-          {t('detail_return_list')}
-        </button>
-      </div>
-    );
-  }
-
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!debtor) return;
     setPayError('');
     const amt = Number(payAmount);
     if (!payAmount || isNaN(amt) || amt <= 0) {
@@ -98,42 +93,22 @@ export default function DebtorDetailPage() {
 
     // Persist to Neon DB API
     try {
-      await fetch(`/api/debtors/${id}/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amountPaid: amt,
-          paymentDate: payDate,
-          recordedBy: currentUser?.fullName || 'Collector',
-          role: currentUser?.role || 'collector',
-          notes: payNotes
-        })
+      await paymentsApi.create(id, {
+        amountPaid: amt,
+        paymentDate: payDate,
+        recordedBy: currentUser?.fullName || 'Collector',
+        role: currentUser?.role || 'collector',
+        notes: payNotes
       });
     } catch (err) {
-      console.warn('Neon payment record error:', err);
+      console.warn('Payment record error:', err);
     }
-
-    // Also update local store
-    addPayment({
-      debtorId: id,
-      amountPaid: amt,
-      paymentDate: payDate,
-      recordedBy: currentUser?.fullName || 'Collector',
-      notes: payNotes
-    });
 
     setPayAmount('');
     setPayNotes('');
     setPayError('');
     loadData();
   };
-
-  // Admin Payment Edit State & Handlers
-  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [editPayAmount, setEditPayAmount] = useState('');
-  const [editPayDate, setEditPayDate] = useState('');
-  const [editPayNotes, setEditPayNotes] = useState('');
-  const [editPayError, setEditPayError] = useState('');
 
   const openEditPayment = (p: Payment) => {
     setEditingPayment(p);
@@ -153,30 +128,16 @@ export default function DebtorDetailPage() {
     }
 
     try {
-      const res = await fetch(`/api/payments/${editingPayment.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amountPaid: amt,
-          paymentDate: editPayDate,
-          notes: editPayNotes,
-          adminUsername: currentUser?.username || 'admin'
-        })
+      await paymentsApi.update(editingPayment.id, {
+        amountPaid: amt,
+        paymentDate: editPayDate,
+        notes: editPayNotes,
+        adminUsername: currentUser?.username || 'admin'
       });
-      if (!res.ok) {
-        const data = await res.json();
-        setEditPayError(data.error || 'Failed to update payment in database.');
-        return;
-      }
-    } catch (err) {
-      console.warn('Neon payment update error:', err);
+    } catch (err: any) {
+      setEditPayError(err.message || 'Failed to update payment in database.');
+      return;
     }
-
-    updatePayment(editingPayment.id, {
-      amountPaid: amt,
-      paymentDate: editPayDate,
-      notes: editPayNotes
-    });
 
     setEditingPayment(null);
     loadData();
@@ -185,50 +146,56 @@ export default function DebtorDetailPage() {
   const handleDeletePayment = async (paymentId: string, amount: number) => {
     if (window.confirm(`Are you sure you want to remove this payment of R ${amount.toFixed(2)}? This action is logged in the audit trail.`)) {
       try {
-        await fetch(`/api/payments/${paymentId}`, { method: 'DELETE' });
+        await paymentsApi.delete(paymentId);
       } catch (err) {
-        console.warn('Neon payment delete error:', err);
+        console.warn('Payment delete error:', err);
       }
-      deletePayment(paymentId);
       loadData();
     }
   };
 
   const handleAddActivity = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!actDesc) return;
+    if (!actDesc.trim()) return;
 
     try {
-      await fetch(`/api/debtors/${id}/activities`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          activityType: actType,
-          description: actDesc,
-          scheduledDate: actDate,
-          createdBy: currentUser?.fullName || 'Collector'
-        })
+      await activitiesApi.create(id, {
+        activityType: actType,
+        description: actDesc.trim(),
+        scheduledDate: actDate,
+        createdBy: currentUser?.fullName || currentUser?.username || 'Collector'
       });
+      setActDesc('');
     } catch (err) {
-      console.warn('Neon activity record error:', err);
+      console.warn('Activity record error:', err);
     }
 
-    addActivity({
-      debtorId: id,
-      activityType: actType as Activity['activityType'],
-      description: actDesc,
-      scheduledDate: actDate,
-      createdBy: currentUser?.fullName || 'Collector'
-    });
-
-    setActDesc('');
     loadData();
   };
 
   const handleWhatsApp = () => {
-    const link = generateWhatsAppLink(debtor);
-    window.open(link, '_blank');
+    if (!debtor) return;
+    setIsWhatsAppModalOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!debtor) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-base font-semibold text-slate-700">{t('detail_not_found')}</h2>
+        <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-blue-600 hover:underline">
+          {t('detail_return_list')}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -547,32 +514,147 @@ export default function DebtorDetailPage() {
             </form>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('detail_activity_timeline')}</h3>
-            {activities.length === 0 ? (
-              <p className="text-slate-400 text-xs italic">{t('detail_no_activity')}</p>
-            ) : (
-              <div className="space-y-3">
-                {activities.map((act) => {
-                  const typeInfo = ACTIVITY_TYPES.find((t) => t.value === act.activityType);
-                  return (
-                    <div key={act.id} className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 text-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-slate-800">{typeInfo?.label || act.activityType}</span>
-                        <span className="text-[11px] text-slate-400">
-                          {act.scheduledDate ? new Date(act.scheduledDate).toLocaleDateString() : ''}
-                        </span>
-                      </div>
-                      <p className="text-slate-600">{act.description}</p>
-                      <p className="text-[10px] text-slate-400 mt-1.5">Logged by: {act.createdBy}</p>
-                    </div>
-                  );
-                })}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">{t('detail_activity_timeline')}</h3>
+                <p className="text-[11px] text-slate-400">Interaction history of calls, meetings, notes & reminders</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="date"
+                  value={timelineDateFilter}
+                  onChange={(e) => setTimelineDateFilter(e.target.value)}
+                  className="px-2.5 py-1 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:bg-white focus:border-blue-500"
+                  title="Filter timeline by calendar date"
+                />
+                <select
+                  value={timelineTypeFilter}
+                  onChange={(e) => setTimelineTypeFilter(e.target.value)}
+                  className="px-2.5 py-1 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:bg-white focus:border-blue-500"
+                >
+                  <option value="all">All Types</option>
+                  {ACTIVITY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                {(timelineDateFilter || timelineTypeFilter !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setTimelineDateFilter('');
+                      setTimelineTypeFilter('all');
+                    }}
+                    className="text-[11px] text-blue-600 hover:underline font-medium"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Calendar Filter Badge */}
+            {timelineDateFilter && (
+              <div className="flex items-center justify-between text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100">
+                <span>Filtered on calendar date: <strong>{timelineDateFilter}</strong></span>
+                <button
+                  onClick={() => setTimelineDateFilter('')}
+                  className="text-blue-500 hover:text-blue-800 font-bold ml-2"
+                >
+                  ✕
+                </button>
               </div>
             )}
+
+            {(() => {
+              const filteredActivities = activities.filter((act) => {
+                const actDateStr = act.scheduledDate || (act.createdAt ? act.createdAt.split('T')[0] : '');
+                const matchesDate = !timelineDateFilter || actDateStr === timelineDateFilter;
+                const matchesType = timelineTypeFilter === 'all' || act.activityType === timelineTypeFilter;
+                return matchesDate && matchesType;
+              });
+
+              if (filteredActivities.length === 0) {
+                return (
+                  <p className="text-slate-400 text-xs italic py-4 text-center">
+                    {activities.length === 0
+                      ? t('detail_no_activity')
+                      : 'No activities recorded on the selected calendar date.'}
+                  </p>
+                );
+              }
+
+              return (
+                <div className="space-y-3">
+                  {filteredActivities.map((act) => {
+                    const typeInfo = ACTIVITY_TYPES.find((t) => t.value === act.activityType);
+                    return (
+                      <div key={act.id} className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 text-xs transition">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md font-semibold text-[11px] ${
+                            act.activityType === 'call_made'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                              : act.activityType === 'meeting_scheduled'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                              : act.activityType === 'note'
+                              ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                              : act.activityType === 'payment_recorded'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                          }`}>
+                            {act.activityType === 'call_made' && (
+                              <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                              </svg>
+                            )}
+                            {act.activityType === 'meeting_scheduled' && (
+                              <svg className="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.253 3.75h18M4.5 7.5h15a2.25 2.25 0 012.25 2.25v10.5A2.25 2.25 0 0119.5 22.5h-15A2.25 2.25 0 012.25 20.25V9.75A2.25 2.25 0 014.5 7.5z" />
+                              </svg>
+                            )}
+                            {act.activityType === 'note' && (
+                              <svg className="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                              </svg>
+                            )}
+                            <span>{typeInfo?.label || act.activityType}</span>
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            {act.scheduledDate || (act.createdAt ? new Date(act.createdAt).toLocaleDateString() : '')}
+                          </span>
+                        </div>
+                        <p className="text-slate-700 whitespace-pre-wrap leading-relaxed mt-1">{act.description}</p>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2 pt-1.5 border-t border-slate-100">
+                          <span>Logged by: <strong className="text-slate-700">{act.createdBy}</strong></span>
+                          {act.createdAt && (
+                            <span>{new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Reminder Modal */}
+      <WhatsAppModal
+        isOpen={isWhatsAppModalOpen}
+        debtor={debtor}
+        currentUser={currentUser}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        onSuccess={() => loadData()}
+        onOpenSettings={() => setIsWhatsAppSettingsOpen(true)}
+      />
+
+      {/* WhatsApp Cloud API Settings Modal */}
+      <WhatsAppSettingsModal
+        isOpen={isWhatsAppSettingsOpen}
+        onClose={() => setIsWhatsAppSettingsOpen(false)}
+      />
     </div>
   );
 }
+

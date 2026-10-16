@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getDebtor, updateDebtor, getCurrentUser } from '@/lib/store';
+import { getCurrentUser } from '@/lib/store';
+import { debtorsApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
 import DebtorFormFields from '@/components/DebtorFormFields';
 import type { Debtor } from '@/lib/types';
@@ -16,8 +17,9 @@ export default function EditDebtorPage() {
   const [debtor, setDebtor] = useState<Debtor | null>(null);
 
   useEffect(() => {
-    const d = getDebtor(id);
-    setDebtor(d);
+    debtorsApi.getById(id)
+      .then(d => setDebtor(d))
+      .catch(err => console.warn('Fetch debtor error:', err));
   }, [id]);
 
   if (!debtor) {
@@ -40,21 +42,16 @@ export default function EditDebtorPage() {
     }
 
     try {
-      await fetch(`/api/debtors/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...payload,
-          actorUsername: currentUser?.username || 'admin',
-          actorFullName: currentUser?.fullName || 'User',
-          actorRole: currentUser?.role || 'admin'
-        })
+      await debtorsApi.update(id, {
+        ...payload,
+        actorUsername: currentUser?.username || 'admin',
+        actorFullName: currentUser?.fullName || 'User',
+        actorRole: currentUser?.role || 'admin'
       });
     } catch (err) {
-      console.warn('Neon edit debtor error:', err);
+      console.warn('Edit debtor error:', err);
     }
 
-    updateDebtor(id, payload);
     router.push(`/debtors/${id}`);
   };
 

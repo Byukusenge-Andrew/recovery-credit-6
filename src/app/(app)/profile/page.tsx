@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getCurrentUser, updateUserProfile, getDashboardStats } from '@/lib/store';
+import { profileApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
 import type { User } from '@/lib/types';
 import Link from 'next/link';
@@ -55,18 +56,14 @@ export default function ProfilePage() {
     }
 
     try {
-      await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: currentUser?.id,
-          username: currentUser?.username,
-          fullName: fullName.trim(),
-          email: email.trim() || undefined
-        })
+      await profileApi.update({
+        id: currentUser?.id,
+        username: currentUser?.username,
+        fullName: fullName.trim(),
+        email: email.trim() || undefined
       });
-    } catch (err) {
-      console.warn('Neon profile update error:', err);
+    } catch (err: any) {
+      console.warn('Backend profile update error:', err);
     }
 
     const result = updateUserProfile({
@@ -102,24 +99,16 @@ export default function ProfilePage() {
     }
 
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: currentUser?.id,
-          username: currentUser?.username,
-          currentPassword,
-          newPassword
-        })
+      await profileApi.update({
+        id: currentUser?.id,
+        username: currentUser?.username,
+        currentPassword,
+        newPassword
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setPasswordMsg({ type: 'error', text: data.error || 'Failed to update password.' });
-        return;
-      }
-    } catch (err) {
-      console.warn('Neon password update error:', err);
+    } catch (err: any) {
+      console.warn('Backend password update error:', err);
+      setPasswordMsg({ type: 'error', text: err.message || 'Failed to update password.' });
+      return;
     }
 
     const result = updateUserProfile({ password: newPassword });

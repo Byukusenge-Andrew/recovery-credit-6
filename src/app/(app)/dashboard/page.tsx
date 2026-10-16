@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getDashboardStats, getDebtors, getCurrentUser, exportClientsDebtorsCSV, getNotifications } from '@/lib/store';
+import { getCurrentUser, exportClientsDebtorsCSV } from '@/lib/store';
+import { dashboardApi, debtorsApi, notificationsApi } from '@/services/api';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
@@ -25,53 +26,40 @@ export default function DashboardPage() {
     const user = getCurrentUser();
     setCurrentUser(user);
 
-    // Initial local fallback
-    setStats(getDashboardStats());
-    setRecentDebtors(getDebtors().slice(-8).reverse());
-
     if (user) {
-      setRecentNotifications(getNotifications(user.username).slice(0, 3));
+      dashboardApi.getStats({ role: user.role, username: user.username })
+        .then(s => setStats(s))
+        .catch(err => console.warn('Dashboard stats error:', err));
 
-      // Fetch live data from Neon PostgreSQL Database
-      const roleParam = user.role;
-      const userParam = encodeURIComponent(user.username);
-      
-      fetch(`/api/dashboard/stats?role=${roleParam}&username=${userParam}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.stats) setStats(data.stats);
-        })
-        .catch(err => console.warn('Neon stats fetch error:', err));
+      debtorsApi.list({ role: user.role, username: user.username })
+        .then(list => setRecentDebtors(list.slice(0, 8)))
+        .catch(err => console.warn('Dashboard debtors error:', err));
 
-      fetch(`/api/debtors?role=${roleParam}&username=${userParam}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.debtors) setRecentDebtors(data.debtors.slice(0, 8));
-        })
-        .catch(err => console.warn('Neon debtors fetch error:', err));
-
-      fetch(`/api/notifications?username=${userParam}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.notifications) setRecentNotifications(data.notifications.slice(0, 3));
-        })
-        .catch(err => console.warn('Neon notifications fetch error:', err));
+      notificationsApi.list(user.username)
+        .then(notifs => setRecentNotifications(notifs.slice(0, 3)))
+        .catch(err => console.warn('Dashboard notifications error:', err));
     }
   }, []);
 
-  const handleDownloadAll = () => {
-    const csv = exportClientsDebtorsCSV();
-    if (!csv) {
-      alert('No data available to download.');
-      return;
+  const handleDownloadAll = async () => {
+    try {
+      const user = getCurrentUser();
+      const list = await debtorsApi.list({ role: user?.role, username: user?.username });
+      const csv = exportClientsDebtorsCSV(list.length > 0 ? list : recentDebtors);
+      if (!csv) {
+        alert('No data available to download.');
+        return;
+      }
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `clients_debtors_report_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn('Export fetch error:', err);
     }
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `clients_debtors_report_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
   };
 
   const isCollector = isClientLoaded && currentUser?.role === 'collector';

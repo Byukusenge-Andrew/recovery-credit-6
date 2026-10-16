@@ -15,6 +15,7 @@ export const translations = {
 
     // Navigation
     nav_dashboard: 'Dashboard',
+    nav_institutions: 'Financial Institutions',
     nav_debtors: 'Debtors',
     nav_collectors: 'Collectors',
     nav_upload: 'Upload Data',
@@ -320,6 +321,33 @@ export const translations = {
     legal_security: 'Security Measures',
     legal_signin: 'Sign In',
     legal_back: 'Back to Home',
+
+    // Financial Institutions Specific
+    inst_title: 'Financial Institutions',
+    inst_subtitle: 'Manage institutional client portfolios, recovery performance, and debtor accounts.',
+    inst_debtors_in: 'Debtors in',
+    inst_total_debtors: 'Total Debtors',
+    inst_total_claim: 'Total Claimed',
+    inst_total_paid: 'Total Recovered',
+    inst_balance_due: 'Outstanding Balance',
+    inst_recovery_rate: 'Recovery Rate',
+    inst_assigned_collectors: 'Assigned Collectors',
+    inst_upload_debtors: 'Upload Debtors (CSV)',
+    inst_download_template: 'CSV Template',
+    inst_export_debtors: 'Export Debtors',
+    inst_sort_by: 'Sort By',
+    inst_sort_newest: 'Newest First',
+    inst_sort_oldest: 'Oldest First',
+    inst_sort_balance_high: 'Highest Balance',
+    inst_sort_balance_low: 'Lowest Balance',
+    inst_sort_claim_high: 'Highest Claim',
+    inst_sort_name_asc: 'Debtor Name (A-Z)',
+    inst_edit_details: 'Edit Institution',
+    inst_save_changes: 'Save Changes',
+    inst_back_to_list: 'All Institutions',
+    inst_all_collectors: 'All Assigned Collectors',
+    inst_no_debtors: 'No debtors found for this institution.',
+    inst_no_debtors_hint: 'Upload a CSV spreadsheet or add debtor accounts to begin recovery tracking.',
   },
   rw: {
     // Brand
@@ -333,6 +361,7 @@ export const translations = {
 
     // Navigation
     nav_dashboard: 'Imbonerahamwe',
+    nav_institutions: 'Ibigo by’Imari (Banki)',
     nav_debtors: 'Abafite Imyenda',
     nav_collectors: 'Abishyuza',
     nav_upload: 'Kwinjiza Amakuru',
@@ -638,6 +667,33 @@ export const translations = {
     legal_security: 'Ingamba z’Umutekano',
     legal_signin: 'Injira',
     legal_back: 'Gusubira Ahabanza',
+
+    // Financial Institutions Specific
+    inst_title: 'Ibigo by’Imari (Banki)',
+    inst_subtitle: 'Gucunga amabanki n’ibigo by’imari, umusaruro w’ubwishyu n’abishyuzwa.',
+    inst_debtors_in: 'Abishyuzwa muri',
+    inst_total_debtors: 'Abishyuzwa Bose',
+    inst_total_claim: 'Amafaranga Yose Abazwa',
+    inst_total_paid: 'Ayishyuwe Yose',
+    inst_balance_due: 'Asigaye Kwishyuzwa',
+    inst_recovery_rate: 'Igipimo cy’Ubwishyu',
+    inst_assigned_collectors: 'Abashinzwe Kwishyuza',
+    inst_upload_debtors: 'Kwinjiza Abishyuzwa (CSV)',
+    inst_download_template: 'Inyandiko y’Icyitegererezo',
+    inst_export_debtors: 'Kuramo Urutonde rw’Abishyuzwa',
+    inst_sort_by: 'Uburyo bwo Gutunganya',
+    inst_sort_newest: 'Ibyashyizwemo Vuba',
+    inst_sort_oldest: 'Ibyakera Mbere',
+    inst_sort_balance_high: 'Ibirarane Byinshi Mbere',
+    inst_sort_balance_low: 'Ibirarane Bike Mbere',
+    inst_sort_claim_high: 'Umwenda Munini Mbere',
+    inst_sort_name_asc: 'Amazina y’Uwishyuzwa (A-Z)',
+    inst_edit_details: 'Hindura Amakuru y’Ikigo',
+    inst_save_changes: 'Bika Impinduka',
+    inst_back_to_list: 'Ibigo Byose by’Imari',
+    inst_all_collectors: 'Abishyuza Bose',
+    inst_no_debtors: 'Nta bishyuzwa babonetse muri iki kigo cy’imari.',
+    inst_no_debtors_hint: 'Injiza dosiye ya CSV cyangwa wongereho abishyuzwa kugira ngo utangire gukurikirana.',
   }
 } as const;
 

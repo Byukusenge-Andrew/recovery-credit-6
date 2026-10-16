@@ -4,10 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { searchDebtors, deleteDebtor, exportClientsDebtorsCSV, importClientsDebtorsFromCSV, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { debtorsApi } from '@/services/api';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
+import WhatsAppModal from '@/components/WhatsAppModal';
+import WhatsAppSettingsModal from '@/components/WhatsAppSettingsModal';
 import type { Debtor, Category, ColorFlag, User } from '@/lib/types';
 
 export default function DebtorsPage() {
@@ -22,35 +25,23 @@ export default function DebtorsPage() {
   const [flagFilter, setFlagFilter] = useState<string>(searchParams.get('flag') || '');
   const [clientFilter, setClientFilter] = useState<string>(searchParams.get('client') || '');
   const [uploadResult, setUploadResult] = useState<{ success: number; errors: string[] } | null>(null);
+  const [selectedDebtorForWhatsApp, setSelectedDebtorForWhatsApp] = useState<Debtor | null>(null);
+  const [isWhatsAppSettingsOpen, setIsWhatsAppSettingsOpen] = useState(false);
 
   const loadDebtors = useCallback(async () => {
     const user = getCurrentUser();
-    // Default immediate view
-    const cat = categoryFilter ? (categoryFilter as Category) : undefined;
-    const flag = flagFilter ? (flagFilter as ColorFlag) : undefined;
-    setDebtors(searchDebtors(search, cat, flag, clientFilter));
-
-    // Live query from Neon PostgreSQL Database
     try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (categoryFilter) params.set('category', categoryFilter);
-      if (flagFilter) params.set('flag', flagFilter);
-      if (clientFilter) params.set('client', clientFilter);
-      if (user) {
-        params.set('role', user.role);
-        params.set('username', user.username);
-      }
-
-      const res = await fetch(`/api/debtors?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.debtors && Array.isArray(data.debtors)) {
-          setDebtors(data.debtors);
-        }
-      }
+      const data = await debtorsApi.list({
+        search,
+        category: categoryFilter,
+        flag: flagFilter,
+        client: clientFilter,
+        role: user?.role,
+        username: user?.username
+      });
+      setDebtors(data);
     } catch (err) {
-      console.warn('Neon debtors fetch error:', err);
+      console.warn('Debtors list fetch error:', err);
     }
   }, [search, categoryFilter, flagFilter, clientFilter]);
 
@@ -63,17 +54,16 @@ export default function DebtorsPage() {
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete debtor record for: "${name}"?`)) {
       try {
-        await fetch(`/api/debtors/${id}`, { method: 'DELETE' });
+        await debtorsApi.delete(id);
       } catch (err) {
-        console.warn('Neon delete error:', err);
+        console.warn('Delete debtor error:', err);
       }
-      deleteDebtor(id);
       loadDebtors();
     }
   };
 
   const handleDownloadClientsDebtors = () => {
-    const csv = exportClientsDebtorsCSV();
+    const csv = exportClientsDebtorsCSV(debtors);
     if (!csv) {
       alert('No data available to download.');
       return;
@@ -103,10 +93,23 @@ export default function DebtorsPage() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string;
       if (content) {
         const res = importClientsDebtorsFromCSV(content);
+
+        if (res.parsedDebtors && res.parsedDebtors.length > 0) {
+          try {
+            await debtorsApi.bulkUpload({
+              debtors: res.parsedDebtors,
+              actorUsername: currentUser?.username,
+              actorFullName: currentUser?.fullName
+            });
+          } catch (err) {
+            console.warn('Bulk debtors sync error:', err);
+          }
+        }
+
         setUploadResult({ success: res.successCount, errors: res.errors });
         loadDebtors();
       }
@@ -118,8 +121,7 @@ export default function DebtorsPage() {
   };
 
   const handleWhatsApp = (debtor: Debtor) => {
-    const link = generateWhatsAppLink(debtor);
-    window.open(link, '_blank');
+    setSelectedDebtorForWhatsApp(debtor);
   };
 
   const isCollector = currentUser?.role === 'collector';
@@ -180,6 +182,17 @@ export default function DebtorsPage() {
                 title="Download CSV Template"
               >
                 CSV Template
+              </button>
+
+              <button
+                onClick={() => setIsWhatsAppSettingsOpen(true)}
+                className="px-3 py-2 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
+                title="Configure Meta WhatsApp Cloud API credentials"
+              >
+                <svg className="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.187-2.59-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.181-.076.355.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.072.376-.044.102-.115.434-.506.549-.68.116-.173.232-.144.39-.086.159.058 1.012.477 1.185.564.173.086.289.13.332.202.043.072.043.419-.101.824z" />
+                </svg>
+                <span>WhatsApp API</span>
               </button>
 
               <Link
@@ -394,6 +407,23 @@ export default function DebtorsPage() {
           </table>
         </div>
       </div>
+
+      {/* WhatsApp Reminder Modal */}
+      <WhatsAppModal
+        isOpen={Boolean(selectedDebtorForWhatsApp)}
+        debtor={selectedDebtorForWhatsApp}
+        currentUser={currentUser}
+        onClose={() => setSelectedDebtorForWhatsApp(null)}
+        onSuccess={() => loadDebtors()}
+        onOpenSettings={() => setIsWhatsAppSettingsOpen(true)}
+      />
+
+      {/* WhatsApp Cloud API Settings Modal */}
+      <WhatsAppSettingsModal
+        isOpen={isWhatsAppSettingsOpen}
+        onClose={() => setIsWhatsAppSettingsOpen(false)}
+      />
     </div>
   );
 }
+

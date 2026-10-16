@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         'user',
         ${id},
         ${`Collector: ${cleanUsername} (${fullName})`},
-        ${`Created new collector account '${cleanUsername}' in Neon PostgreSQL.`}
+        ${`Collector account created successfully for @${cleanUsername} with collector privileges.`}
       )
     `;
 

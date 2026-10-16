@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Debtor, Category, ColorFlag, User } from '@/lib/types';
 import { CATEGORIES, COLOR_FLAGS } from '@/lib/constants';
-import { getCollectors, getCurrentUser } from '@/lib/store';
+import { getCurrentUser } from '@/lib/store';
+import { collectorsApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
 
 export interface DebtorFormData {
@@ -29,11 +30,14 @@ interface Props {
 
 export default function DebtorFormFields({ debtor, onSubmit, isEdit = false }: Props) {
   const { t } = useLanguage();
-  const collectors = getCollectors();
+  const [collectors, setCollectors] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     setCurrentUser(getCurrentUser());
+    collectorsApi.list()
+      .then(list => setCollectors(list))
+      .catch(err => console.warn('Fetch collectors error:', err));
   }, []);
 
   const isCollector = currentUser?.role === 'collector';

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { resolveDebtorName } from '@/lib/debtorHealer';
 import type { Debtor } from '@/lib/types';
 
 export async function GET(request: Request) {
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
       id: r.id,
       accountNumber: r.account_number,
       customerId: r.customer_id,
-      debtorName: r.debtor_name,
+      debtorName: resolveDebtorName(r.account_number, r.debtor_name, r.client_name, r.id),
       clientName: r.client_name,
       bankName: r.bank_name || r.client_name,
       outstandingAmount: Number(r.outstanding_amount || 0),
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
 
     await sql`
       INSERT INTO debtors (
-        id, account_number, customer_id, debtor_name, client_name, bank_name,
+        id, account_number, customer_id, debtor_name, client_name, bank_name, institution_id,
         outstanding_amount, paid_amount, outstanding_balance, date_of_payment,
         whatsapp_number, category, color_flag, assigned_collector, notes, created_by,
         created_at, updated_at
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
         ${data.debtorName || data.clientName || ''},
         ${data.clientName || ''},
         ${data.bankName || data.clientName || ''},
+        ${data.institutionId || null},
         ${outstandingAmount},
         ${paidAmount},
         ${outstandingBalance},
@@ -132,7 +134,7 @@ export async function POST(request: Request) {
         'debtor',
         ${id},
         ${`${data.debtorName || ''} (${data.clientName || ''} - ${data.accountNumber || ''})`},
-        ${`Created debtor in Neon PostgreSQL. Claim: R ${outstandingAmount.toFixed(2)}, Collector: ${data.assignedCollector || 'None'}.`}
+        ${`Created debtor record. Claim: R ${outstandingAmount.toFixed(2)}, Assigned: @${data.assignedCollector || 'Unassigned'}.`}
       )
     `;
 
