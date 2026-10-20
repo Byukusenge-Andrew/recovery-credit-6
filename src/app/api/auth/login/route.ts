@@ -71,16 +71,17 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      maxAge: 24 * 60 * 60 // 24 hours
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/auth/login error:', error);
-    const isTimeout = error?.message?.includes('fetch failed') || error?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT';
+    const err = error as { message?: string; cause?: { code?: string } };
+    const isTimeout = err?.message?.includes('fetch failed') || err?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT';
     const msg = isTimeout
       ? 'Database connection timed out. Please verify your internet connection and try again.'
-      : (error.message || 'Internal server error');
+      : (err?.message || 'Internal server error');
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

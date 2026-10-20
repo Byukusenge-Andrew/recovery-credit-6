@@ -433,7 +433,7 @@ export default function AuditPage() {
 
                       {/* 4. Target */}
                       <td className="py-3.5 px-4 align-top">
-                        <div className="text-slate-800 font-medium text-xs break-words" title={log.targetDescription}>
+                        <div className="text-slate-800 font-medium text-xs wrap-break-word" title={log.targetDescription}>
                           <span className="px-2 py-0.5 rounded-md bg-slate-100/90 text-slate-700 text-[11px] border border-slate-200/80 inline-block font-mono">
                             {cleanTarget}
                           </span>

@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
+const emptySubscribe = () => () => {};
+
 export default function LandingPage() {
   const { t, setLang } = useLanguage();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   useEffect(() => {
-    setMounted(true);
     const stored = localStorage.getItem('rc6_language');
     if (!stored) {
       setLang('rw');
@@ -69,7 +70,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 md:py-28 px-6 bg-gradient-to-b from-blue-50/40 via-slate-50/30 to-white">
+      <section className="py-20 md:py-28 px-6 bg-linear-to-b from-blue-50/40 via-slate-50/30 to-white">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/70 text-blue-700 text-xs font-medium shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
@@ -260,7 +261,7 @@ export default function LandingPage() {
 
       {/* Bank Portfolios & Call to Action Banner */}
       <section id="portfolios" className="py-16 px-6 bg-white border-t border-slate-100">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8 md:p-12 shadow-md">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-linear-to-br from-slate-900 to-slate-800 text-white p-8 md:p-12 shadow-md">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="space-y-3 max-w-xl">
               <div className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-semibold">
