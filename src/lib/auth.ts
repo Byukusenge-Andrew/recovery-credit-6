@@ -34,7 +34,7 @@ function base64UrlDecode(str: string): string {
  */
 export function createSessionToken(
   user: { id: string; username: string; role: 'admin' | 'collector' },
-  durationMs: number = 7 * 24 * 60 * 60 * 1000
+  durationMs: number =  24 * 60 * 60 * 1000
 ): string {
   const payload: TokenPayload = {
     id: user.id,
