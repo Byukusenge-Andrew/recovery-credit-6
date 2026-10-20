@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 import { LanguageProvider } from '@/components/LanguageContext';
+import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({
   children,
@@ -45,6 +46,7 @@ export default function RootLayout({
         <LanguageProvider>
           {children}
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );

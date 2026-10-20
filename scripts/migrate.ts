@@ -51,12 +51,12 @@ async function main() {
   }
 
   // Check tables
-  const tables = await pool.query(`
+  const tables = await pool.query<{ table_name: string }>(`
     SELECT table_name 
     FROM information_schema.tables 
     WHERE table_schema = 'public'
   `);
-  console.log('Initialized tables in PostgreSQL:', tables.rows.map((t: any) => t.table_name));
+  console.log('Initialized tables in PostgreSQL:', tables.rows.map(t => t.table_name));
 
   await pool.end();
 }
