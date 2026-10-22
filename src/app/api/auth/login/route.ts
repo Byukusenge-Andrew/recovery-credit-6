@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
     const input = usernameOrEmail.trim().toLowerCase();
     const rows = await sql`
-      SELECT id, username, password, role, full_name, email, is_email_verified, created_at
+      SELECT id, username, password, role, full_name, email, is_email_verified, must_change_password, created_at
       FROM users
       WHERE LOWER(username) = ${input} OR LOWER(email) = ${input}
       LIMIT 1
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       fullName: dbUser.full_name,
       email: dbUser.email,
       isEmailVerified: dbUser.is_email_verified,
+      mustChangePassword: Boolean(dbUser.must_change_password),
       createdAt: dbUser.created_at
     };
 
@@ -38,7 +39,8 @@ export async function POST(request: Request) {
     const token = createSessionToken({
       id: user.id,
       username: user.username,
-      role: user.role
+      role: user.role,
+      mustChangePassword: user.mustChangePassword
     });
 
     // Log login audit directly to Neon PostgreSQL

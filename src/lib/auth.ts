@@ -9,6 +9,7 @@ export interface TokenPayload {
   id: string;
   username: string;
   role: 'admin' | 'collector';
+  mustChangePassword?: boolean;
   exp: number; // unix timestamp in ms
 }
 
@@ -33,13 +34,14 @@ function base64UrlDecode(str: string): string {
  * Default validity: 7 days.
  */
 export function createSessionToken(
-  user: { id: string; username: string; role: 'admin' | 'collector' },
+  user: { id: string; username: string; role: 'admin' | 'collector'; mustChangePassword?: boolean },
   durationMs: number =  24 * 60 * 60 * 1000
 ): string {
   const payload: TokenPayload = {
     id: user.id,
     username: user.username,
     role: user.role,
+    mustChangePassword: user.mustChangePassword,
     exp: Date.now() + durationMs
   };
 

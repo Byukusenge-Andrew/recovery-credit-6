@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
     // 3. Query user fresh from Neon PostgreSQL
     const rows = await sql`
-      SELECT id, username, role, full_name, email, is_email_verified, created_at
+      SELECT id, username, role, full_name, email, is_email_verified, must_change_password, created_at
       FROM users
       WHERE id = ${payload.id}
       LIMIT 1
@@ -56,6 +56,7 @@ export async function GET(request: Request) {
       fullName: dbUser.full_name,
       email: dbUser.email,
       isEmailVerified: dbUser.is_email_verified,
+      mustChangePassword: Boolean(dbUser.must_change_password),
       createdAt: dbUser.created_at
     };
 

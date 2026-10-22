@@ -6,6 +6,7 @@ export interface User {
   fullName: string;
   role: 'admin' | 'collector';
   isEmailVerified?: boolean;
+  mustChangePassword?: boolean;
   createdAt: string;
 }
 

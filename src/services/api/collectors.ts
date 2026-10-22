@@ -16,9 +16,9 @@ export const collectorsApi = {
     username: string;
     fullName: string;
     email: string;
-    password: string;
-  }): Promise<{ success: boolean; id: string }> => {
-    return apiClient.post<{ success: boolean; id: string }>('/collectors', data);
+    password?: string;
+  }): Promise<{ success: boolean; id: string; tempPassword?: string; emailSent?: boolean; emailError?: string }> => {
+    return apiClient.post('/collectors', data);
   },
 
   getPerformanceMetrics: async (): Promise<{

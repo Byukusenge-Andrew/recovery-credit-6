@@ -16,6 +16,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       // 1. If user is already loaded in memory, render immediately
       const existingUser = getCurrentUser();
       if (existingUser) {
+        if (existingUser.mustChangePassword) {
+          router.push('/change-password');
+          return;
+        }
         if (isMounted) setIsChecking(false);
         return;
       }
@@ -25,6 +29,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const res = await authApi.me();
         if (res.success && res.user) {
           setAuthUser(res.user);
+          if (res.user.mustChangePassword) {
+            router.push('/change-password');
+            return;
+          }
           if (isMounted) setIsChecking(false);
           return;
         }

@@ -63,6 +63,16 @@ export default function CollectorsPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [submittingAdd, setSubmittingAdd] = useState(false);
+  const [createdNotice, setCreatedNotice] = useState<{
+    username: string;
+    fullName: string;
+    email: string;
+    tempPassword?: string;
+    emailSent?: boolean;
+    emailError?: string | null;
+  } | null>(null);
+  const [copiedOtp, setCopiedOtp] = useState(false);
 
   const loadMetrics = useCallback(async () => {
     try {
@@ -232,8 +242,8 @@ export default function CollectorsPage() {
     e.preventDefault();
     setError('');
 
-    if (!username.trim() || !fullName.trim() || !email.trim() || !password.trim()) {
-      setError('Please fill in all required fields.');
+    if (!username.trim() || !fullName.trim() || !email.trim()) {
+      setError('Please provide full name, official email, and username.');
       return;
     }
 
@@ -243,36 +253,49 @@ export default function CollectorsPage() {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please re-enter the password confirmation.');
-      return;
+    if (password.trim()) {
+      if (password !== confirmPassword) {
+        setError('Passwords do not match. Please re-enter the password confirmation.');
+        return;
+      }
+      if (password.length < 5) {
+        setError('Password must be at least 5 characters long.');
+        return;
+      }
     }
 
-    if (password.length < 5) {
-      setError('Password must be at least 5 characters long.');
-      return;
-    }
+    setSubmittingAdd(true);
 
     try {
-      await collectorsApi.create({
+      const res = await collectorsApi.create({
         username: username.trim().toLowerCase(),
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
-        password: password.trim()
+        password: password.trim() || undefined
       });
+
+      setCreatedNotice({
+        username: username.trim().toLowerCase(),
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        tempPassword: res.tempPassword,
+        emailSent: res.emailSent,
+        emailError: res.emailError || null
+      });
+
+      setUsername('');
+      setFullName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setShowAddForm(false);
+      loadCollectorsRoster();
+      loadMetrics();
     } catch (err: any) {
       setError(err.message || 'Error communicating with database.');
-      return;
+    } finally {
+      setSubmittingAdd(false);
     }
-
-    setUsername('');
-    setFullName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setShowAddForm(false);
-    loadCollectorsRoster();
-    loadMetrics();
   };
 
   const setDatePreset = (preset: 'today' | 'yesterday' | 'all') => {
@@ -1262,26 +1285,32 @@ export default function CollectorsPage() {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_pass')}</label>
+                    <label className="block font-medium text-slate-700 mb-1">
+                      Temporary Password <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
                     <input
                       type="password"
-                      required
-                      placeholder="••••••••"
+                      placeholder="Leave blank for auto-OTP"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
                     />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      If blank, an OTP is generated and emailed to collector.
+                    </p>
                   </div>
 
                   <div>
-                    <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_confirm_pass')}</label>
+                    <label className="block font-medium text-slate-700 mb-1">
+                      Confirm Password <span className="text-slate-400 font-normal">(If set manually)</span>
+                    </label>
                     <input
                       type="password"
-                      required
-                      placeholder="••••••••"
+                      disabled={!password.trim()}
+                      placeholder={password.trim() ? "••••••••" : "Not required for auto-OTP"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -1295,16 +1324,25 @@ export default function CollectorsPage() {
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
+                    disabled={submittingAdd}
                     onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50"
+                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition"
+                    disabled={submittingAdd}
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg font-semibold shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
                   >
-                    {t('coll_btn_create')}
+                    {submittingAdd ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Creating & Sending Email...</span>
+                      </>
+                    ) : (
+                      <span>Create Collector Account</span>
+                    )}
                   </button>
                 </div>
               </form>
@@ -1478,6 +1516,145 @@ export default function CollectorsPage() {
                 className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: COLLECTOR CREATION & OTP CONFIRMATION */}
+      {/* ========================================================================= */}
+      {createdNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Collector Account Created</h3>
+                  <p className="text-xs text-slate-500">Officer credential & OTP details</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setCreatedNotice(null);
+                  setCopiedOtp(false);
+                }}
+                className="text-slate-400 hover:text-slate-600 font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Officer Details */}
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200/70 space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Full Name:</span>
+                <span className="font-semibold text-slate-800">{createdNotice.fullName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Username:</span>
+                <span className="font-mono text-slate-800">@{createdNotice.username}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Email Address:</span>
+                <span className="font-medium text-slate-800">{createdNotice.email}</span>
+              </div>
+            </div>
+
+            {/* Email Dispatch Status */}
+            <div>
+              {createdNotice.emailSent ? (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs flex items-start gap-2.5">
+                  <svg className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold">Welcome Email Dispatched via Resend</p>
+                    <p className="text-[11px] text-emerald-700 mt-0.5">
+                      The collector has received their temporary login credentials and password upgrade link at <span className="underline">{createdNotice.email}</span>.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs flex items-start gap-2.5">
+                  <svg className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold">Email Delivery Notice</p>
+                    <p className="text-[11px] text-amber-700 mt-0.5">
+                      {createdNotice.emailError || 'Resend sandbox mode limits external delivery. You can share the temporary OTP directly below.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Temporary OTP Display Card */}
+            {createdNotice.tempPassword && (
+              <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-blue-900 uppercase tracking-wider">
+                    One-Time Password (OTP)
+                  </span>
+                  <span className="text-[10px] text-blue-600 bg-blue-100/80 px-2 py-0.5 rounded font-medium">
+                    Must be changed on first login
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3 bg-white px-3 py-2 rounded-lg border border-blue-200 font-mono text-sm font-bold text-slate-900">
+                  <span className="select-all tracking-wider">{createdNotice.tempPassword}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (createdNotice.tempPassword) {
+                        navigator.clipboard.writeText(createdNotice.tempPassword);
+                        setCopiedOtp(true);
+                        setTimeout(() => setCopiedOtp(false), 2000);
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition shadow-xs"
+                  >
+                    {copiedOtp ? (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                        </svg>
+                        <span>Copy OTP</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Upon logging in with this OTP, the officer will be automatically routed to a mandatory password change screen before being granted access to client files.
+                </p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setCreatedNotice(null);
+                  setCopiedOtp(false);
+                }}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition shadow-xs"
+              >
+                Done
               </button>
             </div>
           </div>

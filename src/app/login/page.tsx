@@ -28,7 +28,12 @@ export default function LoginPage() {
   useEffect(() => {
     initializeStore();
     async function checkExistingAuth() {
-      if (getCurrentUser()) {
+      const existing = getCurrentUser();
+      if (existing) {
+        if (existing.mustChangePassword) {
+          router.push('/change-password');
+          return;
+        }
         router.push('/dashboard');
         return;
       }
@@ -36,6 +41,10 @@ export default function LoginPage() {
         const res = await authApi.me();
         if (res.success && res.user) {
           setAuthUser(res.user);
+          if (res.user.mustChangePassword) {
+            router.push('/change-password');
+            return;
+          }
           router.push('/dashboard');
           return;
         }
@@ -91,6 +100,10 @@ export default function LoginPage() {
           setAuthToken(data.token);
         }
         setFailedAttempts(0);
+        if (data.user.mustChangePassword) {
+          router.push('/change-password');
+          return;
+        }
         router.push('/dashboard');
         return;
       }

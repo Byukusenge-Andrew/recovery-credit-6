@@ -23,5 +23,13 @@ export const authApi = {
 
   logout: async (): Promise<{ success: boolean }> => {
     return apiClient.post<{ success: boolean }>('/auth/logout');
+  },
+
+  changePassword: async (data: {
+    currentPassword?: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<{ success: boolean; message?: string; user: User; token?: string }> => {
+    return apiClient.post('/auth/change-password', data);
   }
 };
