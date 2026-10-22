@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -76,8 +76,8 @@ export default function LoginPage() {
       return;
     }
 
-    if (!acceptedTerms) {
-      setError('You must confirm authorization and accept the Terms of Service & Privacy Policy.');
+    if (!username.trim() || !password) {
+      setError('Please enter your username and password.');
       return;
     }
 
@@ -110,50 +110,38 @@ export default function LoginPage() {
     }
   };
 
-  const handleFillDemo = () => {
-    setUsername('admin');
-    setPassword('admin123');
-    setAcceptedTerms(true);
-    setError('');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-7 h-7 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-7 h-7 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-slate-50/70 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900 relative">
-      {/* Subtle architectural background grid - quiet, enterprise, no neon/gradient slop */}
+      {/* Subtle architecture dot grid */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.35]" 
+        className="absolute inset-0 pointer-events-none opacity-[0.3]" 
         style={{
           backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)',
           backgroundSize: '24px 24px'
         }} 
       />
 
-      {/* Top Navigation Bar */}
-      <header className="relative z-10 w-full border-b border-slate-200/70 bg-white/80 backdrop-blur-sm">
+      {/* Top Header Bar */}
+      <header className="relative z-10 w-full border-b border-slate-200/70 bg-white/70 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 transition opacity-90 hover:opacity-100">
+          <Link href="/" className="flex items-center gap-2.5 transition hover:opacity-90">
             <Logo size={28} variant="icon" className="shrink-0" />
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 text-sm tracking-tight">{t('app_name')}</span>
-              <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
-                Security Gateway
-              </span>
-            </div>
+            <span className="font-bold text-slate-900 text-sm tracking-tight">{t('app_name')}</span>
           </Link>
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             <Link
               href="/"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition"
             >
               <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -164,22 +152,18 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* Main Authentication Section */}
+      {/* Main Authentication Card */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
-        <div className="w-full max-w-[410px]">
-          {/* Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_0_rgba(15,23,42,0.06),0_12px_24px_-8px_rgba(15,23,42,0.04)] p-6 sm:p-8 space-y-5">
+        <div className="w-full max-w-[400px]">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_0_rgba(15,23,42,0.06),0_12px_24px_-8px_rgba(15,23,42,0.04)] p-7 sm:p-8 space-y-6">
             {/* Header info */}
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 mb-2.5">
-                <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <span>Authorized Access Only</span>
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-1">
+                <Logo size={42} variant="icon" className="shrink-0" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">{t('login_card_title')}</h1>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                {t('login_card_desc')}
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Sign In</h1>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                Enter your credentials to access your recovery workspace
               </p>
             </div>
 
@@ -202,7 +186,7 @@ export default function LoginPage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-xs font-medium focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition disabled:opacity-50"
-                    placeholder="e.g. admin or collector"
+                    placeholder="Username or official email"
                     autoComplete="username"
                     required
                   />
@@ -211,18 +195,9 @@ export default function LoginPage() {
 
               {/* Password Input */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block font-medium text-slate-700">
-                    {t('login_lbl_pass')}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleFillDemo}
-                    className="text-[11px] text-blue-600 hover:text-blue-700 font-medium transition"
-                  >
-                    Auto-fill Demo
-                  </button>
-                </div>
+                <label className="block font-medium text-slate-700 mb-1.5">
+                  {t('login_lbl_pass')}
+                </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,7 +210,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-9 pr-10 py-2.5 bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-xs font-medium focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition disabled:opacity-50 font-sans"
-                    placeholder="Enter password"
+                    placeholder="Password"
                     autoComplete="current-password"
                     required
                   />
@@ -260,27 +235,16 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Compliance / Terms Checkbox */}
-              <div className="pt-1">
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              {/* Remember Me Option */}
+              <div className="flex items-center justify-between pt-0.5">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20 shrink-0 cursor-pointer"
-                    required
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20 cursor-pointer"
                   />
-                  <span className="text-[11px] text-slate-600 leading-snug">
-                    {t('login_terms_certify')}{' '}
-                    <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-700 underline font-medium">
-                      {t('login_terms')}
-                    </Link>{' '}
-                    {t('login_terms_and')}{' '}
-                    <Link href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-700 underline font-medium">
-                      {t('login_privacy')}
-                    </Link>
-                    {t('login_terms_logged')}
-                  </span>
+                  <span className="text-[11px] text-slate-600 font-medium">Remember this device</span>
                 </label>
               </div>
 
@@ -314,23 +278,35 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <span>{t('login_btn_submit')}</span>
+                    <span>Sign In</span>
                     <svg className="w-3.5 h-3.5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </>
                 )}
               </button>
+
+              {/* Standard Enterprise Legal Notice */}
+              <p className="text-[11px] text-slate-500 text-center leading-relaxed pt-1">
+                By signing in, you agree to our{' '}
+                <Link href="/terms" className="text-blue-600 hover:text-blue-700 underline font-medium">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-blue-600 hover:text-blue-700 underline font-medium">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
             </form>
 
-            {/* Security Badge and Demo Hint */}
-            <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-              <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {t('login_ssl_badge')}
-              </span>
-              <span className="font-mono text-slate-500">
-                {t('login_demo_hint')}
+            {/* Security Badge */}
+            <div className="pt-3.5 border-t border-slate-100 flex items-center justify-center text-[11px] text-slate-500">
+              <span className="flex items-center gap-1.5 font-medium">
+                <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <span>256-Bit SSL Encrypted &bull; Monitored Access</span>
               </span>
             </div>
           </div>
