@@ -224,7 +224,7 @@ export default function WhatsAppSettingsModal({
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           <div>
             <label className="block font-semibold text-slate-700 mb-1">
-              WhatsApp Phone Number ID <span className="text-rose-500">*</span>
+              WhatsApp Phone Number ID <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -246,7 +246,7 @@ export default function WhatsAppSettingsModal({
                 {isTokenActive ? (
                   <span className="text-emerald-600 text-[11px] font-normal">&bull; Active & Valid</span>
                 ) : isTokenExpired ? (
-                  <span className="text-rose-600 text-[11px] font-normal">&bull; Expired</span>
+                  <span className="text-red-600 text-[11px] font-normal">&bull; Expired</span>
                 ) : null}
               </label>
               {accessToken && (

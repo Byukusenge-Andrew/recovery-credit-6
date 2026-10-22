@@ -274,7 +274,7 @@ export default function InstitutionDetailPage({
   if (error || !institution) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center">
-        <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl border border-red-100 flex items-center justify-center mx-auto mb-4">
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
           </svg>
@@ -588,7 +588,7 @@ export default function InstitutionDetailPage({
             <span>{currentUser?.role === 'collector' ? 'My Remaining Balance' : t('inst_balance_due')}</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">{metrics?.recoveryRate || 0}%</span>
           </div>
-          <div className="text-2xl font-black text-rose-600 mt-2">
+          <div className="text-2xl font-black text-red-600 mt-2">
             {formatCurrency(metrics?.totalBalance || 0)}
           </div>
           <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
@@ -804,7 +804,7 @@ export default function InstitutionDetailPage({
                       {formatCurrency(debtor.paidAmount)}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-bold text-rose-600">
+                    <td className="py-3.5 px-4 text-right font-bold text-red-600">
                       {formatCurrency(debtor.outstandingBalance)}
                     </td>
 

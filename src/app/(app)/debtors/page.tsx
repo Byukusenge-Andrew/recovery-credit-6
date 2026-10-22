@@ -377,7 +377,7 @@ export default function DebtorsPage() {
                       {currentUser?.role === 'admin' && (
                         <button
                           onClick={() => handleDelete(debtor.id, debtor.debtorName)}
-                          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
                           title="Delete Record"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

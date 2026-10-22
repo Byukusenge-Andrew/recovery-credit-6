@@ -272,7 +272,7 @@ export default function WhatsAppModal({
               onClick={() => applyTemplate('urgent')}
               className={`px-2.5 py-1.5 rounded-lg border text-left font-medium transition ${
                 selectedTemplate === 'urgent'
-                  ? 'bg-rose-50 border-rose-300 text-rose-700'
+                  ? 'bg-red-50 border-red-300 text-red-700'
                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >

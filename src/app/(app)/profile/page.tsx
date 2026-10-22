@@ -208,7 +208,7 @@ export default function ProfilePage() {
               className={`p-3 rounded-xl text-xs font-medium border ${
                 profileMsg.type === 'success'
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-rose-50 text-rose-800 border-rose-200'
+                  : 'bg-red-50 text-red-800 border-red-200'
               }`}
             >
               {profileMsg.text}
@@ -276,7 +276,7 @@ export default function ProfilePage() {
               className={`p-3 rounded-xl text-xs font-medium border ${
                 passwordMsg.type === 'success'
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-rose-50 text-rose-800 border-rose-200'
+                  : 'bg-red-50 text-red-800 border-red-200'
               }`}
             >
               {passwordMsg.text}

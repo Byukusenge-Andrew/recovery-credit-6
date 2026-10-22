@@ -6,7 +6,7 @@ export const CATEGORIES: { value: Category; id: Category; label: string; color: 
   { value: 'promise_to_pay', id: 'promise_to_pay', label: 'Promise to Pay', color: '#d97706', bgLight: '#fffbeb' },
   { value: 'schedule_meeting', id: 'schedule_meeting', label: 'Schedule Meeting', color: '#ea580c', bgLight: '#fff7ed' },
   { value: 'waiver_letter', id: 'waiver_letter', label: 'Waiver Letter', color: '#9333ea', bgLight: '#faf5ff' },
-  { value: 'disputed', id: 'disputed', label: 'Disputed', color: '#e11d48', bgLight: '#fff1f2' },
+  { value: 'disputed', id: 'disputed', label: 'Disputed', color: '#dc2626', bgLight: '#fef2f2' },
   { value: 'negotiation', id: 'negotiation', label: 'Negotiation', color: '#0d9488', bgLight: '#f0fdfa' },
   { value: 'skip_tracing', id: 'skip_tracing', label: 'Skip Tracing', color: '#475569', bgLight: '#f8fafc' },
 ];

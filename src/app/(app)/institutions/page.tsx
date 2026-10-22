@@ -307,7 +307,7 @@ export default function InstitutionsPage() {
                     </div>
                     <div>
                       <p className="text-[10px] text-slate-400 font-medium">Outstanding Bal</p>
-                      <p className="font-bold text-rose-600 text-[11px]">{formatCurrency(m.totalBalance)}</p>
+                      <p className="font-bold text-red-600 text-[11px]">{formatCurrency(m.totalBalance)}</p>
                     </div>
                   </div>
                 </div>
@@ -345,7 +345,7 @@ export default function InstitutionsPage() {
             </div>
 
             {formError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
                 {formError}
               </div>
             )}

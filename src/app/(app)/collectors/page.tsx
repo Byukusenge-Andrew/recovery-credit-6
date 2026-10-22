@@ -393,14 +393,14 @@ export default function CollectorsPage() {
             <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-slate-500">Remaining Balance Due</p>
-                <p className="text-2xl font-black text-rose-600 mt-1">
+                <p className="text-2xl font-black text-red-600 mt-1">
                   {formatCurrency(dashboardSummary?.totalRemainingBalance || 0)}
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Across {dashboardSummary?.totalAssignedDebtors || 0} assigned debtor files
                 </p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -605,7 +605,7 @@ export default function CollectorsPage() {
                           key={col.id}
                           className={`hover:bg-slate-50/80 transition-colors ${
                             isZeroInteraction && col.assignedDebtorsCount > 0
-                              ? 'bg-rose-50/30'
+                              ? 'bg-red-50/30'
                               : hasHighUncontacted && col.uncontactedCount >= 3
                               ? 'bg-amber-50/20'
                               : ''
@@ -634,7 +634,7 @@ export default function CollectorsPage() {
 
                           {/* Remaining Balance Due */}
                           <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                            <p className="font-bold text-rose-600 text-xs">
+                            <p className="font-bold text-red-600 text-xs">
                               {formatCurrency(col.remainingBalance)}
                             </p>
                             <p className="text-[10px] text-slate-400">
@@ -668,7 +668,7 @@ export default function CollectorsPage() {
                           {/* Total Interactions */}
                           <td className="py-3.5 px-4 text-center whitespace-nowrap">
                             <div className="flex flex-col items-center">
-                              <span className={`font-black text-xs ${isZeroInteraction ? 'text-rose-600' : 'text-blue-600'}`}>
+                              <span className={`font-black text-xs ${isZeroInteraction ? 'text-red-600' : 'text-blue-600'}`}>
                                 {col.totalInteractions}
                               </span>
                               <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
@@ -719,7 +719,7 @@ export default function CollectorsPage() {
                               </span>
                             )}
                             {col.activityStatus === 'inactive' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
                                 0 Interactions
                               </span>
                             )}
@@ -1287,7 +1287,7 @@ export default function CollectorsPage() {
                 </div>
 
                 {error && (
-                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-medium">
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 font-medium">
                     {error}
                   </div>
                 )}
@@ -1445,7 +1445,7 @@ export default function CollectorsPage() {
                         <td className="py-2.5 px-3 text-slate-700">
                           {debtor.bankName || debtor.clientName}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-rose-600">
+                        <td className="py-2.5 px-3 text-right font-bold text-red-600">
                           {formatCurrency(debtor.outstandingBalance)}
                         </td>
                         <td className="py-2.5 px-3 text-center">
@@ -1471,7 +1471,7 @@ export default function CollectorsPage() {
 
             <div className="pt-2 flex items-center justify-between border-t border-slate-100 text-xs">
               <span className="text-slate-500">
-                Total Uncontacted Exposure: <strong className="text-rose-600">{formatCurrency(uncontactedDebtors.reduce((acc, d) => acc + d.outstandingBalance, 0))}</strong>
+                Total Uncontacted Exposure: <strong className="text-red-600">{formatCurrency(uncontactedDebtors.reduce((acc, d) => acc + d.outstandingBalance, 0))}</strong>
               </span>
               <button
                 onClick={() => setSelectedCollectorUncontacted(null)}

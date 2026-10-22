@@ -26,7 +26,7 @@ export default function EditDebtorPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-base font-semibold text-slate-700">{t('detail_not_found')}</h2>
-        <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-rose-600 hover:underline">
+        <button onClick={() => router.push('/debtors')} className="mt-3 text-xs text-blue-600 hover:underline">
           {t('detail_return_list')}
         </button>
       </div>

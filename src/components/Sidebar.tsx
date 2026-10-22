@@ -206,7 +206,7 @@ export default function Sidebar({ expanded = false, onExpand, onCollapse }: Side
       <button
         onClick={handleLogout}
         title={t('nav_signout')}
-        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors text-xs font-medium ${
+        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors text-xs font-medium ${
           isExpanded ? 'w-full justify-start' : 'w-10 h-10 justify-center mx-auto'
         }`}
       >

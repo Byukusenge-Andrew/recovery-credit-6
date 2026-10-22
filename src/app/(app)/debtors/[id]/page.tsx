@@ -368,7 +368,7 @@ export default function DebtorDetailPage() {
                             <span className="text-slate-300">•</span>
                             <button
                               onClick={() => handleDeletePayment(p.id, p.amountPaid)}
-                              className="text-[10px] text-rose-600 hover:text-rose-800 font-medium px-1.5 py-0.5 rounded hover:bg-rose-50 transition"
+                              className="text-[10px] text-red-600 hover:text-red-800 font-medium px-1.5 py-0.5 rounded hover:bg-red-50 transition"
                               title="Delete this payment (Admin only)"
                             >
                               Delete
@@ -404,7 +404,7 @@ export default function DebtorDetailPage() {
               </div>
 
               {editPayError && (
-                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs">
+                <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
                   {editPayError}
                 </div>
               )}

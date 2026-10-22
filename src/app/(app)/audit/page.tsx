@@ -66,7 +66,7 @@ export default function AuditPage() {
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'delete_debtor':
       case 'delete_payment':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
+        return 'bg-red-50 text-red-700 border-red-200';
       case 'update_debtor':
       case 'update_user':
         return 'bg-amber-50 text-amber-700 border-amber-200';
@@ -184,7 +184,7 @@ export default function AuditPage() {
       case 'delete_payment': {
         return {
           tag: isRw ? 'Gusiba Ubwishyu' : 'Payment Reversal',
-          tagColor: 'bg-rose-50 text-rose-700 border-rose-200',
+          tagColor: 'bg-red-50 text-red-700 border-red-200',
           primaryText: isRw
             ? `Inyandiko y'ubwishyu yasibwe n'umuyobozi, umwenda urongerwa.`
             : `Payment transaction removed by administrator; balance readjusted.`
