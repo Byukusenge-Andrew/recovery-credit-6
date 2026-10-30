@@ -1,24 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { searchDebtors, deleteDebtor, exportClientsDebtorsCSV, importClientsDebtorsFromCSV, generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { exportClientsDebtorsCSV, importClientsDebtorsFromCSV, getCurrentUser } from '@/lib/store';
 import { debtorsApi } from '@/services/api';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
+import { TranslationKey } from '@/lib/i18n';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
 import WhatsAppModal from '@/components/WhatsAppModal';
 import WhatsAppSettingsModal from '@/components/WhatsAppSettingsModal';
-import type { Debtor, Category, ColorFlag, User } from '@/lib/types';
+import type { Debtor } from '@/lib/types';
+
+const emptySubscribe = () => () => {};
 
 export default function DebtorsPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
   const [debtors, setDebtors] = useState<Debtor[]>([]);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get('category') || '');
@@ -46,10 +49,27 @@ export default function DebtorsPage() {
   }, [search, categoryFilter, flagFilter, clientFilter]);
 
   useEffect(() => {
-    const u = getCurrentUser();
-    setCurrentUser(u);
-    loadDebtors();
-  }, [loadDebtors]);
+    let isCancelled = false;
+    const user = getCurrentUser();
+    debtorsApi.list({
+      search,
+      category: categoryFilter,
+      flag: flagFilter,
+      client: clientFilter,
+      role: user?.role,
+      username: user?.username
+    })
+      .then((data) => {
+        if (!isCancelled) setDebtors(data);
+      })
+      .catch((err) => {
+        console.warn('Debtors list fetch error:', err);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [search, categoryFilter, flagFilter, clientFilter]);
 
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete debtor record for: "${name}"?`)) {
@@ -265,7 +285,7 @@ export default function DebtorsPage() {
               <option value="">{t('debtors_all_categories')}</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {t(`cat_${cat.value}` as any) || cat.label}
+                  {t(`cat_${cat.value}` as TranslationKey) || cat.label}
                 </option>
               ))}
             </select>
@@ -281,7 +301,7 @@ export default function DebtorsPage() {
               <option value="">{t('debtors_all_flags')}</option>
               {COLOR_FLAGS.filter((f) => f.value !== 'none').map((flag) => (
                 <option key={flag.value} value={flag.value}>
-                  {t(`flag_${flag.value}` as any) || `${flag.label} Flag`}
+                  {t(`flag_${flag.value}` as TranslationKey) || `${flag.label} Flag`}
                 </option>
               ))}
             </select>
@@ -317,7 +337,7 @@ export default function DebtorsPage() {
                   </td>
                   <td className="py-3 px-4 font-semibold text-slate-900">
                     <Link href={`/debtors/${debtor.id}`} className="hover:text-blue-600 transition">
-                      {debtor.debtorName || (debtor as any).clientName}
+                      {debtor.debtorName || debtor.clientName}
                     </Link>
                   </td>
                   <td className="py-3 px-4 font-mono text-[11px] text-slate-500">

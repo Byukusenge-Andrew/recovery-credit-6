@@ -1,27 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/store';
 import { debtorsApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
-import DebtorFormFields from '@/components/DebtorFormFields';
-import type { User } from '@/lib/types';
+import DebtorFormFields, { DebtorFormData } from '@/components/DebtorFormFields';
+
+const emptySubscribe = () => () => {};
 
 export default function AddDebtorPage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isClientLoaded, setIsClientLoaded] = useState(false);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
 
-  useEffect(() => {
-    setIsClientLoaded(true);
-    const u = getCurrentUser();
-    setCurrentUser(u);
-  }, []);
-
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: DebtorFormData) => {
     try {
       await debtorsApi.create(data);
     } catch (err) {

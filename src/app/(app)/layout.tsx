@@ -9,8 +9,9 @@ import { useLanguage } from '@/components/LanguageContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/store';
-import { useState, useEffect } from 'react';
-import type { User } from '@/lib/types';
+import { useState, useSyncExternalStore } from 'react';
+
+const emptySubscribe = () => () => {};
 
 export default function AppLayout({
   children,
@@ -31,12 +32,9 @@ function AppLayoutContent({
 }) {
   const router = useRouter();
   const { t } = useLanguage();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-  }, []);
 
   const username = currentUser?.username ?? 'Admin';
   const isAdmin = currentUser?.role === 'admin';

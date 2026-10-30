@@ -1,17 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { generateWhatsAppLink, getCurrentUser } from '@/lib/store';
+import { getCurrentUser } from '@/lib/store';
 import { debtorsApi, paymentsApi, activitiesApi } from '@/services/api';
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
+import { TranslationKey } from '@/lib/i18n';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
 import WhatsAppModal from '@/components/WhatsAppModal';
 import WhatsAppSettingsModal from '@/components/WhatsAppSettingsModal';
-import type { Debtor, Payment, Activity, User, ActivityType } from '@/lib/types';
+import type { Debtor, Payment, Activity, ActivityType } from '@/lib/types';
+
+const emptySubscribe = () => () => {};
 
 export default function DebtorDetailPage() {
   const params = useParams();
@@ -19,7 +22,8 @@ export default function DebtorDetailPage() {
   const { t } = useLanguage();
   const id = params.id as string;
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
   const [debtor, setDebtor] = useState<Debtor | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -51,28 +55,28 @@ export default function DebtorDetailPage() {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [isWhatsAppSettingsOpen, setIsWhatsAppSettingsOpen] = useState(false);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [d, pList, aList] = await Promise.all([
-        debtorsApi.getById(id),
-        paymentsApi.getByDebtorId(id),
-        activitiesApi.getByDebtorId(id)
-      ]);
-      setDebtor(d);
-      setPayments(pList);
-      setActivities(aList);
-    } catch (err) {
-      console.warn('Debtor detail load error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadData = useCallback(() => {
+    Promise.all([
+      debtorsApi.getById(id),
+      paymentsApi.getByDebtorId(id),
+      activitiesApi.getByDebtorId(id)
+    ])
+      .then(([d, pList, aList]) => {
+        setDebtor(d);
+        setPayments(pList);
+        setActivities(aList);
+      })
+      .catch(err => {
+        console.warn('Debtor detail load error:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [id]);
 
   useEffect(() => {
-    setCurrentUser(getCurrentUser());
     loadData();
-  }, [id]);
+  }, [loadData]);
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,8 +138,8 @@ export default function DebtorDetailPage() {
         notes: editPayNotes,
         adminUsername: currentUser?.username || 'admin'
       });
-    } catch (err: any) {
-      setEditPayError(err.message || 'Failed to update payment in database.');
+    } catch (err: unknown) {
+      setEditPayError(err instanceof Error ? err.message : 'Failed to update payment in database.');
       return;
     }
 
@@ -212,7 +216,7 @@ export default function DebtorDetailPage() {
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
-            {debtor.debtorName || (debtor as any).clientName}
+            {debtor.debtorName || debtor.clientName}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">{t('detail_account_label')} {debtor.accountNumber} • {t('detail_customer_id')} {debtor.customerId || '—'}</p>
         </div>
@@ -238,7 +242,7 @@ export default function DebtorDetailPage() {
             <CategoryBadge category={debtor.category} />
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <FlagDot flag={debtor.colorFlag} />
-              <span className="capitalize">{t(`flag_${debtor.colorFlag}` as any) || `${debtor.colorFlag} Flag Priority`}</span>
+              <span className="capitalize">{t(`flag_${debtor.colorFlag}` as TranslationKey) || `${debtor.colorFlag} Flag Priority`}</span>
             </div>
           </div>
           <div className="text-right">

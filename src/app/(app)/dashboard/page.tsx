@@ -1,31 +1,32 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { TranslationKey } from '@/lib/i18n';
 import { getCurrentUser, exportClientsDebtorsCSV } from '@/lib/store';
 import { dashboardApi, debtorsApi, notificationsApi } from '@/services/api';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
-import type { Debtor, User, Notification } from '@/lib/types';
+import type { Debtor, Notification } from '@/lib/types';
 import type { DashboardStats } from '@/lib/store';
+
+const emptySubscribe = () => () => {};
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { t, lang } = useLanguage();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { t } = useLanguage();
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentDebtors, setRecentDebtors] = useState<Debtor[]>([]);
   const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
-  const [isClientLoaded, setIsClientLoaded] = useState(false);
 
   useEffect(() => {
-    setIsClientLoaded(true);
     const user = getCurrentUser();
-    setCurrentUser(user);
-
     if (user) {
       dashboardApi.getStats({ role: user.role, username: user.username })
         .then(s => setStats(s))
@@ -179,7 +180,7 @@ export default function DashboardPage() {
                 <span className="font-semibold text-slate-700">{formatCurrency(stats.totalOutstanding)}</span> {t('dash_total_claim_exposure')}
               </p>
             </div>
-            <div className="sm:text-right shrink-0 bg-slate-50/70 rounded-xl p-3 border border-slate-100 sm:min-w-[180px]">
+            <div className="sm:text-right shrink-0 bg-slate-50/70 rounded-xl p-3 border border-slate-100 sm:min-w-45">
               <span className="text-[11px] font-medium text-slate-400 block">{t('dash_remaining_due_balance')}</span>
               <p className="text-base font-bold text-slate-900 mt-0.5">{formatCurrency(stats.totalBalance)}</p>
               <span className="text-[10px] text-blue-600 font-medium">{100 - recoveryRate}% {t('dash_remaining')}</span>
@@ -289,7 +290,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {CATEGORIES.map((cat) => {
               const count = stats?.categoryCounts?.[cat.value] || 0;
-              const catTranslated = t(`cat_${cat.value}` as any) || cat.label;
+              const catTranslated = t(`cat_${cat.value}` as TranslationKey) || cat.label;
               return (
                 <div
                   key={cat.value}
@@ -317,7 +318,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {COLOR_FLAGS.filter((f) => f.value !== 'none').map((flag) => {
               const count = stats?.flagCounts?.[flag.value] || 0;
-              const flagTranslated = t(`flag_${flag.value}` as any) || `${flag.label} Flag`;
+              const flagTranslated = t(`flag_${flag.value}` as TranslationKey) || `${flag.label} Flag`;
               return (
                 <div
                   key={flag.value}
@@ -374,7 +375,7 @@ export default function DashboardPage() {
                     <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px]">{debtor.clientName}</span>
                   </td>
                   <td className="py-3">
-                    <p className="font-semibold text-slate-900">{debtor.debtorName || (debtor as any).clientName}</p>
+                    <p className="font-semibold text-slate-900">{debtor.debtorName || debtor.clientName}</p>
                     <p className="text-[11px] text-slate-400 font-mono mt-0.5">{debtor.accountNumber}</p>
                   </td>
                   {!isCollector && (

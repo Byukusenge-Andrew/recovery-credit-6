@@ -1,20 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { getCurrentUser, updateUserProfile, getDashboardStats } from '@/lib/store';
 import { profileApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
-import type { User } from '@/lib/types';
 import Link from 'next/link';
+import type { User } from '@/lib/types';
+
+const emptySubscribe = () => () => {};
 
 export default function ProfilePage() {
   const { t } = useLanguage();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isClientLoaded, setIsClientLoaded] = useState(false);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [currentUserState, setCurrentUser] = useState<User | null>(null);
+  const currentUser = currentUserState ?? (isClientLoaded ? getCurrentUser() : null);
 
   // Profile details state
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState(() => getCurrentUser()?.fullName || '');
+  const [email, setEmail] = useState(() => getCurrentUser()?.email || '');
   const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Password state
@@ -24,19 +27,7 @@ export default function ProfilePage() {
   const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Quick stats
-  const [assignedCount, setAssignedCount] = useState(0);
-
-  useEffect(() => {
-    setIsClientLoaded(true);
-    const user = getCurrentUser();
-    setCurrentUser(user);
-    if (user) {
-      setFullName(user.fullName || '');
-      setEmail(user.email || '');
-      const stats = getDashboardStats();
-      setAssignedCount(stats.totalDebtors);
-    }
-  }, []);
+  const assignedCount = isClientLoaded ? getDashboardStats().totalDebtors : 0;
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +53,7 @@ export default function ProfilePage() {
         fullName: fullName.trim(),
         email: email.trim() || undefined
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Backend profile update error:', err);
     }
 
@@ -105,9 +96,10 @@ export default function ProfilePage() {
         currentPassword,
         newPassword
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Backend password update error:', err);
-      setPasswordMsg({ type: 'error', text: err.message || 'Failed to update password.' });
+      const e = err as { message?: string };
+      setPasswordMsg({ type: 'error', text: e.message || 'Failed to update password.' });
       return;
     }
 

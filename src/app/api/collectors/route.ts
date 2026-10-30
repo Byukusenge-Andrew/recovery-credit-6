@@ -11,27 +11,45 @@ export async function GET() {
       FROM users
       ORDER BY created_at DESC
     `;
-    const users: User[] = rows.map((r: any) => ({
-      id: r.id,
-      username: r.username,
+    const users: User[] = rows.map((r: Record<string, unknown>) => ({
+      id: String(r.id),
+      username: String(r.username),
       password: '',
-      role: r.role,
-      fullName: r.full_name,
-      email: r.email,
-      isEmailVerified: r.is_email_verified,
+      role: r.role as 'admin' | 'collector',
+      fullName: String(r.full_name || ''),
+      email: String(r.email || ''),
+      isEmailVerified: Boolean(r.is_email_verified),
       mustChangePassword: Boolean(r.must_change_password),
-      createdAt: r.created_at
+      createdAt: String(r.created_at)
     }));
     return NextResponse.json({ users });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/collectors GET error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const err = error as { message?: string };
+    return NextResponse.json({ error: err?.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+let globalOtpSequence = 0;
+
+/**
+ * Generates a temporary one-time password for new accounts.
+ */
+async function generateUniqueOneTimePassword(): Promise<string> {
+  while (true) {
+    const randHex = crypto.randomBytes(5).toString('hex').toUpperCase(); // 10 chars
+    const seq = (globalOtpSequence++ % 1000).toString().padStart(3, '0');
+    const candidate = `RC-${randHex.slice(0, 4)}-${randHex.slice(4, 8)}-${randHex.slice(8, 10)}${seq}`;
+    const existing = await sql`SELECT id FROM users WHERE password = ${candidate} LIMIT 1`;
+    if (existing.length === 0) {
+      return candidate;
+    }
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const { username, fullName, email, password } = await request.json();
+    const { username, fullName, email } = await request.json();
 
     if (!username || !email) {
       return NextResponse.json({ error: 'Username and email are required' }, { status: 400 });
@@ -40,10 +58,8 @@ export async function POST(request: Request) {
     const cleanUsername = username.trim().toLowerCase();
     const cleanEmail = email.trim().toLowerCase();
 
-    // Generate secure One-Time Password if not provided or format clean temporary OTP
-    const otpPassword = password && password.trim().length >= 6
-      ? password.trim()
-      : 'RC-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    // Automatically generate a unique, non-colliding One-Time Password
+    const otpPassword = await generateUniqueOneTimePassword();
 
     const existing = await sql`
       SELECT id FROM users 
@@ -129,8 +145,9 @@ export async function POST(request: Request) {
       emailSent: emailResult.success,
       emailError: emailResult.error || null
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/collectors POST error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const err = error as { message?: string };
+    return NextResponse.json({ error: err?.message || 'Internal server error' }, { status: 500 });
   }
 }

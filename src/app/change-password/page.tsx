@@ -9,8 +9,8 @@ import Logo from '@/components/Logo';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUserState] = useState(getCurrentUser());
-  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUserState] = useState(() => getCurrentUser());
+  const [loading, setLoading] = useState(() => !getCurrentUser());
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -28,13 +28,9 @@ export default function ChangePasswordPage() {
     async function verifyAuth() {
       const user = getCurrentUser();
       if (user) {
-        setCurrentUserState(user);
-        // If they already don't need to change password, redirect to dashboard
         if (user.mustChangePassword === false) {
           router.push('/dashboard');
-          return;
         }
-        setLoading(false);
         return;
       }
 
@@ -108,8 +104,8 @@ export default function ChangePasswordPage() {
       } else {
         setError(res.message || 'Failed to update password.');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while updating your password.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred while updating your password.');
     } finally {
       setSubmitting(false);
     }
@@ -170,7 +166,7 @@ export default function ChangePasswordPage() {
 
       {/* Card Form */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
-        <div className="w-full max-w-[440px]">
+        <div className="w-full max-w-110">
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_0_rgba(15,23,42,0.06),0_12px_24px_-8px_rgba(15,23,42,0.04)] p-7 sm:p-8 space-y-6">
             
             {/* Header info */}

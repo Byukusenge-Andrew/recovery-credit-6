@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, exportCollectorsCSV, parseCollectorsCSV } from '@/lib/store';
@@ -16,12 +16,16 @@ import type {
   Debtor 
 } from '@/lib/types';
 
+const emptySubscribe = () => () => {};
+
 export default function CollectorsPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'activities' | 'roster'>('dashboard');
 
   // Dashboard & Metrics State
@@ -60,8 +64,6 @@ export default function CollectorsPage() {
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [submittingAdd, setSubmittingAdd] = useState(false);
   const [createdNotice, setCreatedNotice] = useState<{
@@ -74,55 +76,57 @@ export default function CollectorsPage() {
   } | null>(null);
   const [copiedOtp, setCopiedOtp] = useState(false);
 
-  const loadMetrics = useCallback(async () => {
-    try {
-      setLoadingMetrics(true);
-      const res = await collectorsApi.getPerformanceMetrics();
-      setCollectorsMetrics(res.collectors || []);
-      setDashboardSummary(res.summary || null);
-    } catch (err) {
-      console.warn('Failed to load collector performance metrics:', err);
-    } finally {
-      setLoadingMetrics(false);
-    }
+  const loadMetrics = useCallback(() => {
+    collectorsApi.getPerformanceMetrics()
+      .then(res => {
+        setCollectorsMetrics(res.collectors || []);
+        setDashboardSummary(res.summary || null);
+      })
+      .catch(err => {
+        console.warn('Failed to load collector performance metrics:', err);
+      })
+      .finally(() => {
+        setLoadingMetrics(false);
+      });
   }, []);
 
-  const loadCollectorsRoster = useCallback(async () => {
-    try {
-      const list = await collectorsApi.list();
-      setCollectorsList(list);
-    } catch (err) {
-      console.warn('Collectors roster fetch error:', err);
-    }
+  const loadCollectorsRoster = useCallback(() => {
+    collectorsApi.list()
+      .then(list => {
+        setCollectorsList(list);
+      })
+      .catch(err => {
+        console.warn('Collectors roster fetch error:', err);
+      });
   }, []);
 
-  const loadActivities = useCallback(async () => {
-    try {
-      setLoadingActivities(true);
-      const res = await activitiesApi.getCollectorActivities({
-        collector: selectedCollector,
-        date: selectedDate,
-        activityType: selectedType,
-        search: searchQuery
+  const loadActivities = useCallback(() => {
+    activitiesApi.getCollectorActivities({
+      collector: selectedCollector,
+      date: selectedDate,
+      activityType: selectedType,
+      search: searchQuery
+    })
+      .then(res => {
+        setActivityLogs(res.activities || []);
+        setActivitySummary(res.summary || {
+          totalActivities: 0,
+          callsMade: 0,
+          meetingsScheduled: 0,
+          notesLogged: 0,
+          debtorsReached: 0
+        });
+      })
+      .catch(err => {
+        console.warn('Failed to load collector activities:', err);
+      })
+      .finally(() => {
+        setLoadingActivities(false);
       });
-      setActivityLogs(res.activities || []);
-      setActivitySummary(res.summary || {
-        totalActivities: 0,
-        callsMade: 0,
-        meetingsScheduled: 0,
-        notesLogged: 0,
-        debtorsReached: 0
-      });
-    } catch (err) {
-      console.warn('Failed to load collector activities:', err);
-    } finally {
-      setLoadingActivities(false);
-    }
   }, [selectedCollector, selectedDate, selectedType, searchQuery]);
 
   useEffect(() => {
     const user = getCurrentUser();
-    setCurrentUser(user);
     if (!user || user.role !== 'admin') {
       router.push('/dashboard');
       return;
@@ -165,7 +169,7 @@ export default function CollectorsPage() {
   };
 
   const handleDownloadTemplate = () => {
-    const template = 'username,fullName,email,password\n"alex_collector","Alex Smith","alex@recoverycredit.internal","collector123"\n"sarah_collector","Sarah Ndlovu","sarah@recoverycredit.internal","collector123"';
+    const template = 'username,fullName,email\n"alex_collector","Alex Smith","alex@recoverycredit.internal"\n"sarah_collector","Sarah Ndlovu","sarah@recoverycredit.internal"';
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -220,14 +224,20 @@ export default function CollectorsPage() {
       const content = event.target?.result as string;
       if (content) {
         const parsed = parseCollectorsCSV(content);
+        let createdCount = 0;
+        const uploadErrors = [...parsed.errors];
+
         for (const col of parsed.parsedCollectors) {
           try {
             await collectorsApi.create(col);
-          } catch (err) {
+            createdCount++;
+          } catch (err: unknown) {
+            const e = err as { message?: string };
             console.warn('Upload collector error:', err);
+            uploadErrors.push(`@${col.username}: ${e?.message || 'Failed to create collector'}`);
           }
         }
-        setUploadResult({ success: parsed.successCount, errors: parsed.errors });
+        setUploadResult({ success: createdCount, errors: uploadErrors });
         loadCollectorsRoster();
         loadMetrics();
       }
@@ -253,25 +263,13 @@ export default function CollectorsPage() {
       return;
     }
 
-    if (password.trim()) {
-      if (password !== confirmPassword) {
-        setError('Passwords do not match. Please re-enter the password confirmation.');
-        return;
-      }
-      if (password.length < 5) {
-        setError('Password must be at least 5 characters long.');
-        return;
-      }
-    }
-
     setSubmittingAdd(true);
 
     try {
       const res = await collectorsApi.create({
         username: username.trim().toLowerCase(),
         fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        password: password.trim() || undefined
+        email: email.trim().toLowerCase()
       });
 
       setCreatedNotice({
@@ -286,13 +284,12 @@ export default function CollectorsPage() {
       setUsername('');
       setFullName('');
       setEmail('');
-      setPassword('');
-      setConfirmPassword('');
       setShowAddForm(false);
       loadCollectorsRoster();
       loadMetrics();
-    } catch (err: any) {
-      setError(err.message || 'Error communicating with database.');
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e?.message || 'Error communicating with database.');
     } finally {
       setSubmittingAdd(false);
     }
@@ -544,7 +541,7 @@ export default function CollectorsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'needs_attention' | 'inactive' | 'active' | 'top_performer')}
                 className="px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
               >
                 <option value="all">All Collectors ({collectorsMetrics.length})</option>
@@ -556,7 +553,7 @@ export default function CollectorsPage() {
 
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'balance_desc' | 'uncontacted_desc' | 'interactions_asc' | 'interactions_desc' | 'rate_desc')}
                 className="px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
               >
                 <option value="balance_desc">Sort: Highest Remaining Balance</option>
@@ -676,7 +673,7 @@ export default function CollectorsPage() {
                           </td>
 
                           {/* Recovery Progress Bar */}
-                          <td className="py-3.5 px-4 text-center whitespace-nowrap min-w-[120px]">
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap min-w-30">
                             <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                               <div
                                 className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
@@ -1247,7 +1244,7 @@ export default function CollectorsPage() {
               </div>
 
               <form onSubmit={handleAddCollector} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-medium text-slate-700 mb-1">{t('coll_lbl_fullname')}</label>
                     <input
@@ -1283,35 +1280,18 @@ export default function CollectorsPage() {
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block font-medium text-slate-700 mb-1">
-                      Temporary Password <span className="text-slate-400 font-normal">(Optional)</span>
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Leave blank for auto-OTP"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      If blank, an OTP is generated and emailed to collector.
-                    </p>
+                {/* Automated One-Time Password Note */}
+                <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 text-blue-950 text-xs flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-[11px] mt-0.5">
+                    i
                   </div>
-
                   <div>
-                    <label className="block font-medium text-slate-700 mb-1">
-                      Confirm Password <span className="text-slate-400 font-normal">(If set manually)</span>
-                    </label>
-                    <input
-                      type="password"
-                      disabled={!password.trim()}
-                      placeholder={password.trim() ? "••••••••" : "Not required for auto-OTP"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:bg-white focus:border-blue-500 disabled:opacity-50"
-                    />
+                    <p className="font-semibold text-blue-900">One-Time Password (OTP)</p>
+                    <p className="text-[11px] text-blue-700 mt-0.5 leading-relaxed">
+                      A temporary password will be issued and sent to the collector&apos;s official email address.
+                    </p>
                   </div>
                 </div>
 

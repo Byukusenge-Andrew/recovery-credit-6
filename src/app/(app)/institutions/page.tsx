@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/store';
 import { institutionsApi, InstitutionWithMetrics } from '@/services/api';
 import { formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
-import type { User, FinancialInstitution } from '@/lib/types';
+import type { User } from '@/lib/types';
+
+const emptySubscribe = () => () => {};
 
 export default function InstitutionsPage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
   const [institutions, setInstitutions] = useState<InstitutionWithMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -31,28 +33,27 @@ export default function InstitutionsPage() {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadInstitutions = async (userParam?: User | null) => {
-    try {
-      setLoading(true);
-      const u = userParam !== undefined ? userParam : currentUser;
-      const data = await institutionsApi.list({
-        role: u?.role,
-        username: u?.username,
-        fullName: u?.fullName
+  const loadInstitutions = useCallback((userParam?: User | null) => {
+    const u = userParam !== undefined ? userParam : getCurrentUser();
+    institutionsApi.list({
+      role: u?.role,
+      username: u?.username,
+      fullName: u?.fullName
+    })
+      .then(data => {
+        setInstitutions(data);
+      })
+      .catch(err => {
+        console.warn('Failed to load institutions:', err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setInstitutions(data);
-    } catch (err) {
-      console.warn('Failed to load institutions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setCurrentUser(user);
-    loadInstitutions(user);
-  }, []);
+    loadInstitutions();
+  }, [loadInstitutions]);
 
   const handleCreateInstitution = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,8 +88,8 @@ export default function InstitutionsPage() {
       setNotes('');
       setShowAddModal(false);
       loadInstitutions();
-    } catch (err: any) {
-      setFormError(err.message || 'Error occurred while saving institution.');
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : 'Error occurred while saving institution.');
     } finally {
       setIsSubmitting(false);
     }

@@ -75,7 +75,7 @@ export function logout(): void {
   }
 }
 
-export function login(usernameOrEmail: string, password: string): User | null {
+export function login(usernameOrEmail: string, _password?: string): User | null {
   // Offline fallback if necessary; primary auth is handled via authApi.login()
   const user = inMemoryUser;
   if (user && (user.username.toLowerCase() === usernameOrEmail.trim().toLowerCase() || user.email.toLowerCase() === usernameOrEmail.trim().toLowerCase())) {
@@ -161,13 +161,13 @@ export function exportCollectorsCSV(collectorsList?: User[], debtorsList?: Debto
 }
 
 export function parseCollectorsCSV(csvText: string): {
-  parsedCollectors: { username: string; fullName: string; email: string; password: string }[];
+  parsedCollectors: { username: string; fullName: string; email: string }[];
   successCount: number;
   errorCount: number;
   errors: string[];
 } {
   const result = {
-    parsedCollectors: [] as { username: string; fullName: string; email: string; password: string }[],
+    parsedCollectors: [] as { username: string; fullName: string; email: string }[],
     successCount: 0,
     errorCount: 0,
     errors: [] as string[]
@@ -187,7 +187,6 @@ export function parseCollectorsCSV(csvText: string): {
   const userIdx = getHeaderIdx('username', 'user', 'uname', 'login');
   const nameIdx = getHeaderIdx('full_name', 'fullname', 'full name', 'name', 'officer', 'collector');
   const emailIdx = getHeaderIdx('email', 'mail', 'e-mail');
-  const passIdx = getHeaderIdx('password', 'pass', 'pwd');
 
   for (let i = 1; i < lines.length; i++) {
     try {
@@ -201,7 +200,6 @@ export function parseCollectorsCSV(csvText: string): {
       let fullName = getVal(nameIdx);
       let email = getVal(emailIdx).toLowerCase();
       let username = getVal(userIdx).toLowerCase();
-      const password = getVal(passIdx) || 'collector123';
 
       if (!username) {
         if (email) {
@@ -225,11 +223,12 @@ export function parseCollectorsCSV(csvText: string): {
         continue;
       }
 
-      result.parsedCollectors.push({ username, fullName, email, password });
+      result.parsedCollectors.push({ username, fullName, email });
       result.successCount++;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const e = err as { message?: string };
       result.errorCount++;
-      result.errors.push(`Row ${i + 1}: ${err.message || 'Error parsing line'}`);
+      result.errors.push(`Row ${i + 1}: ${e?.message || 'Error parsing line'}`);
     }
   }
 
@@ -249,17 +248,17 @@ export function importCollectorsFromCSV(csvText: string): { successCount: number
 // NOTIFICATIONS (Fetched via /api/notifications)
 // ---------------------------------------------------------------------
 
-export function getNotifications(recipientUsername?: string): Notification[] {
+export function getNotifications(_recipientUsername?: string): Notification[] {
   return [];
 }
 
-export function getUnreadNotificationsCount(recipientUsername?: string): number {
+export function getUnreadNotificationsCount(_recipientUsername?: string): number {
   return 0;
 }
 
-export function markNotificationAsRead(id: string): void {}
+export function markNotificationAsRead(_id: string): void {}
 
-export function markAllNotificationsAsRead(recipientUsername?: string): void {}
+export function markAllNotificationsAsRead(_recipientUsername?: string): void {}
 
 export function createNotification(notif: {
   recipientUsername: string;
@@ -292,7 +291,7 @@ export function getDebtors(): Debtor[] {
   return [];
 }
 
-export function getDebtor(id: string): Debtor | null {
+export function getDebtor(_id: string): Debtor | null {
   return null;
 }
 
@@ -313,17 +312,17 @@ export function addDebtor(debtorData: Omit<Debtor, 'id' | 'createdAt' | 'updated
   };
 }
 
-export function updateDebtor(id: string, updates: Partial<Debtor>): Debtor | null {
+export function updateDebtor(_id: string, _updates: Partial<Debtor>): Debtor | null {
   return null;
 }
 
-export function deleteDebtor(id: string): void {}
+export function deleteDebtor(_id: string): void {}
 
-export function searchDebtors(query: string, categoryFilter?: Category, flagFilter?: ColorFlag, clientFilter?: string): Debtor[] {
+export function searchDebtors(_query: string, _categoryFilter?: Category, _flagFilter?: ColorFlag, _clientFilter?: string): Debtor[] {
   return [];
 }
 
-export function getPayments(debtorId: string): Payment[] {
+export function getPayments(_debtorId: string): Payment[] {
   return [];
 }
 
@@ -344,15 +343,15 @@ export function addPayment(paymentData: {
   };
 }
 
-export function updatePayment(paymentId: string, updates: Partial<Payment>): Payment | null {
+export function updatePayment(_paymentId: string, _updates: Partial<Payment>): Payment | null {
   return null;
 }
 
-export function deletePayment(paymentId: string): boolean {
+export function deletePayment(_paymentId: string): boolean {
   return true;
 }
 
-export function getActivities(debtorId: string): Activity[] {
+export function getActivities(_debtorId: string): Activity[] {
   return [];
 }
 
@@ -695,13 +694,15 @@ export function parseClientsDebtorsCSV(
         });
 
         result.successCount++;
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const e = err as { message?: string };
         result.errorCount++;
-        result.errors.push(`Row ${i + 1}: ${err.message || 'Error parsing row'}`);
+        result.errors.push(`Row ${i + 1}: ${e?.message || 'Error parsing row'}`);
       }
     }
-  } catch (e: any) {
-    result.errors.push(e.message || 'Failed to parse CSV');
+  } catch (e: unknown) {
+    const err = e as { message?: string };
+    result.errors.push(err?.message || 'Failed to parse CSV');
   }
 
   return result;
@@ -729,7 +730,7 @@ export const importDebtorsFromCSV = importClientsDebtorsFromCSV;
 // ---------------------------------------------------------------------
 
 export function generateWhatsAppLink(debtorOrPhone: Debtor | string, customMessage?: string): string {
-  let rawPhone = typeof debtorOrPhone === 'string' ? debtorOrPhone : (debtorOrPhone.whatsappNumber || '');
+  const rawPhone = typeof debtorOrPhone === 'string' ? debtorOrPhone : (debtorOrPhone.whatsappNumber || '');
   let phone = (rawPhone || '').replace(/[^0-9+]/g, '');
   if (!phone) return '#';
 

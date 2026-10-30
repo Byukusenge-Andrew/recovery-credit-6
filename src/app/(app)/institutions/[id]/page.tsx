@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, use } from 'react';
+import { useState, useEffect, useCallback, useRef, use, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, importClientsDebtorsFromCSV, generateWhatsAppLink } from '@/lib/store';
@@ -9,7 +9,7 @@ import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import CategoryBadge from '@/components/CategoryBadge';
 import FlagDot from '@/components/FlagDot';
-import type { User, FinancialInstitution, Debtor, Category, ColorFlag } from '@/lib/types';
+import type { FinancialInstitution, Debtor } from '@/lib/types';
 
 interface InstitutionMetrics {
   totalDebtors: number;
@@ -22,6 +22,8 @@ interface InstitutionMetrics {
   flagBreakdown: Record<string, number>;
 }
 
+const emptySubscribe = () => () => {};
+
 export default function InstitutionDetailPage({
   params
 }: {
@@ -32,7 +34,8 @@ export default function InstitutionDetailPage({
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const currentUser = isClientLoaded ? getCurrentUser() : null;
   const [institution, setInstitution] = useState<FinancialInstitution | null>(null);
   const [debtors, setDebtors] = useState<Debtor[]>([]);
   const [metrics, setMetrics] = useState<InstitutionMetrics | null>(null);
@@ -66,46 +69,45 @@ export default function InstitutionDetailPage({
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const user = getCurrentUser();
-      const data = await institutionsApi.getById(id, {
-        search,
-        category: categoryFilter,
-        flag: flagFilter,
-        collector: collectorFilter,
-        sortBy,
-        role: user?.role,
-        username: user?.username,
-        fullName: user?.fullName
+  const loadData = useCallback(() => {
+    const user = getCurrentUser();
+    institutionsApi.getById(id, {
+      search,
+      category: categoryFilter,
+      flag: flagFilter,
+      collector: collectorFilter,
+      sortBy,
+      role: user?.role,
+      username: user?.username,
+      fullName: user?.fullName
+    })
+      .then(data => {
+        setInstitution(data.institution);
+        setDebtors(data.debtors || []);
+        setMetrics(data.metrics || null);
+
+        if (data.institution) {
+          setEditName(data.institution.name || '');
+          setEditCode(data.institution.code || '');
+          setEditType(data.institution.institutionType || 'commercial_bank');
+          setEditContact(data.institution.contactPerson || '');
+          setEditEmail(data.institution.email || '');
+          setEditPhone(data.institution.phone || '');
+          setEditAddress(data.institution.address || '');
+          setEditNotes(data.institution.notes || '');
+        }
+      })
+      .catch((err: unknown) => {
+        const e = err as { message?: string };
+        console.warn('Load institution detail error:', err);
+        setError(e?.message || 'An error occurred while fetching data.');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-      setInstitution(data.institution);
-      setDebtors(data.debtors || []);
-      setMetrics(data.metrics || null);
-
-      if (data.institution) {
-        setEditName(data.institution.name || '');
-        setEditCode(data.institution.code || '');
-        setEditType(data.institution.institutionType || 'commercial_bank');
-        setEditContact(data.institution.contactPerson || '');
-        setEditEmail(data.institution.email || '');
-        setEditPhone(data.institution.phone || '');
-        setEditAddress(data.institution.address || '');
-        setEditNotes(data.institution.notes || '');
-      }
-    } catch (err: any) {
-      console.warn('Load institution detail error:', err);
-      setError(err.message || 'An error occurred while fetching data.');
-    } finally {
-      setLoading(false);
-    }
   }, [id, search, categoryFilter, flagFilter, collectorFilter, sortBy]);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setCurrentUser(user);
     loadData();
   }, [loadData]);
 
@@ -133,8 +135,8 @@ export default function InstitutionDetailPage({
 
       setShowEditModal(false);
       loadData();
-    } catch (err: any) {
-      setEditError(err.message || 'Error updating institution');
+    } catch (err: unknown) {
+      setEditError(err instanceof Error ? err.message : 'Error updating institution');
     } finally {
       setEditSaving(false);
     }

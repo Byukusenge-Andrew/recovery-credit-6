@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
+const emptySubscribe = () => () => {};
+
 export default function DataDeletionPage() {
   const { t, language } = useLanguage();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   if (!mounted) {
     return (
