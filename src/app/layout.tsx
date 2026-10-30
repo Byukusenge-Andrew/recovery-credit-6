@@ -7,6 +7,12 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Recovery Credit | Debt Collection Management System',
   description: 'Enterprise Debt Collection, Bank Client Portfolios & Recovery Tracking',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Recovery Credit',
+  },
   icons: {
     icon: '/logo.svg',
     shortcut: '/logo.svg',

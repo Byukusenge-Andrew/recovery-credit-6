@@ -5,6 +5,8 @@ import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import Logo from '@/components/Logo';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import MobileBottomNav from '@/components/MobileBottomNav';
+import QuickPaymentModal from '@/components/QuickPaymentModal';
 import { useLanguage } from '@/components/LanguageContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -35,6 +37,7 @@ function AppLayoutContent({
   const isClientLoaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const currentUser = isClientLoaded ? getCurrentUser() : null;
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [quickPayOpen, setQuickPayOpen] = useState(false);
 
   const username = currentUser?.username ?? 'Admin';
   const isAdmin = currentUser?.role === 'admin';
@@ -119,7 +122,7 @@ function AppLayoutContent({
       {sidebarExpanded && (
         <div
           onClick={() => setSidebarExpanded(false)}
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-[1px] z-10 md:hidden"
+          className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-20 md:hidden"
           aria-hidden="true"
         />
       )}
@@ -138,14 +141,26 @@ function AppLayoutContent({
             setSidebarExpanded(false);
           }
         }}
-        className={`pt-16 min-h-screen transition-all duration-200 ${
-          sidebarExpanded ? 'pl-56' : 'pl-16'
+        className={`pt-16 min-h-screen transition-all duration-200 pb-20 md:pb-8 ${
+          sidebarExpanded ? 'md:pl-56 pl-0' : 'md:pl-16 pl-0'
         }`}
       >
-        <div className="max-w-7xl mx-auto p-6 md:p-8">
+        <div className="max-w-7xl mx-auto p-3.5 sm:p-6 md:p-8">
           {children}
         </div>
       </main>
+
+      {/* Fixed Mobile Bottom Navigation */}
+      <MobileBottomNav
+        onOpenQuickPay={() => setQuickPayOpen(true)}
+        onOpenDrawer={() => setSidebarExpanded(true)}
+      />
+
+      {/* 1-Tap Quick Payment Recording Modal */}
+      <QuickPaymentModal
+        isOpen={quickPayOpen}
+        onClose={() => setQuickPayOpen(false)}
+      />
     </div>
   );
 }

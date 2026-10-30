@@ -350,7 +350,48 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile View (< md) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {recentDebtors.map((debtor) => (
+            <div
+              key={debtor.id}
+              onClick={() => router.push(`/debtors/${debtor.id}`)}
+              className="py-3 flex items-center justify-between gap-3 active:bg-slate-50 cursor-pointer"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <FlagDot flag={debtor.colorFlag} />
+                  <span className="font-bold text-slate-900 text-xs truncate">
+                    {debtor.debtorName || debtor.clientName}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                  {debtor.clientName} {debtor.accountNumber ? `· ${debtor.accountNumber}` : ''}
+                </div>
+                <div className="mt-1">
+                  <CategoryBadge category={debtor.category} />
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <div className="text-[10px] text-slate-400 font-semibold uppercase">Balance</div>
+                <div className={`font-mono font-bold text-xs ${debtor.outstandingBalance > 0 ? 'text-slate-900' : 'text-emerald-600'}`}>
+                  {formatCurrency(debtor.outstandingBalance)}
+                </div>
+                <span className="text-[10px] text-blue-600 font-semibold block mt-1">Open File →</span>
+              </div>
+            </div>
+          ))}
+
+          {recentDebtors.length === 0 && (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              No recent debtors available
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 font-medium">

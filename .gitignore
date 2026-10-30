@@ -44,3 +44,6 @@ next-env.d.ts
 
 # AIContext Cache Directory
 .aicontext/
+
+android/
+recovery-credit-app.apk

@@ -1,14 +1,2083 @@
-<!-- Recovery Credit 6 — Mobile Designs Showcase Mirror in Root for direct double-click opening -->
-<!-- Please see public/mobile-designs-showcase.html for the served version -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="refresh" content="0; url=public/mobile-designs-showcase.html" />
-  <script>
-    window.location.href = "public/mobile-designs-showcase.html";
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recovery Credit 6 — Mobile Interface Specifications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #0b111e;
+      --bg-panel: #111827;
+      --bg-panel-subtle: #162032;
+      --border-color: #243046;
+      --border-subtle: #1b263b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --brand-navy: #0c2340;
+      --brand-navy-deep: #071526;
+      --brand-green: #15803d;
+      --brand-green-light: #16a34a;
+      --brand-green-bg: rgba(22, 163, 74, 0.12);
+      --status-red: #dc2626;
+      --status-red-bg: rgba(220, 38, 38, 0.12);
+      --status-amber: #d97706;
+      --status-amber-bg: rgba(217, 119, 6, 0.12);
+      --status-blue: #2563eb;
+      --status-blue-bg: rgba(37, 99, 235, 0.12);
+      --status-slate: #475569;
+      --status-slate-bg: rgba(71, 85, 105, 0.12);
+      --radius: 6px;
+      --radius-lg: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    /* Top Global Header */
+    header.system-bar {
+      border-bottom: 1px solid var(--border-color);
+      background: #090e18;
+      padding: 12px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      background: var(--brand-navy);
+      border: 1px solid #2d4263;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-mark svg {
+      width: 18px;
+      height: 18px;
+      color: #ffffff;
+    }
+    .brand-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .brand-name {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-spec {
+      font-size: 10px;
+      font-weight: 600;
+      background: #1c2738;
+      border: 1px solid #2e3e57;
+      color: #94a3b8;
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Filter Controls in Topbar */
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .filter-tabs {
+      display: flex;
+      background: #131b2c;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 2px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover {
+      color: #ffffff;
+    }
+    .tab-btn.active {
+      background: #1e2a3f;
+      color: #ffffff;
+    }
+
+    /* Intro Strip */
+    .context-strip {
+      max-width: 1480px;
+      margin: 20px auto 0;
+      padding: 0 24px;
+    }
+    .intro-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .intro-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .intro-text p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      max-width: 720px;
+    }
+    .intro-metrics {
+      display: flex;
+      gap: 14px;
+      border-left: 1px solid var(--border-color);
+      padding-left: 20px;
+    }
+    .kpi-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .kpi-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .kpi-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Showcase Layout Grid */
+    .viewport-grid {
+      max-width: 1480px;
+      margin: 24px auto 60px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Concept Outer Card */
+    .concept-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .concept-card:hover {
+      border-color: #3b4e6d;
+    }
+    .concept-card.is-selected {
+      border-color: var(--brand-green-light);
+      box-shadow: 0 0 0 1px var(--brand-green-light);
+    }
+
+    .concept-header {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .concept-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .concept-badge-selected {
+      display: none;
+      color: var(--brand-green-light);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--brand-green-bg);
+      border: 1px solid rgba(22, 163, 74, 0.3);
+      padding: 1px 7px;
+      border-radius: 4px;
+    }
+    .is-selected .concept-badge-selected {
+      display: inline-block;
+    }
+    .concept-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .concept-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      min-height: 34px;
+      line-height: 1.4;
+    }
+
+    /* Phone Shell (Precision Hardware Enclosure) */
+    .mockup-shell {
+      width: 320px;
+      height: 660px;
+      background: #090e17;
+      border-radius: 40px;
+      border: 1px solid #2e3a4d;
+      padding: 8px;
+      box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.8);
+      position: relative;
+      user-select: none;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 32px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .phone-screen::-webkit-scrollbar {
+      width: 3px;
+    }
+    .phone-screen::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    /* Dynamic Island Hardware Cutout */
+    .hardware-notch {
+      position: sticky;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 88px;
+      height: 20px;
+      background: #000000;
+      border-radius: 12px;
+      z-index: 50;
+      margin: 0 auto;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+    }
+    .camera-lens {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #141c28;
+    }
+    .notch-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #0d141e;
+    }
+
+    /* Internal Device Status Bar */
+    .device-status-bar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 16px 2px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    .device-home-bar {
+      position: sticky;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 3px;
+      border-radius: 4px;
+      z-index: 40;
+      margin: 4px auto 2px;
+      flex-shrink: 0;
+    }
+
+    /* ---------------------------------------------------------------
+       CONCEPT 1: ENTERPRISE FIELD AGENT (LIGHT CLEAN CORPORATE)
+       --------------------------------------------------------------- */
+    .screen-light-corp {
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .screen-light-corp .device-status-bar {
+      background: #ffffff;
+      color: #475569;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .screen-light-corp .device-home-bar {
+      background: #cbd5e1;
+    }
+
+    .corp-header {
+      padding: 10px 14px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .corp-profile-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .corp-officer-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .corp-officer-sub {
+      font-size: 10px;
+      color: #64748b;
+    }
+    .status-badge-outline {
+      border: 1px solid #16a34a;
+      background: #f0fdf4;
+      color: #15803d;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Daily summary bar */
+    .corp-stat-banner {
+      background: #0c2340;
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stat-caption {
+      font-size: 9px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-figure {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .stat-progress-sub {
+      font-size: 9.5px;
+      color: #86efac;
+      font-weight: 500;
+    }
+
+    /* Action bar */
+    .corp-action-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .corp-btn-action {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .corp-btn-action:hover {
+      background: #f1f5f9;
+    }
+    .corp-btn-action svg {
+      width: 14px;
+      height: 14px;
+      color: #0c2340;
+    }
+    .corp-btn-action span {
+      font-size: 9px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    /* List Rows */
+    .corp-list-label {
+      padding: 8px 14px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+    }
+    .corp-card-debtor {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #dc2626;
+      border-radius: 6px;
+      margin: 4px 14px 6px;
+      padding: 8px 10px;
+    }
+    .debtor-line-1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .debtor-primary-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .debtor-balance-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .debtor-line-2 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2px;
+      font-size: 10px;
+      color: #64748b;
+    }
+    .status-pill-subtle {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .pill-red { background: var(--status-red-bg); color: var(--status-red); }
+    .pill-amber { background: var(--status-amber-bg); color: var(--status-amber); }
+    .pill-green { background: var(--brand-green-bg); color: var(--brand-green-light); }
+
+    .debtor-controls {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .btn-row-action {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 4px 0;
+      font-size: 10px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .btn-row-action svg {
+      width: 12px;
+      height: 12px;
+    }
+    .btn-row-action.btn-pay-primary {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #15803d;
+      font-weight: 700;
+    }
+
+    /* Fixed Bottom Navigation */
+    .corp-bottom-bar {
+      position: sticky;
+      bottom: 0;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 4px 12px;
+      margin-top: auto;
+      z-index: 30;
+    }
+    .corp-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 9px;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .corp-nav-item svg {
+      width: 16px;
+      height: 16px;
+    }
+    .corp-nav-item.active {
+      color: #0c2340;
+      font-weight: 700;
+    }
+
+    /* ---------------------------------------------------------------
+       CONCEPT 2: FIELD CONSOLE TERMINAL (HIGH-CONTRAST DARK)
+       --------------------------------------------------------------- */
+    .screen-dark-terminal {
+      background: #090e17;
+      color: #e2e8f0;
+    }
+    .screen-dark-terminal .device-status-bar {
+      background: #090e17;
+      color: #94a3b8;
+      border-bottom: 1px solid #162032;
+    }
+    .screen-dark-terminal .device-home-bar {
+      background: #334155;
+    }
+
+    .terminal-top {
+      padding: 10px 14px;
+      border-bottom: 1px solid #162032;
+      background: #0e1624;
+    }
+    .terminal-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .terminal-heading {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    .terminal-agent-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #38bdf8;
+    }
+
+    .terminal-kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .terminal-kpi-cell {
+      background: #131c2b;
+      border: 1px solid #1e2b40;
+      border-radius: 4px;
+      padding: 6px 8px;
+    }
+    .terminal-cell-lbl {
+      font-size: 8.5px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .terminal-cell-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 1px;
+    }
+    .terminal-cell-val.val-green {
+      color: #4ade80;
+    }
+
+    /* Terminal fast bar */
+    .terminal-fast-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 8px 14px;
+      border-bottom: 1px solid #162032;
+      background: #090e17;
+    }
+    .term-btn {
+      background: #111a28;
+      border: 1px solid #1d2a3d;
+      border-radius: 4px;
+      color: #cbd5e1;
+      padding: 6px 0;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .term-btn svg {
+      width: 12px;
+      height: 12px;
+      color: #94a3b8;
+    }
+    .term-btn.term-pay {
+      background: #0f241a;
+      border-color: #1b4d33;
+      color: #4ade80;
+    }
+    .term-btn.term-pay svg {
+      color: #4ade80;
+    }
+
+    .terminal-row {
+      background: #0e1624;
+      border: 1px solid #192538;
+      border-left: 3px solid #dc2626;
+      border-radius: 4px;
+      margin: 4px 14px 6px;
+      padding: 8px 10px;
+    }
+    .terminal-row.flag-amber {
+      border-left-color: #d97706;
+    }
+    .terminal-row.flag-green {
+      border-left-color: #16a34a;
+    }
+    .term-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .term-debtor-name {
+      font-weight: 600;
+      font-size: 12px;
+      color: #ffffff;
+    }
+    .term-debtor-amt {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      color: #f8fafc;
+    }
+    .term-row-mid {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .term-row-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #141f30;
+    }
+
+    /* Terminal Nav */
+    .terminal-nav {
+      position: sticky;
+      bottom: 0;
+      background: #0e1624;
+      border-top: 1px solid #192538;
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 4px 12px;
+      margin-top: auto;
+      z-index: 30;
+    }
+    .terminal-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 9px;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .terminal-nav-item svg {
+      width: 16px;
+      height: 16px;
+    }
+    .terminal-nav-item.active {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    /* ---------------------------------------------------------------
+       CONCEPT 3: EXECUTIVE RECOVERY AUDIT (PORTFOLIO CONSOLE)
+       --------------------------------------------------------------- */
+    .screen-portfolio {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    .screen-portfolio .device-status-bar {
+      background: #f8fafc;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .screen-portfolio .device-home-bar {
+      background: #cbd5e1;
+    }
+
+    .portfolio-header {
+      padding: 10px 14px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .portfolio-inst-select {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .inst-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0c2340;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .inst-tag-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .portfolio-summary-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .port-metric-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      font-size: 10.5px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .port-metric-row:last-child {
+      border-bottom: none;
+    }
+    .port-metric-lbl {
+      color: #64748b;
+    }
+    .port-metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    /* Filter strip */
+    .portfolio-filter-strip {
+      display: flex;
+      gap: 4px;
+      padding: 8px 14px;
+      overflow-x: auto;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .filter-chip-mini {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #475569;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .filter-chip-mini.active {
+      background: #0c2340;
+      border-color: #0c2340;
+      color: #ffffff;
+    }
+
+    .portfolio-row-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      margin: 4px 14px 6px;
+      padding: 8px 10px;
+    }
+    .port-row-line-1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .port-cust-name {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .port-cust-bal {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .port-row-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3px;
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    /* ---------------------------------------------------------------
+       CONCEPT 4: OFFICIAL DISPATCH & WHATSAPP NOTICE CONSOLE
+       --------------------------------------------------------------- */
+    .screen-dispatch {
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .screen-dispatch .device-status-bar {
+      background: #0c2340;
+      color: #cbd5e1;
+    }
+    .screen-dispatch .device-home-bar {
+      background: #cbd5e1;
+    }
+
+    .dispatch-top {
+      background: #0c2340;
+      color: #ffffff;
+      padding: 8px 14px 12px;
+      border-bottom: 1px solid #1a365d;
+    }
+    .dispatch-target-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dispatch-debtor-title {
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .dispatch-account-ref {
+      font-size: 10px;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Official Notice Container */
+    .dispatch-preview-box {
+      margin: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #f8fafc;
+      padding: 10px;
+    }
+    .notice-header-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .notice-ref-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #475569;
+      font-weight: 600;
+    }
+    .notice-type-tag {
+      font-size: 9px;
+      font-weight: 600;
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .notice-text-content {
+      font-size: 10px;
+      color: #334155;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .notice-amount-highlight {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+
+    /* Template Dispatch Buttons */
+    .dispatch-template-list {
+      padding: 0 14px;
+    }
+    .dispatch-tpl-btn {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 7px 10px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+    .dispatch-tpl-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+    .dispatch-tpl-btn svg {
+      width: 12px;
+      height: 12px;
+      color: #64748b;
+    }
+
+    /* Modal / Bottom Sheet Preview */
+    .device-modal-sheet {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 60;
+      display: none;
+      align-items: flex-end;
+    }
+    .device-modal-sheet.open {
+      display: flex;
+    }
+    .modal-sheet-panel {
+      background: #ffffff;
+      width: 100%;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      border-top: 1px solid #cbd5e1;
+      padding: 14px;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .modal-sheet-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .modal-sheet-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: #64748b;
+    }
+    .form-field-unit {
+      margin-bottom: 10px;
+    }
+    .form-field-unit label {
+      display: block;
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .form-field-unit input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+      outline: none;
+    }
+    .btn-submit-modal {
+      width: 100%;
+      background: #15803d;
+      border: 1px solid #166534;
+      color: #ffffff;
+      padding: 8px 0;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Footer Selection Button on Cards */
+    .card-footer {
+      width: 100%;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .spec-points {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .spec-points li {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .spec-points li svg {
+      width: 14px;
+      height: 14px;
+      color: var(--brand-green-light);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .btn-select-concept {
+      width: 100%;
+      background: #1c2738;
+      border: 1px solid #2e3e57;
+      color: #ffffff;
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-select-concept:hover {
+      background: #253349;
+      border-color: #3b4e6d;
+    }
+    .is-selected .btn-select-concept {
+      background: var(--brand-green-light);
+      border-color: var(--brand-green);
+      color: #ffffff;
+    }
+
+    /* Technical Comparison Matrix */
+    .matrix-section {
+      max-width: 1480px;
+      margin: 40px auto 60px;
+      padding: 0 24px;
+    }
+    .matrix-heading {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .matrix-sub {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .matrix-table-wrap {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+    }
+    table.matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12.5px;
+    }
+    table.matrix-table th {
+      background: #0f1726;
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    table.matrix-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1b263b;
+      color: var(--text-secondary);
+    }
+    table.matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+    .matrix-param {
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Floating Toast */
+    .decision-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 200;
+      background: #111827;
+      border: 1px solid var(--brand-green-light);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      max-width: 440px;
+    }
+    .decision-toast h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .decision-toast p {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+    .btn-copy-toast {
+      background: var(--brand-green-light);
+      border: none;
+      color: #ffffff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .mockup-shell {
+        width: 100%;
+        max-width: 320px;
+      }
+      .intro-metrics {
+        border-left: none;
+        padding-left: 0;
+        width: 100%;
+      }
+      .decision-toast {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="public/mobile-designs-showcase.html">Mobile Designs Showcase</a>...</p>
+
+  <!-- Top System Bar -->
+  <header class="system-bar">
+    <div class="brand-block">
+      <div class="brand-mark">
+        <!-- Clean Banking Shield Mark (No Emojis) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <div class="brand-name">
+          Recovery Credit 6
+          <span class="badge-spec">Mobile Architecture Specifications</span>
+        </div>
+        <div class="brand-sub">Umusa Debt Recovery &amp; Portfolio Management System</div>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <div class="filter-tabs">
+        <button class="tab-btn active" onclick="setFilter('all', this)">All Concepts</button>
+        <button class="tab-btn" onclick="setFilter('corp', this)">Field Corporate</button>
+        <button class="tab-btn" onclick="setFilter('terminal', this)">Field Terminal</button>
+        <button class="tab-btn" onclick="setFilter('portfolio', this)">Portfolio Audit</button>
+        <button class="tab-btn" onclick="setFilter('dispatch', this)">Notice Dispatch</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Context Strip -->
+  <section class="context-strip">
+    <div class="intro-box">
+      <div class="intro-text">
+        <h1>Mobile Architecture Options — Select Implementation Specification</h1>
+        <p>
+          Standard financial and debt recovery operations interface specifications. Built without placeholder emojis or non-standard hues, adhering strictly to enterprise banking design standards, Rwandan financial context, and local data workflows.
+        </p>
+      </div>
+      <div class="intro-metrics">
+        <div class="kpi-item">
+          <span class="kpi-val">4 Layouts</span>
+          <span class="kpi-lbl">Architectures</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-val">Direct Ledger</span>
+          <span class="kpi-lbl">Payment Record</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-val">Audit Track</span>
+          <span class="kpi-lbl">Activity Log</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Viewport Grid -->
+  <main class="viewport-grid" id="conceptsGrid">
+
+    <!-- ========================================================
+         CONCEPT 1: ENTERPRISE FIELD AGENT (LIGHT CLEAN CORPORATE)
+         ======================================================== -->
+    <article class="concept-card is-selected" id="cardCorp">
+      <div class="concept-header">
+        <div class="concept-num">
+          <span>Option 1 · Field Standard</span>
+          <span class="concept-badge-selected">Selected</span>
+        </div>
+        <h2 class="concept-title">Enterprise Field Corporate</h2>
+        <p class="concept-desc">Clean white institutional interface engineered for debt collectors conducting field visits and logging receipts on the spot.</p>
+      </div>
+
+      <!-- Device Enclosure -->
+      <div class="mockup-shell">
+        <div class="phone-screen screen-light-corp">
+          
+          <!-- Hardware Notch -->
+          <div class="hardware-notch">
+            <div class="camera-lens"></div>
+            <div class="notch-dot"></div>
+          </div>
+
+          <!-- Status Bar -->
+          <div class="device-status-bar">
+            <span>09:41</span>
+            <span>4G 98%</span>
+          </div>
+
+          <!-- Header -->
+          <div class="corp-header">
+            <div class="corp-profile-row">
+              <div>
+                <div class="corp-officer-title">Kagabo Jean</div>
+                <div class="corp-officer-sub">Recovery Agent #RA-048</div>
+              </div>
+              <span class="status-badge-outline">Active Shift</span>
+            </div>
+
+            <!-- Shift Banner -->
+            <div class="corp-stat-banner">
+              <div>
+                <div class="stat-caption">Collected Today</div>
+                <div class="stat-figure">R 420,000.00</div>
+              </div>
+              <div style="text-align: right;">
+                <div class="stat-caption">Shift Quota</div>
+                <div class="stat-progress-sub">70.0% of R 600,000</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fast Action Bar -->
+          <div class="corp-action-bar">
+            <button class="corp-btn-action" onclick="toggleModal('modalPayLight')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              <span>Payment</span>
+            </button>
+            <button class="corp-btn-action" onclick="alert('Opening official WhatsApp Cloud template selector')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+              <span>WhatsApp</span>
+            </button>
+            <button class="corp-btn-action" onclick="alert('Initiating call to debtor phone number')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <span>Call</span>
+            </button>
+            <button class="corp-btn-action" onclick="alert('Geotagged site check-in logged to audit trail')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>Visit Log</span>
+            </button>
+          </div>
+
+          <!-- Section Label -->
+          <div class="corp-list-label">
+            <span>Assigned Field Docket</span>
+            <span>3 Critical</span>
+          </div>
+
+          <!-- Debtor 1 -->
+          <div class="corp-card-debtor" style="border-left-color: var(--status-red);">
+            <div class="debtor-line-1">
+              <span class="debtor-primary-name">Mugisha Eric</span>
+              <span class="debtor-balance-amount">R 1,250,000.00</span>
+            </div>
+            <div class="debtor-line-2">
+              <span>Bank of Kigali · Loan #BK-9021</span>
+              <span class="status-pill-subtle pill-red">Overdue (84d)</span>
+            </div>
+            <div class="debtor-controls">
+              <button class="btn-row-action" onclick="alert('Sending WhatsApp Demand Notice to Mugisha')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Notice
+              </button>
+              <button class="btn-row-action btn-pay-primary" onclick="toggleModal('modalPayLight')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Record Payment
+              </button>
+            </div>
+          </div>
+
+          <!-- Debtor 2 -->
+          <div class="corp-card-debtor" style="border-left-color: var(--status-amber);">
+            <div class="debtor-line-1">
+              <span class="debtor-primary-name">Umutoni Diane</span>
+              <span class="debtor-balance-amount">R 380,000.00</span>
+            </div>
+            <div class="debtor-line-2">
+              <span>MTN Rwanda · Acc #MT-4819</span>
+              <span class="status-pill-subtle pill-amber">Promise Due Today</span>
+            </div>
+            <div class="debtor-controls">
+              <button class="btn-row-action" onclick="alert('Calling Umutoni')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                Call
+              </button>
+              <button class="btn-row-action btn-pay-primary" onclick="toggleModal('modalPayLight')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Record Payment
+              </button>
+            </div>
+          </div>
+
+          <!-- Debtor 3 -->
+          <div class="corp-card-debtor" style="border-left-color: var(--brand-green-light);">
+            <div class="debtor-line-1">
+              <span class="debtor-primary-name">Habimana Jean Paul</span>
+              <span class="debtor-balance-amount">R 890,000.00</span>
+            </div>
+            <div class="debtor-line-2">
+              <span>Equity Bank · Ref #EQ-1092</span>
+              <span class="status-pill-subtle pill-green">Installment Active</span>
+            </div>
+            <div class="debtor-controls">
+              <button class="btn-row-action" onclick="alert('Viewing Ledger for Habimana')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Ledger
+              </button>
+              <button class="btn-row-action btn-pay-primary" onclick="toggleModal('modalPayLight')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Record Payment
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation -->
+          <div class="corp-bottom-bar">
+            <div class="corp-nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>Docket</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Debtors</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span>Collections</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Profile</span>
+            </div>
+          </div>
+
+          <!-- Interactive Modal Sheet -->
+          <div class="device-modal-sheet" id="modalPayLight">
+            <div class="modal-sheet-panel">
+              <div class="modal-sheet-top">
+                <span class="modal-sheet-title">Record Payment Receipt</span>
+                <button class="modal-close-btn" onclick="toggleModal('modalPayLight')">✕</button>
+              </div>
+              <div class="form-field-unit">
+                <label>Debtor</label>
+                <input type="text" value="Mugisha Eric (BK-9021)" readonly style="background: #f8fafc;">
+              </div>
+              <div class="form-field-unit">
+                <label>Amount (RWF)</label>
+                <input type="text" value="250,000.00" id="lightAmtInput">
+              </div>
+              <div class="form-field-unit">
+                <label>Method / Reference</label>
+                <input type="text" value="MOMO-MP261030.09" placeholder="Bank ref or Momo TxID">
+              </div>
+              <button class="btn-submit-modal" onclick="alert('Payment confirmed and posted to API endpoint'); toggleModal('modalPayLight');">
+                Post Transaction Receipt
+              </button>
+            </div>
+          </div>
+
+          <div class="device-home-bar"></div>
+        </div>
+      </div>
+
+      <!-- Footer & Specs -->
+      <div class="card-footer">
+        <ul class="spec-points">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Clean white institutional theme matching commercial banking standards</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Strict SVG line icons, zero emojis, zero artificial gradients</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Direct 1-tap Payment, WhatsApp Demand Notice, and Call actions</span>
+          </li>
+        </ul>
+        <button class="btn-select-concept" onclick="selectSpecification('Option 1: Enterprise Field Corporate')">
+          Select Option 1 (Field Corporate)
+        </button>
+      </div>
+    </article>
+
+    <!-- ========================================================
+         CONCEPT 2: FIELD CONSOLE TERMINAL (HIGH-CONTRAST DARK)
+         ======================================================== -->
+    <article class="concept-card" id="cardTerminal">
+      <div class="concept-header">
+        <div class="concept-num">
+          <span>Option 2 · Terminal Console</span>
+          <span class="concept-badge-selected">Selected</span>
+        </div>
+        <h2 class="concept-title">Field Console Terminal</h2>
+        <p class="concept-desc">High-density dark console inspired by Bloomberg and FactSet. Designed for maximum outdoor legibility and fast numeric workflows.</p>
+      </div>
+
+      <!-- Device Enclosure -->
+      <div class="mockup-shell">
+        <div class="phone-screen screen-dark-terminal">
+          
+          <div class="hardware-notch">
+            <div class="camera-lens"></div>
+            <div class="notch-dot"></div>
+          </div>
+
+          <div class="device-status-bar">
+            <span>09:41</span>
+            <span>LTE 94%</span>
+          </div>
+
+          <div class="terminal-top">
+            <div class="terminal-title-row">
+              <span class="terminal-heading">Recovery Dispatch</span>
+              <span class="terminal-agent-tag">ID: AG-048</span>
+            </div>
+            <div class="terminal-kpi-grid">
+              <div class="terminal-kpi-cell">
+                <div class="terminal-cell-lbl">Book Balance</div>
+                <div class="terminal-cell-val">R 24,800,000</div>
+              </div>
+              <div class="terminal-kpi-cell">
+                <div class="terminal-cell-lbl">Recovered Today</div>
+                <div class="terminal-cell-val val-green">R 420,000</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminal Fast Bar -->
+          <div class="terminal-fast-bar">
+            <button class="term-btn term-pay" onclick="alert('Open Terminal Payment Entry')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ Record</span>
+            </button>
+            <button class="term-btn" onclick="alert('Dispatch WhatsApp Notice')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>WhatsApp</span>
+            </button>
+            <button class="term-btn" onclick="alert('Dial Debtor')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>Call</span>
+            </button>
+          </div>
+
+          <!-- Debtor Row 1 -->
+          <div class="terminal-row">
+            <div class="term-row-top">
+              <span class="term-debtor-name">Mugisha Eric</span>
+              <span class="term-debtor-amt">R 1,250,000.00</span>
+            </div>
+            <div class="term-row-mid">
+              <span>BK-9021 · Bank of Kigali</span>
+              <span style="color: #ef4444; font-weight: 600;">84 Days Overdue</span>
+            </div>
+            <div class="term-row-actions">
+              <button class="term-btn" style="flex:1;" onclick="alert('Viewing Ledger')">Ledger</button>
+              <button class="term-btn term-pay" style="flex:1;" onclick="alert('Logging payment')">Payment</button>
+            </div>
+          </div>
+
+          <!-- Debtor Row 2 -->
+          <div class="terminal-row flag-amber">
+            <div class="term-row-top">
+              <span class="term-debtor-name">Umutoni Diane</span>
+              <span class="term-debtor-amt">R 380,000.00</span>
+            </div>
+            <div class="term-row-mid">
+              <span>MT-4819 · MTN Rwanda</span>
+              <span style="color: #f59e0b; font-weight: 600;">Promise: 14:00 Today</span>
+            </div>
+            <div class="term-row-actions">
+              <button class="term-btn" style="flex:1;" onclick="alert('Calling Diane')">Call</button>
+              <button class="term-btn term-pay" style="flex:1;" onclick="alert('Logging payment')">Payment</button>
+            </div>
+          </div>
+
+          <!-- Debtor Row 3 -->
+          <div class="terminal-row flag-green">
+            <div class="term-row-top">
+              <span class="term-debtor-name">Habimana Jean Paul</span>
+              <span class="term-debtor-amt">R 890,000.00</span>
+            </div>
+            <div class="term-row-mid">
+              <span>EQ-1092 · Equity Bank</span>
+              <span style="color: #4ade80; font-weight: 600;">Scheduled Plan</span>
+            </div>
+            <div class="term-row-actions">
+              <button class="term-btn" style="flex:1;" onclick="alert('Notice dispatched')">Notice</button>
+              <button class="term-btn term-pay" style="flex:1;" onclick="alert('Logging payment')">Payment</button>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation -->
+          <div class="terminal-nav">
+            <div class="terminal-nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>Queue</span>
+            </div>
+            <div class="terminal-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Search</span>
+            </div>
+            <div class="terminal-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Entry</span>
+            </div>
+            <div class="terminal-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>Audit</span>
+            </div>
+          </div>
+
+          <div class="device-home-bar"></div>
+        </div>
+      </div>
+
+      <!-- Footer & Specs -->
+      <div class="card-footer">
+        <ul class="spec-points">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Ultra high-contrast dark palette without battery-draining colors</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Monospaced financial typography for balances and account references</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Fast row action triggers for field velocity</span>
+          </li>
+        </ul>
+        <button class="btn-select-concept" onclick="selectSpecification('Option 2: Field Console Terminal')">
+          Select Option 2 (Terminal Console)
+        </button>
+      </div>
+    </article>
+
+    <!-- ========================================================
+         CONCEPT 3: EXECUTIVE RECOVERY AUDIT (PORTFOLIO CONSOLE)
+         ======================================================== -->
+    <article class="concept-card" id="cardPortfolio">
+      <div class="concept-header">
+        <div class="concept-num">
+          <span>Option 3 · Executive Audit</span>
+          <span class="concept-badge-selected">Selected</span>
+        </div>
+        <h2 class="concept-title">Portfolio Audit Console</h2>
+        <p class="concept-desc">Tailored for agency directors, credit managers, and client institutions to audit recovery performance and debt aging buckets.</p>
+      </div>
+
+      <!-- Device Enclosure -->
+      <div class="mockup-shell">
+        <div class="phone-screen screen-portfolio">
+          
+          <div class="hardware-notch">
+            <div class="camera-lens"></div>
+            <div class="notch-dot"></div>
+          </div>
+
+          <div class="device-status-bar">
+            <span>09:41</span>
+            <span>Wi-Fi 100%</span>
+          </div>
+
+          <div class="portfolio-header">
+            <div class="portfolio-inst-select">
+              <span class="inst-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="21" width="18" height="2"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h1"/><path d="M9 11h1"/><path d="M9 15h1"/><path d="M14 7h1"/><path d="M14 11h1"/><path d="M14 15h1"/></svg>
+                Bank of Kigali Portfolio
+              </span>
+              <span class="inst-tag-badge">Master</span>
+            </div>
+
+            <div class="portfolio-summary-card">
+              <div class="port-metric-row">
+                <span class="port-metric-lbl">Total Placed Principal</span>
+                <span class="port-metric-val">R 148,500,000</span>
+              </div>
+              <div class="port-metric-row">
+                <span class="port-metric-lbl">Total Cash Recovered</span>
+                <span class="port-metric-val" style="color: #15803d;">R 94,200,000 (63.4%)</span>
+              </div>
+              <div class="port-metric-row">
+                <span class="port-metric-lbl">Active Accounts</span>
+                <span class="port-metric-val">1,420 Debtors</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aging Filter Strip -->
+          <div class="portfolio-filter-strip">
+            <div class="filter-chip-mini active">All Accounts</div>
+            <div class="filter-chip-mini">30-60 Days</div>
+            <div class="filter-chip-mini">61-90 Days</div>
+            <div class="filter-chip-mini">90+ Days</div>
+          </div>
+
+          <!-- Debtor List Items -->
+          <div class="portfolio-row-item">
+            <div class="port-row-line-1">
+              <span class="port-cust-name">Nkurunziza Emmanuel</span>
+              <span class="port-cust-bal">R 4,120,000.00</span>
+            </div>
+            <div class="port-row-meta">
+              <span>Account #BK-1082 · Commercial</span>
+              <span style="color: #2563eb; font-weight: 600;">Paying Monthly</span>
+            </div>
+          </div>
+
+          <div class="portfolio-row-item">
+            <div class="port-row-line-1">
+              <span class="port-cust-name">Keza Alice</span>
+              <span class="port-cust-bal">R 1,840,000.00</span>
+            </div>
+            <div class="port-row-meta">
+              <span>Account #BK-7741 · Retail Loan</span>
+              <span style="color: #d97706; font-weight: 600;">Promise Broken</span>
+            </div>
+          </div>
+
+          <div class="portfolio-row-item">
+            <div class="port-row-line-1">
+              <span class="port-cust-name">Bizimana Patrick</span>
+              <span class="port-cust-bal">R 6,450,000.00</span>
+            </div>
+            <div class="port-row-meta">
+              <span>Account #BK-3390 · Secured SME</span>
+              <span style="color: #dc2626; font-weight: 600;">Legal Escalation</span>
+            </div>
+          </div>
+
+          <div class="portfolio-row-item">
+            <div class="port-row-line-1">
+              <span class="port-cust-name">Kayitare Alexis</span>
+              <span class="port-cust-bal">R 2,450,000.00</span>
+            </div>
+            <div class="port-row-meta">
+              <span>Account #BK-6211 · Overdraft</span>
+              <span style="color: #475569; font-weight: 600;">Skip Tracing</span>
+            </div>
+          </div>
+
+          <!-- Nav -->
+          <div class="corp-bottom-bar" style="background:#f8fafc;">
+            <div class="corp-nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span>Portfolio</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span>Clients</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>Reports</span>
+            </div>
+          </div>
+
+          <div class="device-home-bar"></div>
+        </div>
+      </div>
+
+      <!-- Footer & Specs -->
+      <div class="card-footer">
+        <ul class="spec-points">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Detailed portfolio roll-up metrics by client bank and institution</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Standard aging bracket segmentation (30-60, 61-90, 90+ days)</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Clean executive readability for tablet &amp; mobile supervisors</span>
+          </li>
+        </ul>
+        <button class="btn-select-concept" onclick="selectSpecification('Option 3: Portfolio Audit Console')">
+          Select Option 3 (Portfolio Audit)
+        </button>
+      </div>
+    </article>
+
+    <!-- ========================================================
+         CONCEPT 4: OFFICIAL DISPATCH & WHATSAPP NOTICE CONSOLE
+         ======================================================== -->
+    <article class="concept-card" id="cardDispatch">
+      <div class="concept-header">
+        <div class="concept-num">
+          <span>Option 4 · Notice Dispatch</span>
+          <span class="concept-badge-selected">Selected</span>
+        </div>
+        <h2 class="concept-title">Notice Dispatch Portal</h2>
+        <p class="concept-desc">Strictly adheres to formal debt recovery legal communication workflows, WhatsApp Cloud API message logs, and Momo payment prompts.</p>
+      </div>
+
+      <!-- Device Enclosure -->
+      <div class="mockup-shell">
+        <div class="phone-screen screen-dispatch">
+          
+          <div class="hardware-notch">
+            <div class="camera-lens"></div>
+            <div class="notch-dot"></div>
+          </div>
+
+          <div class="device-status-bar">
+            <span>09:41</span>
+            <span>5G 95%</span>
+          </div>
+
+          <!-- Dispatch Top -->
+          <div class="dispatch-top">
+            <div class="dispatch-target-row">
+              <span class="dispatch-debtor-title">Gasana Samuel</span>
+              <span class="dispatch-account-ref">BPR #BPR-4432</span>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+              Phone: +250 788 443 219 · Flag: None
+            </div>
+          </div>
+
+          <!-- Notice Preview Box -->
+          <div class="dispatch-preview-box">
+            <div class="notice-header-line">
+              <span class="notice-ref-num">REF: RC6-NOT-2026-081</span>
+              <span class="notice-type-tag">Formal Demand</span>
+            </div>
+            <div class="notice-text-content">
+              "Muraho Gasana Samuel, Recovery Credit 6 notifies you on behalf of BPR Bank regarding your overdue loan balance. You are requested to settle before end of current week."
+            </div>
+            <div class="notice-amount-highlight">
+              <span style="color: #64748b;">Total Amount Due:</span>
+              <strong style="color: #0f172a; font-family: 'JetBrains Mono', monospace;">R 750,000.00</strong>
+            </div>
+          </div>
+
+          <!-- Template Selector Buttons -->
+          <div class="dispatch-template-list">
+            <div class="corp-list-label" style="padding-left:0; padding-right:0;">
+              <span>Verified WhatsApp Templates</span>
+            </div>
+
+            <button class="dispatch-tpl-btn" onclick="alert('Template 1: Formal Demand Notice dispatched via WhatsApp Cloud API')">
+              <span>Formal Demand Notice (Kinyarwanda)</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+            <button class="dispatch-tpl-btn" onclick="alert('Template 2: Payment Details & MOMO Code dispatched')">
+              <span>MOMO Payment Instructions (*182#)</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+            <button class="dispatch-tpl-btn" onclick="alert('Template 3: Scheduled Field Meeting Confirmation dispatched')">
+              <span>Field Visit &amp; Meeting Summons</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+            <button class="dispatch-tpl-btn" onclick="alert('Template 4: Payment Received Confirmation dispatched')">
+              <span>Official Payment Receipt Confirmation</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
+          <!-- Bottom Action Bar -->
+          <div class="corp-bottom-bar">
+            <div class="corp-nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Dispatch</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>Outbox</span>
+            </div>
+            <div class="corp-nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              <span>Delivery Log</span>
+            </div>
+          </div>
+
+          <div class="device-home-bar"></div>
+        </div>
+      </div>
+
+      <!-- Footer & Specs -->
+      <div class="card-footer">
+        <ul class="spec-points">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Fully compliant with Meta WhatsApp Cloud API pre-approved templates</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Includes formal notice reference tracking (e.g. RC6-NOT-2026)</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Instant Mobile Money payment prompt generation</span>
+          </li>
+        </ul>
+        <button class="btn-select-concept" onclick="selectSpecification('Option 4: Notice Dispatch Portal')">
+          Select Option 4 (Notice Dispatch)
+        </button>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Technical Comparison Matrix -->
+  <section class="matrix-section">
+    <h3 class="matrix-heading">Architecture Comparison Matrix</h3>
+    <p class="matrix-sub">Technical assessment for implementation into the Next.js React app structure.</p>
+
+    <div class="matrix-table-wrap">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Specification Feature</th>
+            <th>Option 1: Field Corporate</th>
+            <th>Option 2: Terminal Console</th>
+            <th>Option 3: Portfolio Audit</th>
+            <th>Option 4: Notice Dispatch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="matrix-param">Target Deployment</td>
+            <td>Field Agents on Mobile Phones</td>
+            <td>Field Bailiffs &amp; Fast Outbound Calls</td>
+            <td>Credit Supervisors &amp; Portfolio Leads</td>
+            <td>WhatsApp Cloud &amp; Communications Desk</td>
+          </tr>
+          <tr>
+            <td class="matrix-param">Visual Theme</td>
+            <td>Clean White &amp; Slate-900 Institutional</td>
+            <td>OLED Terminal Navy (#090e17)</td>
+            <td>Executive Clean Light (#ffffff + #f8fafc)</td>
+            <td>Formal Banking White &amp; Navy Header</td>
+          </tr>
+          <tr>
+            <td class="matrix-param">Sunlight Contrast</td>
+            <td>Standard Commercial High Legibility</td>
+            <td>Maximum Outdoor OLED Contrast</td>
+            <td>Optimal for Office &amp; Indoor Tablet</td>
+            <td>High Legibility for Text Documents</td>
+          </tr>
+          <tr>
+            <td class="matrix-param">Direct Payment Entry</td>
+            <td>Yes (1-Tap Modal Sheet)</td>
+            <td>Yes (Numeric Entry Fast Key)</td>
+            <td>Read-Only Audit &amp; Ledger Access</td>
+            <td>Post-Payment Confirmation Receipt</td>
+          </tr>
+          <tr>
+            <td class="matrix-param">WhatsApp Integration</td>
+            <td>One-tap Pre-filled Cloud API</td>
+            <td>Quick Outbound Trigger</td>
+            <td>Drawer Link</td>
+            <td>Native Formal Template Dispatcher</td>
+          </tr>
+          <tr>
+            <td class="matrix-param">Codebase Reusability</td>
+            <td>95% reuses existing Tailwind classes</td>
+            <td>90% reuses existing Tailwind classes</td>
+            <td>Extends existing desktop dashboard</td>
+            <td>Reuses existing WhatsApp API endpoints</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Floating Selection Toast -->
+  <div class="decision-toast" id="decisionToast" style="display: none;">
+    <div>
+      <h4 id="toastTitle">Option Selected</h4>
+      <p id="toastSub">Ready to implement in codebase.</p>
+    </div>
+    <button class="btn-copy-toast" onclick="copyDecisionNote()">Copy Decision</button>
+  </div>
+
+  <script>
+    let selectedOption = 'Option 1: Enterprise Field Corporate';
+
+    function selectSpecification(name) {
+      selectedOption = name;
+
+      // Update card states
+      document.querySelectorAll('.concept-card').forEach(c => c.classList.remove('is-selected'));
+
+      let cardId = '';
+      if (name.includes('Field Corporate')) cardId = 'cardCorp';
+      else if (name.includes('Terminal Console')) cardId = 'cardTerminal';
+      else if (name.includes('Portfolio Audit')) cardId = 'cardPortfolio';
+      else if (name.includes('Notice Dispatch')) cardId = 'cardDispatch';
+
+      const target = document.getElementById(cardId);
+      if (target) target.classList.add('is-selected');
+
+      const toast = document.getElementById('decisionToast');
+      document.getElementById('toastTitle').textContent = 'Selected: ' + name;
+      document.getElementById('toastSub').textContent = 'Click "Copy Decision" to copy this choice.';
+      toast.style.display = 'flex';
+    }
+
+    function copyDecisionNote() {
+      const text = `I choose **${selectedOption}** for the Recovery Credit 6 mobile interface. Please proceed with implementing this mobile UX into the React components.`;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!\n\n"' + text + '"');
+      }).catch(() => {
+        alert('Selected: ' + selectedOption);
+      });
+    }
+
+    function toggleModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.toggle('open');
+    }
+
+    function setFilter(type, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = {
+        corp: document.getElementById('cardCorp'),
+        terminal: document.getElementById('cardTerminal'),
+        portfolio: document.getElementById('cardPortfolio'),
+        dispatch: document.getElementById('cardDispatch')
+      };
+
+      if (type === 'all') {
+        Object.values(cards).forEach(c => c && (c.style.display = 'flex'));
+      } else {
+        Object.entries(cards).forEach(([key, card]) => {
+          if (card) {
+            card.style.display = (key === type) ? 'flex' : 'none';
+          }
+        });
+      }
+    }
+
+    // Default to Option 1
+    selectSpecification('Option 1: Enterprise Field Corporate');
+  </script>
 </body>
 </html>

@@ -125,10 +125,10 @@ export default function Sidebar({ expanded = false, onExpand, onCollapse }: Side
         }
       }}
       title={!isExpanded ? "Click or hover to expand sidebar" : undefined}
-      className={`fixed left-0 top-16 bottom-0 bg-white border-r border-slate-100 flex flex-col py-4 z-20 transition-all duration-200 select-none ${
+      className={`fixed left-0 top-16 bottom-0 bg-white border-r border-slate-100 flex flex-col py-4 z-30 transition-all duration-200 select-none ${
         isExpanded
-          ? `w-56 px-3 ${!expanded ? 'shadow-xl border-slate-200 z-30' : ''}`
-          : 'w-16 items-center cursor-pointer hover:bg-slate-50/80 hover:border-slate-200'
+          ? 'w-64 md:w-56 px-3 shadow-2xl md:shadow-none translate-x-0'
+          : '-translate-x-full md:translate-x-0 w-16 items-center cursor-pointer hover:bg-slate-50/80 hover:border-slate-200'
       }`}
     >
       {/* Top Header Row when Expanded */}

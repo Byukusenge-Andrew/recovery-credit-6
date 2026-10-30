@@ -17,20 +17,24 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       const existingUser = getCurrentUser();
       if (existingUser) {
         if (existingUser.mustChangePassword) {
-          router.push('/change-password');
+          router.replace('/change-password');
           return;
         }
         if (isMounted) setIsChecking(false);
         return;
       }
 
-      // 2. Otherwise verify session token against Neon DB via /api/auth/me
+      // 2. Fast timeout safety: if session verification hangs, fail safe to login
+      const timeoutPromise = new Promise<{ success: false }>((resolve) =>
+        setTimeout(() => resolve({ success: false }), 3000)
+      );
+
       try {
-        const res = await authApi.me();
-        if (res.success && res.user) {
+        const res = await Promise.race([authApi.me(), timeoutPromise]) as any;
+        if (res && res.success && res.user) {
           setAuthUser(res.user);
           if (res.user.mustChangePassword) {
-            router.push('/change-password');
+            router.replace('/change-password');
             return;
           }
           if (isMounted) setIsChecking(false);
@@ -40,10 +44,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         // Token invalid, expired, or absent
       }
 
-      // 3. Unauthorized: wipe session and redirect to login
+      // 3. Unauthorized or timed out: wipe session and redirect to login
       logout();
-      if (isMounted) {
-        router.push('/login');
+      if (typeof window !== 'undefined') {
+        router.replace('/login');
+        // Secondary deterministic fallback
+        setTimeout(() => {
+          if (window.location.pathname !== '/login') {
+            window.location.replace('/login');
+          }
+        }, 350);
       }
     }
 
