@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import type { DashboardStats, Category, ColorFlag } from '@/lib/types';
 
+interface DebtorRow {
+  outstanding_amount: number | string | null;
+  paid_amount: number | string | null;
+  outstanding_balance: number | string | null;
+  client_name: string | null;
+  category: Category | string | null;
+  color_flag: ColorFlag | string | null;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -15,23 +24,25 @@ export async function GET(request: Request) {
       ? (verifiedUsername || '')
       : (searchParams.get('username') || verifiedUsername || '');
 
-    let debtorsRows: any[];
+    let debtorsRows: DebtorRow[];
     if (effectiveRole === 'collector' && effectiveUsername) {
-      debtorsRows = await sql`
+      const rows = await sql`
         SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag
         FROM debtors
         WHERE LOWER(assigned_collector) = ${effectiveUsername.toLowerCase()}
       `;
+      debtorsRows = rows as unknown as DebtorRow[];
     } else {
-      debtorsRows = await sql`
+      const rows = await sql`
         SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag
         FROM debtors
       `;
+      debtorsRows = rows as unknown as DebtorRow[];
     }
 
     const uniqueClients = new Set(debtorsRows.map(d => d.client_name).filter(Boolean));
 
-    const stats = {
+    const stats: DashboardStats = {
       totalDebtors: debtorsRows.length,
       totalOutstanding: 0,
       totalPaid: 0,
@@ -47,14 +58,14 @@ export async function GET(request: Request) {
         disputed: 0,
         negotiation: 0,
         skip_tracing: 0
-      } as Record<Category, number>,
+      },
       flagCounts: {
         none: 0,
         red: 0,
         blue: 0,
         yellow: 0,
         green: 0
-      } as Record<ColorFlag, number>
+      }
     };
 
     debtorsRows.forEach(d => {
@@ -76,8 +87,9 @@ export async function GET(request: Request) {
     stats.outstandingBalance = stats.totalBalance;
 
     return NextResponse.json({ stats });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/dashboard/stats GET error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
