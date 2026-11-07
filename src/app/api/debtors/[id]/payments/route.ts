@@ -30,7 +30,13 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const { amountPaid, paymentDate, notes, recordedBy, role } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const { amountPaid, paymentDate, notes, recordedBy } = body;
+
+    const amt = Number(amountPaid || 0);
+    if (isNaN(amt) || amt <= 0) {
+      return NextResponse.json({ error: 'Payment amount must be a positive number greater than zero.' }, { status: 400 });
+    }
 
     const debtorRows = await sql`SELECT * FROM debtors WHERE id = ${id} LIMIT 1`;
     if (debtorRows.length === 0) {
@@ -38,23 +44,30 @@ export async function POST(
     }
     const debtor = debtorRows[0];
 
-    let amt = Number(amountPaid || 0);
-    const remaining = Number(debtor.outstanding_balance || 0);
-    if (amt > remaining) {
-      amt = remaining;
+    // Authorization check: Collectors cannot record payments for debtors assigned to other agents
+    const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
+    if (verifiedRole === 'collector' && verifiedUsername) {
+      if (debtor.assigned_collector && debtor.assigned_collector.toLowerCase() !== verifiedUsername.toLowerCase()) {
+        return NextResponse.json({ error: 'Forbidden: You are not authorized to collect for this debtor account.' }, { status: 403 });
+      }
     }
+
+    const remaining = Number(debtor.outstanding_balance || 0);
+    const finalAmt = amt > remaining ? remaining : amt;
 
     const paymentId = crypto.randomUUID();
     const pDate = paymentDate || new Date().toISOString().split('T')[0];
+    const actor = verifiedUsername || recordedBy || 'Collector';
 
     // Insert payment
     await sql`
       INSERT INTO payments (id, debtor_id, amount_paid, payment_date, recorded_by, notes, created_at)
-      VALUES (${paymentId}, ${id}, ${amt}, ${pDate}, ${recordedBy || 'Collector'}, ${notes || ''}, NOW())
+      VALUES (${paymentId}, ${id}, ${finalAmt}, ${pDate}, ${actor}, ${String(notes || '').slice(0, 500)}, NOW())
     `;
 
     // Recalculate debtor total paid and balance
-    const newPaid = Number(debtor.paid_amount || 0) + amt;
+    const newPaid = Number(debtor.paid_amount || 0) + finalAmt;
     const newBal = Math.max(0, Number(debtor.outstanding_amount || 0) - newPaid);
     let category = debtor.category;
     if (newBal <= 0 && Number(debtor.outstanding_amount) > 0) {
@@ -67,21 +80,23 @@ export async function POST(
       WHERE id = ${id}
     `;
 
+    const actorRole = verifiedRole || body.role || 'collector';
+
     // Audit log
     await sql`
       INSERT INTO audit_logs (id, timestamp, actor_id, actor_username, actor_full_name, actor_role, action, target_type, target_id, target_description, details)
       VALUES (
         ${'aud-' + Date.now() + '-' + crypto.randomUUID().slice(0, 8)},
         NOW(),
-        ${recordedBy || 'user'},
-        ${recordedBy || 'user'},
-        ${recordedBy || 'Collector'},
-        ${role || 'collector'},
+        ${actor},
+        ${actor},
+        ${actor},
+        ${actorRole},
         'record_payment',
         'payment',
         ${paymentId},
         ${`Payment for ${debtor.debtor_name}`},
-        ${`Recorded payment of R ${amt.toFixed(2)} on ${pDate}. Reference: ${notes || 'None'}.`}
+        ${`Recorded payment of RWF ${finalAmt.toFixed(2)} on ${pDate}. Reference: ${notes || 'None'}.`}
       )
     `;
 

@@ -47,3 +47,4 @@ next-env.d.ts
 
 android/
 recovery-credit-app.apk
+*.apk

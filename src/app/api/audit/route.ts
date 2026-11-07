@@ -4,6 +4,11 @@ import type { AuditLog } from '@/lib/types';
 
 export async function GET(request: Request) {
   try {
+    const verifiedRole = request.headers.get('x-verified-role');
+    if (verifiedRole !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Administrator privileges required to access audit logs.' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const action = searchParams.get('action') || 'all';

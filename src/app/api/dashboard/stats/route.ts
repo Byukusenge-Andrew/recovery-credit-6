@@ -5,15 +5,22 @@ import type { DashboardStats, Category, ColorFlag } from '@/lib/types';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const role = searchParams.get('role') || 'admin';
-    const username = searchParams.get('username') || '';
+    const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
+
+    // Role-based access enforcement: Collectors can NEVER escalate to view agency-wide stats
+    const isCollector = verifiedRole === 'collector';
+    const effectiveRole = isCollector ? 'collector' : (searchParams.get('role') || verifiedRole || 'admin');
+    const effectiveUsername = isCollector
+      ? (verifiedUsername || '')
+      : (searchParams.get('username') || verifiedUsername || '');
 
     let debtorsRows: any[];
-    if (role === 'collector' && username) {
+    if (effectiveRole === 'collector' && effectiveUsername) {
       debtorsRows = await sql`
         SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag
         FROM debtors
-        WHERE LOWER(assigned_collector) = ${username.toLowerCase()}
+        WHERE LOWER(assigned_collector) = ${effectiveUsername.toLowerCase()}
       `;
     } else {
       debtorsRows = await sql`

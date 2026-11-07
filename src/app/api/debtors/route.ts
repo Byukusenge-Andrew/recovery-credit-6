@@ -10,15 +10,22 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') || '';
     const flag = searchParams.get('flag') || '';
     const client = searchParams.get('client') || '';
-    const role = searchParams.get('role') || 'admin';
-    const username = searchParams.get('username') || '';
+    const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
+
+    // Role-based access enforcement: Collectors can NEVER escalate to view unassigned debtors
+    const isCollector = verifiedRole === 'collector';
+    const effectiveRole = isCollector ? 'collector' : (searchParams.get('role') || verifiedRole || 'admin');
+    const effectiveUsername = isCollector
+      ? (verifiedUsername || '')
+      : (searchParams.get('username') || verifiedUsername || '');
 
     let queryText = `SELECT * FROM debtors WHERE 1=1`;
     const params: any[] = [];
 
     // Role-based data isolation
-    if (role === 'collector' && username) {
-      params.push(username.toLowerCase());
+    if (effectiveRole === 'collector' && effectiveUsername) {
+      params.push(effectiveUsername.toLowerCase());
       queryText += ` AND LOWER(assigned_collector) = $${params.length}`;
     }
 

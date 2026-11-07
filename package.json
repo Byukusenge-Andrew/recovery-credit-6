@@ -3,16 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:monitor": "node db-monitor.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "^8.6.0",
-    "@capacitor/cli": "^8.6.0",
-    "@capacitor/core": "^8.6.0",
     "@neondatabase/serverless": "^1.2.0",
     "@types/nodemailer": "^8.0.2",
     "@vercel/analytics": "^2.0.1",

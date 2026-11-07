@@ -2,274 +2,1582 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Recovery Credit — Connecting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Recovery Credit — Enterprise Mobile</title>
+  <link rel="manifest" href="manifest.json">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #0c2340;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
+    /* CSS Reset & System Typography */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0c2340; color: #0f172a;
+      -webkit-font-smoothing: antialiased;
     }
+    #app-root {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+      background-color: #f8fafc; position: relative; overflow: hidden;
+    }
+
+    /* Professional Color Palette (Zero purple/indigo AI slop) */
+    :root {
+      --navy-900: #0c2340;
+      --navy-800: #132f54;
+      --navy-700: #1b3d6b;
+      --navy-600: #234c83;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --emerald-600: #059669;
+      --emerald-500: #10b981;
+      --emerald-50:  #ecfdf5;
+      --blue-600: #2563eb;
+      --blue-500: #3b82f6;
+      --blue-50:  #eff6ff;
+      --amber-600: #d97706;
+      --amber-500: #f59e0b;
+      --amber-50:  #fffbeb;
+      --red-600: #dc2626;
+      --red-500: #ef4444;
+      --red-50:  #fef2f2;
+    }
+
+    /* Utility Layout Classes */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .shrink-0 { flex-shrink: 0; }
+    .flex-1 { flex: 1 1 0%; }
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .gap-6 { gap: 24px; }
+    .p-2 { padding: 8px; }
+    .p-3 { padding: 12px; }
+    .p-4 { padding: 16px; }
+    .px-3 { padding-left: 12px; padding-right: 12px; }
+    .px-4 { padding-left: 16px; padding-right: 16px; }
+    .py-1 { padding-top: 4px; padding-bottom: 4px; }
+    .py-2 { padding-top: 8px; padding-bottom: 8px; }
+    .py-2\.5 { padding-top: 10px; padding-bottom: 10px; }
+    .py-3 { padding-top: 12px; padding-bottom: 12px; }
+    .mb-1 { margin-bottom: 4px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-3 { margin-bottom: 12px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .mt-4 { margin-top: 16px; }
+    .rounded-lg { border-radius: 8px; }
+    .rounded-xl { border-radius: 12px; }
+    .rounded-2xl { border-radius: 16px; }
+    .rounded-full { border-radius: 9999px; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Top App Bar */
+    .top-bar {
+      height: 56px; background-color: #ffffff;
+      border-bottom: 1px solid var(--slate-200);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; z-index: 40; flex-shrink: 0;
+    }
+    .brand-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .brand-group svg.logo { width: 32px; height: 32px; flex-shrink: 0; }
+    .brand-title { font-size: 15px; font-weight: 700; color: var(--navy-900); letter-spacing: -0.02em; }
+    .brand-sub { font-size: 10px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .status-pill {
+      font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 9999px;
+      display: flex; align-items: center; gap: 5px; cursor: pointer;
+    }
+    .status-pill.online { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .status-pill.offline { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-dot.online { background: #10b981; }
+    .status-dot.offline { background: #f43f5e; }
+
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--slate-200);
+      background: #ffffff; display: flex; align-items: center; justify-content: center;
+      color: var(--slate-700); cursor: pointer; transition: background 0.15s ease;
+    }
+    .icon-btn:active { background: var(--slate-100); }
+
+    /* Main Scrollable View Area */
+    .view-content {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 16px 14px 88px 14px; -webkit-overflow-scrolling: touch;
+    }
+
+    /* Bottom Navigation Bar (5 slots) */
+    .bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 64px; background: #ffffff;
+      border-top: 1px solid var(--slate-200);
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; color: var(--slate-500); cursor: pointer; border: none; background: transparent;
+      transition: color 0.15s ease; user-select: none;
+    }
+    .nav-item.active { color: var(--blue-600); }
+    .nav-item svg { width: 20px; height: 20px; stroke-width: 2; }
+    .nav-item span { font-size: 10px; font-weight: 600; letter-spacing: -0.01em; }
+    .nav-item.quick-pay-slot { position: relative; }
+    .quick-pay-btn {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--blue-600); color: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: -18px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+      border: 3px solid #ffffff; transition: transform 0.15s ease;
+    }
+    .quick-pay-btn:active { transform: scale(0.92); }
+
+    /* Cards & Containers */
     .card {
-      background: #111e33;
-      border: 1px solid #1f3252;
-      border-radius: 16px;
-      padding: 28px 24px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+      background: #ffffff; border: 1px solid var(--slate-200);
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     }
-    .spinner {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(255, 255, 255, 0.12);
-      border-radius: 50%;
-      border-top-color: #10b981;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
+    .card-navy {
+      background: linear-gradient(135deg, #0c2340 0%, #132f54 100%);
+      color: #ffffff; border: 1px solid #1b3d6b;
+      border-radius: 16px; padding: 18px; margin-bottom: 14px;
+      box-shadow: 0 6px 16px rgba(12, 35, 64, 0.25);
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+
+    /* Metric Cards Grid */
+    .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+    .metric-card {
+      background: #ffffff; border: 1px solid var(--slate-200);
+      border-radius: 12px; padding: 12px 14px;
     }
-    h1 {
-      font-size: 19px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 6px;
+    .metric-label { font-size: 11px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; }
+    .metric-val { font-size: 17px; font-weight: 700; color: var(--slate-900); font-family: -apple-system, monospace; letter-spacing: -0.02em; }
+    .metric-sub { font-size: 10px; color: var(--slate-400); margin-top: 2px; }
+
+    /* Progress Bar */
+    .progress-track {
+      width: 100%; height: 8px; background: rgba(255, 255, 255, 0.2);
+      border-radius: 9999px; overflow: hidden; margin-top: 10px;
     }
-    p.desc {
-      font-size: 12px;
-      color: #94a3b8;
-      line-height: 1.5;
-      margin-bottom: 20px;
+    .progress-fill {
+      height: 100%; background: #10b981; border-radius: 9999px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .status-text {
-      font-size: 11px;
-      font-family: monospace;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      word-break: break-all;
+
+    /* Badges & Chips */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 600;
+      white-space: nowrap;
     }
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      text-align: left;
-      margin-bottom: 14px;
+    .badge-paying { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-ptp { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-waiver { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+    .badge-disputed { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-skip { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .badge-bank { background: var(--slate-100); color: var(--slate-700); font-size: 10px; border-radius: 4px; padding: 2px 6px; font-weight: 600; }
+
+    .flag-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .flag-red { background: #ef4444; }
+    .flag-yellow { background: #f59e0b; }
+    .flag-blue { background: #3b82f6; }
+    .flag-green { background: #10b981; }
+
+    /* Debtor Card */
+    .debtor-card {
+      background: #ffffff; border: 1px solid var(--slate-200);
+      border-radius: 12px; padding: 14px; margin-bottom: 10px;
+      cursor: pointer; transition: transform 0.1s ease, border-color 0.15s ease;
     }
-    label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #cbd5e1;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+    .debtor-card:active { border-color: var(--blue-500); transform: scale(0.99); }
+    .debtor-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .debtor-name { font-size: 14px; font-weight: 700; color: var(--slate-900); display: flex; align-items: center; gap: 6px; }
+    .debtor-acc { font-size: 11px; font-family: monospace; color: var(--slate-500); margin-top: 2px; }
+    .debtor-balance { text-align: right; }
+    .balance-label { font-size: 9px; font-weight: 600; text-transform: uppercase; color: var(--slate-400); }
+    .balance-amt { font-size: 14px; font-weight: 700; color: var(--slate-900); font-family: monospace; }
+    .debtor-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--slate-100); }
+    .action-btn {
+      flex: 1; padding: 6px 0; border-radius: 8px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--slate-200); background: #ffffff; color: var(--slate-700);
+      display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
     }
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      background: #071324;
-      border: 1px solid #283e63;
-      border-radius: 8px;
-      color: #ffffff;
-      font-size: 13px;
-      font-family: monospace;
-      outline: none;
+    .action-btn.primary { background: var(--blue-600); color: #ffffff; border-color: var(--blue-600); }
+    .action-btn.whatsapp { background: #059669; color: #ffffff; border-color: #059669; }
+
+    /* Search & Filter Bar */
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: #ffffff; border: 1px solid var(--slate-200);
+      border-radius: 10px; padding: 8px 12px; margin-bottom: 12px;
     }
-    input:focus {
-      border-color: #10b981;
+    .search-input {
+      flex: 1; border: none; outline: none; font-size: 13px; color: var(--slate-800); background: transparent;
     }
-    .btn-submit {
-      width: 100%;
-      padding: 12px 0;
-      background: #15803d;
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s ease;
-    }
-    .btn-submit:active {
-      background: #166534;
-    }
-    .preset-chips {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 16px;
-      text-align: left;
+    .filter-chips {
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
     }
     .chip {
-      background: #172844;
-      border: 1px solid #273e66;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 11px;
-      color: #cbd5e1;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 5px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--slate-200); background: #ffffff; color: var(--slate-600);
+      white-space: nowrap; cursor: pointer;
     }
-    .chip:hover {
-      background: #20355a;
-      border-color: #3b5a8f;
-      color: #ffffff;
+    .chip.active { background: var(--navy-900); color: #ffffff; border-color: var(--navy-900); }
+
+    /* Modals & Bottom Sheets */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px); z-index: 100; display: none;
+      align-items: flex-end; justify-content: center;
     }
-    .chip span.badge {
-      font-size: 9px;
-      padding: 2px 6px;
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border-radius: 4px;
-      font-weight: 600;
+    .modal-overlay.open { display: flex; animation: fadeIn 0.15s ease; }
+    .bottom-sheet {
+      width: 100%; max-width: 500px; max-height: 85vh; background: #ffffff;
+      border-top-left-radius: 20px; border-top-right-radius: 20px;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2); animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .tip {
-      font-size: 10.5px;
-      color: #64748b;
-      margin-top: 14px;
-      line-height: 1.4;
+    .sheet-handle {
+      width: 36px; height: 4px; background: var(--slate-300);
+      border-radius: 9999px; margin: 10px auto 4px auto;
     }
+    .sheet-header {
+      padding: 12px 18px; border-bottom: 1px solid var(--slate-100);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .sheet-title { font-size: 15px; font-weight: 700; color: var(--slate-900); }
+    .sheet-body { padding: 18px; overflow-y: auto; flex: 1; }
+
+    /* Form Elements */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--slate-700); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.03em; }
+    .form-input, .form-select {
+      width: 100%; padding: 11px 12px; border: 1px solid var(--slate-200); border-radius: 10px;
+      font-size: 13px; color: var(--slate-900); background: #ffffff; outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--blue-600); }
+    .btn-submit {
+      width: 100%; padding: 12px; border-radius: 10px; background: var(--blue-600);
+      color: #ffffff; border: none; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-submit:active { background: #1d4ed8; }
+
+    /* Quick Amount Presets */
+    .amount-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+    .preset-btn {
+      padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--slate-200); border-radius: 8px; background: var(--slate-50);
+      color: var(--slate-700); cursor: pointer;
+    }
+    .preset-btn:active { background: var(--blue-50); border-color: var(--blue-600); color: var(--blue-600); }
+
+    /* Login Screen Card */
+    .login-container {
+      min-height: 100vh; background: #0c2340;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .login-box {
+      width: 100%; max-width: 380px; background: #ffffff;
+      border-radius: 18px; padding: 26px 22px; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Toast Notification */
+    #toast-msg {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      background: var(--slate-900); color: #ffffff; padding: 10px 18px;
+      border-radius: 9999px; font-size: 12px; font-weight: 600; z-index: 200;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; align-items: center; gap: 8px; pointer-events: none;
+    }
+    #toast-msg.show { transform: translateX(-50%) translateY(0); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <div class="spinner" id="spinner"></div>
-    <h1>Recovery Credit</h1>
-    <p class="desc" id="subDesc">Connecting to backend server...</p>
+  <!-- Toast Notification Pill -->
+  <div id="toast-msg">
+    <span id="toast-text">Operation successful</span>
+  </div>
 
-    <div class="status-text" id="statusBox">Detecting host server...</div>
+  <div id="app-root">
+    <!-- View rendered by JavaScript -->
+  </div>
 
-    <div id="manualControls" style="display: none;">
-      <div class="preset-chips">
-        <label>Recommended Connection Presets:</label>
-        <div class="chip" onclick="applyPreset('http://10.0.2.2:3000')">
-          <span>http://10.0.2.2:3000</span>
-          <span class="badge">LDPlayer / Emulator</span>
+  <!-- Server Configuration Modal -->
+  <div class="modal-overlay" id="serverModal">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">Backend Connection Settings</h3>
+        <button class="icon-btn" onclick="closeServerModal()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body">
+        <p style="font-size: 11px; color: var(--slate-500); line-height: 1.5; margin-bottom: 14px;">
+          Connect the mobile client directly to your web backend server. Database URLs and secrets remain safely isolated on the server.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Connection Presets</label>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="chip" onclick="setServerUrlPreset('http://10.0.2.2:3000')" style="display: flex; justify-content: space-between; border-radius: 8px; padding: 9px 12px;">
+              <span>http://10.0.2.2:3000</span>
+              <span style="font-size: 10px; color: #10b981; font-weight: 700;">LDPlayer / Emulator</span>
+            </div>
+            <div class="chip" onclick="setServerUrlPreset('http://192.168.1.189:3000')" style="display: flex; justify-content: space-between; border-radius: 8px; padding: 9px 12px;">
+              <span>http://192.168.1.189:3000</span>
+              <span style="font-size: 10px; color: #3b82f6; font-weight: 700;">Wi-Fi Host LAN</span>
+            </div>
+            <div class="chip" onclick="setServerUrlPreset('http://localhost:3000')" style="display: flex; justify-content: space-between; border-radius: 8px; padding: 9px 12px;">
+              <span>http://localhost:3000</span>
+              <span style="font-size: 10px; color: #64748b; font-weight: 700;">Local PC Browser</span>
+            </div>
+          </div>
         </div>
-        <div class="chip" onclick="applyPreset('http://192.168.1.189:3000')">
-          <span>http://192.168.1.189:3000</span>
-          <span class="badge">Wi-Fi LAN IP</span>
+
+        <div class="form-group">
+          <label class="form-label">Active API Gateway URL</label>
+          <input type="text" id="customServerInput" class="form-input" style="font-family: monospace; font-size: 12px;" value="http://10.0.2.2:3000">
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="action-btn" style="flex: 1;" onclick="testServerPing()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span id="pingStatusText">Test Ping</span>
+          </button>
+          <button class="btn-submit" style="flex: 1; padding: 10px;" onclick="saveServerUrl()">
+            <span>Save & Connect</span>
+          </button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="input-group">
-        <label>Server Endpoint URL</label>
-        <input type="text" id="serverInput" value="http://10.0.2.2:3000" placeholder="http://10.0.2.2:3000">
+  <!-- Quick Record Payment Modal -->
+  <div class="modal-overlay" id="quickPayModal">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">Record Debtor Payment</h3>
+        <button class="icon-btn" onclick="closeQuickPayModal()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
+      <div class="sheet-body">
+        <form onsubmit="handleQuickPaySubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Select Debtor Account</label>
+            <select id="payDebtorSelect" class="form-select" required onchange="handleDebtorSelectionChange()">
+              <option value="">Choose debtor from portfolio...</option>
+            </select>
+          </div>
 
-      <button class="btn-submit" onclick="testAndConnect()">Connect Now</button>
+          <div id="selectedDebtorInfo" style="display: none; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 10px; padding: 10px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+              <span style="color: var(--slate-500);">Bank / Creditor:</span>
+              <strong id="payInfoBank" style="color: var(--slate-800);">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 4px;">
+              <span style="color: var(--slate-500);">Current Balance:</span>
+              <strong id="payInfoBalance" style="color: var(--emerald-600); font-family: monospace;">RWF 0</strong>
+            </div>
+          </div>
 
-      <p class="tip">
-        Make sure the Next.js server is running on your PC:
-        <br><code style="color: #38bdf8;">npm run dev</code>
-      </p>
+          <div class="form-group">
+            <label class="form-label">Quick Amount (RWF)</label>
+            <div class="amount-presets">
+              <button type="button" class="preset-btn" onclick="setQuickAmount(50000)">+50k</button>
+              <button type="button" class="preset-btn" onclick="setQuickAmount(100000)">+100k</button>
+              <button type="button" class="preset-btn" onclick="setQuickAmount(250000)">+250k</button>
+              <button type="button" class="preset-btn" onclick="setFullBalanceAmount()">Full</button>
+            </div>
+            <input type="number" id="payAmountInput" class="form-input" placeholder="Amount in RWF" required min="100">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Payment Channel</label>
+            <select id="payChannelSelect" class="form-select">
+              <option value="MTN Mobile Money">MTN Mobile Money (MoMo)</option>
+              <option value="Airtel Money">Airtel Money</option>
+              <option value="Bank Deposit / Transfer">Bank Deposit / Transfer</option>
+              <option value="Cash Receipt">Cash Receipt</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Receipt / Reference Notes</label>
+            <input type="text" id="payNotesInput" class="form-input" placeholder="Transaction ID or notes (optional)">
+          </div>
+
+          <button type="submit" class="btn-submit" id="paySubmitBtn">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Confirm & Record Payment</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debtor Dossier Modal -->
+  <div class="modal-overlay" id="debtorDossierModal">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title" id="dossierTitle">Debtor Dossier</h3>
+        <button class="icon-btn" onclick="closeDossierModal()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body" id="dossierBody">
+        <!-- Rendered dynamically -->
+      </div>
     </div>
   </div>
 
   <script>
-    const candidates = [
-      localStorage.getItem('rc_server_url'),
-      'http://10.0.2.2:3000',
-      'http://192.168.1.189:3000',
-      'http://localhost:3000'
-    ].filter(Boolean);
+    /* -------------------------------------------------------------
+       STATE MANAGEMENT & CONFIGURATION
+       Zero secrets embedded: backend connection is purely via REST.
+    ---------------------------------------------------------------- */
+    const State = {
+      user: null,
+      token: localStorage.getItem('rc_mobile_token') || '',
+      currentTab: 'dash',
+      language: localStorage.getItem('rc_mobile_lang') || 'rw',
+      serverUrl: localStorage.getItem('rc_mobile_server_url') || 'http://10.0.2.2:3000',
+      isOnline: false,
+      stats: null,
+      debtors: [],
+      institutions: [],
+      filteredDebtors: [],
+      activeFilterCategory: 'all',
+      activeFilterFlag: 'all',
+      searchQuery: '',
+      currentDossierDebtor: null
+    };
 
-    let found = false;
+    /* Translations (Kinyarwanda, English, French) */
+    const I18N = {
+      rw: {
+        appName: 'Recovery Credit',
+        tagline: 'Gucunga Umwenda & Kwishyuza',
+        dashboard: 'Imbonerahamwe',
+        debtors: 'Ababerewemo',
+        quickPay: 'Kwishyura',
+        institutions: 'Amabanki',
+        settings: 'Igenamiterere',
+        loginTitle: 'Kwinjira mu Murimo',
+        loginSub: 'Injiza imyirondoro yawe yo gukora mu kwishyuza',
+        username: 'Izina cyangwa Imeyili',
+        password: 'Ijambo ry Ibanga',
+        signIn: 'Injira ubu',
+        connected: 'Ihuza rirahari',
+        offline: 'Nta murongo',
+        totalDebtors: 'Ababerewemo Bose',
+        totalExposure: 'Umwenda Wose',
+        totalRecovered: 'Ayishyuwe Yose',
+        balanceDue: 'Asigaye Kwishyurwa',
+        recoveryRate: 'Igipimo cyo Kwishyuza',
+        serverConfig: 'Guhindura Seriveri',
+        signOut: 'Gusohoka',
+        searchPlaceholder: 'Shakisha izina, konti, banki...',
+        recordPayment: 'Kwandika Ubwishyu',
+        openWhatsApp: 'Ohereza WhatsApp',
+        call: 'Hamagara',
+        viewDossier: 'Reba Dosiyé'
+      },
+      en: {
+        appName: 'Recovery Credit',
+        tagline: 'Debt Collection Management System',
+        dashboard: 'Dashboard',
+        debtors: 'Debtors',
+        quickPay: 'Pay',
+        institutions: 'Banks',
+        settings: 'Settings',
+        loginTitle: 'Agent Sign In',
+        loginSub: 'Enter official credentials to access recovery operations',
+        username: 'Username or Email',
+        password: 'Password',
+        signIn: 'Sign In',
+        connected: 'Connected',
+        offline: 'Offline',
+        totalDebtors: 'Total Debtors',
+        totalExposure: 'Total Exposure',
+        totalRecovered: 'Total Recovered',
+        balanceDue: 'Net Balance Due',
+        recoveryRate: 'Recovery Rate',
+        serverConfig: 'Backend Server',
+        signOut: 'Sign Out',
+        searchPlaceholder: 'Search name, account, bank...',
+        recordPayment: 'Record Payment',
+        openWhatsApp: 'Send WhatsApp',
+        call: 'Call',
+        viewDossier: 'View Dossier'
+      },
+      fr: {
+        appName: 'Recovery Credit',
+        tagline: 'Système de Recouvrement des Créances',
+        dashboard: 'Tableau',
+        debtors: 'Débiteurs',
+        quickPay: 'Payer',
+        institutions: 'Banques',
+        settings: 'Paramètres',
+        loginTitle: 'Connexion Agent',
+        loginSub: 'Entrez vos identifiants pour gérer les recouvrements',
+        username: 'Nom d utilisateur ou Email',
+        password: 'Mot de passe',
+        signIn: 'Se connecter',
+        connected: 'Connecté',
+        offline: 'Hors ligne',
+        totalDebtors: 'Total Débiteurs',
+        totalExposure: 'Créances Totales',
+        totalRecovered: 'Montant Recouvré',
+        balanceDue: 'Solde Restant',
+        recoveryRate: 'Taux de Recouvrement',
+        serverConfig: 'Serveur Backend',
+        signOut: 'Déconnexion',
+        searchPlaceholder: 'Rechercher nom, compte, banque...',
+        recordPayment: 'Enregistrer Paiement',
+        openWhatsApp: 'WhatsApp',
+        call: 'Appeler',
+        viewDossier: 'Voir Dossier'
+      }
+    };
 
-    async function pingUrl(url) {
+    function t(key) {
+      const dict = I18N[State.language] || I18N.rw;
+      return dict[key] || I18N.en[key] || key;
+    }
+
+    function formatRWF(amt) {
+      const num = Number(amt) || 0;
+      return 'RWF ' + num.toLocaleString('en-US');
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast-msg');
+      document.getElementById('toast-text').textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    /* -------------------------------------------------------------
+       API REST CLIENT
+       Zero secrets embedded: communicates via JSON over HTTP.
+    ---------------------------------------------------------------- */
+    async function apiRequest(endpoint, options = {}) {
+      const url = `${State.serverUrl.replace(/\/$/, '')}/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+
+      if (State.token) {
+        headers['Authorization'] = `Bearer ${State.token}`;
+      }
+
+      if (State.user) {
+        headers['x-user-id'] = State.user.id || '';
+        headers['x-user-role'] = State.user.role || '';
+        headers['x-username'] = State.user.username || '';
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
+
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1800);
-        await fetch(url + '/favicon.ico', {
-          method: 'HEAD',
-          mode: 'no-cors',
+        const res = await fetch(url, {
+          ...options,
+          headers,
           signal: controller.signal
         });
         clearTimeout(timeoutId);
-        return true;
-      } catch (e) {
-        return false;
+
+        let data;
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          data = await res.text();
+        }
+
+        if (!res.ok) {
+          const err = (typeof data === 'object' && data.error) ? data.error : `HTTP ${res.status}`;
+          throw new Error(err);
+        }
+
+        State.isOnline = true;
+        updateStatusPill();
+        return data;
+      } catch (err) {
+        clearTimeout(timeoutId);
+        State.isOnline = false;
+        updateStatusPill();
+        throw err;
       }
     }
 
-    async function autoConnect() {
-      const statusBox = document.getElementById('statusBox');
+    async function checkServerHealth() {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        await fetch(`${State.serverUrl.replace(/\/$/, '')}/api/notifications`, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        State.isOnline = true;
+      } catch {
+        State.isOnline = false;
+      }
+      updateStatusPill();
+    }
 
-      for (const url of candidates) {
-        statusBox.textContent = 'Testing ' + url + '...';
-        const ok = await pingUrl(url);
-        if (ok) {
-          found = true;
-          statusBox.textContent = 'Connected! Loading application...';
-          localStorage.setItem('rc_server_url', url);
-          setTimeout(() => {
-            window.location.replace(url + '/login');
-          }, 300);
+    function updateStatusPill() {
+      const pills = document.querySelectorAll('.server-status-hook');
+      pills.forEach(pill => {
+        if (State.isOnline) {
+          pill.className = 'status-pill online server-status-hook';
+          pill.innerHTML = '<span class="status-dot online"></span><span>' + t('connected') + '</span>';
+        } else {
+          pill.className = 'status-pill offline server-status-hook';
+          pill.innerHTML = '<span class="status-dot offline"></span><span>' + t('offline') + '</span>';
+        }
+      });
+    }
+
+    /* -------------------------------------------------------------
+       INITIALIZATION & AUTHENTICATION
+    ---------------------------------------------------------------- */
+    async function initApp() {
+      // Auto-detect server URL from localStorage or presets
+      document.getElementById('customServerInput').value = State.serverUrl;
+      checkServerHealth();
+
+      const savedUser = localStorage.getItem('rc_mobile_user');
+      if (savedUser && State.token) {
+        try {
+          State.user = JSON.parse(savedUser);
+          renderMainShell();
+          await refreshAllData();
           return;
+        } catch {
+          // Token parse issue
         }
       }
 
-      // If all automatic pings fail, show manual configuration
-      showManualControls();
+      // Check session with backend if token exists
+      if (State.token) {
+        try {
+          const me = await apiRequest('/auth/me');
+          if (me.success && me.user) {
+            State.user = me.user;
+            localStorage.setItem('rc_mobile_user', JSON.stringify(me.user));
+            renderMainShell();
+            await refreshAllData();
+            return;
+          }
+        } catch {
+          // Unauthenticated or server offline
+        }
+      }
+
+      renderLoginView();
     }
 
-    function showManualControls() {
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('subDesc').textContent = 'Server not detected. Please verify your server connection:';
-      document.getElementById('statusBox').textContent = 'Offline / Waiting for Next.js server';
-      document.getElementById('manualControls').style.display = 'block';
+    /* -------------------------------------------------------------
+       VIEWS: LOGIN VIEW
+    ---------------------------------------------------------------- */
+    function renderLoginView() {
+      const root = document.getElementById('app-root');
+      root.innerHTML = `
+        <div class="login-container">
+          <div class="login-box">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <svg width="48" height="48" viewBox="0 0 200 200" fill="none" style="margin: 0 auto 10px auto; display: block;">
+                <rect width="200" height="200" rx="36" fill="#0c2340"/>
+                <path d="M48 60 H115 C138 60 152 74 152 94 C152 114 138 128 115 128 H82 V155 H48 V60 Z" fill="#2563eb"/>
+                <path d="M82 85 H112 C122 85 128 90 128 94 C128 99 122 104 112 104 H82 V85 Z" fill="#ffffff"/>
+                <path d="M110 115 L155 155 H118 L88 123 L110 115 Z" fill="#10b981"/>
+              </svg>
+              <h2 style="font-size: 19px; font-weight: 700; color: var(--navy-900); letter-spacing: -0.02em;">${t('appName')}</h2>
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 2px;">${t('tagline')}</p>
+            </div>
 
-      const saved = localStorage.getItem('rc_server_url');
-      if (saved) {
-        document.getElementById('serverInput').value = saved;
+            <!-- Server Connection Indicator -->
+            <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-dot ${State.isOnline ? 'online' : 'offline'}"></span>
+                <div>
+                  <div style="font-size: 10px; font-weight: 700; color: var(--slate-700); text-transform: uppercase;">Backend Server</div>
+                  <div style="font-size: 11px; font-family: monospace; color: var(--slate-500);">${State.serverUrl}</div>
+                </div>
+              </div>
+              <button onclick="openServerModal()" style="font-size: 11px; font-weight: 600; color: var(--blue-600); background: none; border: none; cursor: pointer; text-decoration: underline;">
+                Configure
+              </button>
+            </div>
+
+            <form onsubmit="handleLoginSubmit(event)">
+              <div class="form-group">
+                <label class="form-label">${t('username')}</label>
+                <input type="text" id="loginUsername" class="form-input" placeholder="admin or collector" required value="admin">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">${t('password')}</label>
+                <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required value="admin123">
+              </div>
+
+              <div id="loginErrorBox" style="display: none; padding: 10px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 11px; margin-bottom: 14px;"></div>
+
+              <button type="submit" class="btn-submit" id="loginBtn">
+                <span>${t('signIn')}</span>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+            </form>
+
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--slate-100); text-align: center;">
+              <span style="font-size: 10px; color: var(--slate-400); text-transform: uppercase; font-weight: 700;">Field Agent Quick Demo:</span>
+              <div style="display: flex; gap: 6px; justify-content: center; margin-top: 8px;">
+                <button type="button" class="preset-btn" style="flex: 1;" onclick="fillDemoCredentials('admin', 'admin123')">Admin</button>
+                <button type="button" class="preset-btn" style="flex: 1;" onclick="fillDemoCredentials('collector', 'collector123')">Collector</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function fillDemoCredentials(u, p) {
+      document.getElementById('loginUsername').value = u;
+      document.getElementById('loginPassword').value = p;
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value;
+      const errBox = document.getElementById('loginErrorBox');
+      const btn = document.getElementById('loginBtn');
+
+      errBox.style.display = 'none';
+      btn.disabled = true;
+      btn.innerHTML = 'Connecting...';
+
+      try {
+        const res = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ usernameOrEmail: u, password: p })
+        });
+
+        if (res.user && res.token) {
+          State.user = res.user;
+          State.token = res.token;
+          localStorage.setItem('rc_mobile_token', res.token);
+          localStorage.setItem('rc_mobile_user', JSON.stringify(res.user));
+          showToast('Signed in as ' + res.user.fullName);
+          renderMainShell();
+          await refreshAllData();
+        } else {
+          throw new Error('Authentication succeeded but session payload missing.');
+        }
+      } catch (err) {
+        errBox.style.display = 'block';
+        errBox.textContent = err.message || 'Login failed. Verify server URL & credentials.';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>${t('signIn')}</span><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
       }
     }
 
-    function applyPreset(url) {
-      document.getElementById('serverInput').value = url;
-      testAndConnect();
+    /* -------------------------------------------------------------
+       MAIN APP SHELL
+    ---------------------------------------------------------------- */
+    function renderMainShell() {
+      const root = document.getElementById('app-root');
+      root.innerHTML = `
+        <!-- Top Navigation Header -->
+        <header class="top-bar">
+          <div class="brand-group" onclick="switchTab('dash')">
+            <svg class="logo" viewBox="0 0 200 200" fill="none">
+              <rect width="200" height="200" rx="36" fill="#0c2340"/>
+              <path d="M48 60 H115 C138 60 152 74 152 94 C152 114 138 128 115 128 H82 V155 H48 V60 Z" fill="#2563eb"/>
+              <path d="M82 85 H112 C122 85 128 90 128 94 C128 99 122 104 112 104 H82 V85 Z" fill="#ffffff"/>
+              <path d="M110 115 L155 155 H118 L88 123 L110 115 Z" fill="#10b981"/>
+            </svg>
+            <div>
+              <div class="brand-title">${t('appName')}</div>
+              <div class="brand-sub">${State.user ? State.user.role : 'Field Agent'}</div>
+            </div>
+          </div>
+
+          <div class="top-actions">
+            <div class="status-pill ${State.isOnline ? 'online' : 'offline'} server-status-hook" onclick="openServerModal()">
+              <span class="status-dot ${State.isOnline ? 'online' : 'offline'}"></span>
+              <span>${State.isOnline ? t('connected') : t('offline')}</span>
+            </div>
+
+            <!-- Language Pill Toggle -->
+            <button class="icon-btn" onclick="cycleLanguage()" title="Switch Language">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase;">${State.language}</span>
+            </button>
+
+            <!-- Refresh Button -->
+            <button class="icon-btn" onclick="refreshAllData(true)" title="Refresh Data">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Dynamic Content View -->
+        <main class="view-content" id="mainViewArea">
+          <!-- Rendered by switchTab -->
+        </main>
+
+        <!-- 5-Slot Bottom Navigation -->
+        <nav class="bottom-nav">
+          <button class="nav-item ${State.currentTab === 'dash' ? 'active' : ''}" onclick="switchTab('dash')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            <span>${t('dashboard')}</span>
+          </button>
+
+          <button class="nav-item ${State.currentTab === 'debtors' ? 'active' : ''}" onclick="switchTab('debtors')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+            <span>${t('debtors')}</span>
+          </button>
+
+          <div class="nav-item quick-pay-slot" onclick="openQuickPayModal()">
+            <div class="quick-pay-btn" title="Record Payment">
+              <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </div>
+            <span>${t('quickPay')}</span>
+          </div>
+
+          <button class="nav-item ${State.currentTab === 'institutions' ? 'active' : ''}" onclick="switchTab('institutions')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5m-15 10.5V10.5M3 21h18M3 10.5h18"/></svg>
+            <span>${t('institutions')}</span>
+          </button>
+
+          <button class="nav-item ${State.currentTab === 'settings' ? 'active' : ''}" onclick="switchTab('settings')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27.1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.15.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.27-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>${t('settings')}</span>
+          </button>
+        </nav>
+      `;
+
+      switchTab(State.currentTab);
     }
 
-    async function testAndConnect() {
-      const input = document.getElementById('serverInput');
-      const url = input.value.trim().replace(/\/$/, '');
-      if (!url) return;
+    function switchTab(tab) {
+      State.currentTab = tab;
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.querySelector(`.bottom-nav .nav-item[onclick="switchTab('${tab}')"]`);
+      if (activeBtn) activeBtn.classList.add('active');
 
-      const statusBox = document.getElementById('statusBox');
-      statusBox.textContent = 'Testing ' + url + '...';
-      document.getElementById('spinner').style.display = 'block';
+      const area = document.getElementById('mainViewArea');
+      if (!area) return;
 
-      const ok = await pingUrl(url);
-      if (ok) {
-        statusBox.textContent = 'Connected! Loading application...';
-        localStorage.setItem('rc_server_url', url);
-        setTimeout(() => {
-          window.location.replace(url + '/login');
-        }, 300);
+      if (tab === 'dash') renderDashboardView(area);
+      else if (tab === 'debtors') renderDebtorsView(area);
+      else if (tab === 'institutions') renderInstitutionsView(area);
+      else if (tab === 'settings') renderSettingsView(area);
+    }
+
+    /* -------------------------------------------------------------
+       TAB 1: DASHBOARD VIEW
+    ---------------------------------------------------------------- */
+    function renderDashboardView(container) {
+      const s = State.stats || {
+        totalDebtors: State.debtors.length,
+        totalOutstanding: State.debtors.reduce((acc, d) => acc + (d.outstandingAmount || 0), 0),
+        totalPaid: State.debtors.reduce((acc, d) => acc + (d.paidAmount || 0), 0),
+        totalBalance: State.debtors.reduce((acc, d) => acc + (d.outstandingBalance || 0), 0)
+      };
+
+      const recoveryRate = s.totalOutstanding > 0 ? Math.min(100, Math.round((s.totalPaid / s.totalOutstanding) * 100)) : 0;
+      const recentDebtors = State.debtors.slice(0, 5);
+
+      container.innerHTML = `
+        <!-- Recovery Performance Banner -->
+        <div class="card-navy">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.04em;">
+                ${t('recoveryRate')}
+              </div>
+              <div style="font-size: 26px; font-weight: 800; margin-top: 4px; font-family: monospace;">
+                ${recoveryRate}%
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                ${formatRWF(s.totalPaid)} collected
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">
+                Active Portfolio
+              </span>
+              <div style="font-size: 11px; color: #cbd5e1; margin-top: 6px;">
+                ${s.totalDebtors} assigned files
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill" style="width: ${recoveryRate}%"></div>
+          </div>
+        </div>
+
+        <!-- 4 Key Metric Cards -->
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">${t('totalDebtors')}</div>
+            <div class="metric-val">${s.totalDebtors}</div>
+            <div class="metric-sub">Across all banks</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">${t('totalExposure')}</div>
+            <div class="metric-val" style="font-size: 14px;">${formatRWF(s.totalOutstanding)}</div>
+            <div class="metric-sub">Book claim principal</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">${t('totalRecovered')}</div>
+            <div class="metric-val" style="font-size: 14px; color: var(--emerald-600);">${formatRWF(s.totalPaid)}</div>
+            <div class="metric-sub">Agency receipts</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">${t('balanceDue')}</div>
+            <div class="metric-val" style="font-size: 14px; color: var(--amber-600);">${formatRWF(s.totalBalance)}</div>
+            <div class="metric-sub">Pending collection</div>
+          </div>
+        </div>
+
+        <!-- Quick Action Trigger -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="action-btn primary" style="padding: 10px;" onclick="openQuickPayModal()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Record Payment</span>
+          </button>
+          <button class="action-btn" style="padding: 10px;" onclick="switchTab('debtors')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span>Browse Debtors</span>
+          </button>
+        </div>
+
+        <!-- Recent Debtors Feed -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--slate-900);">Recent Active Files</h4>
+          <span style="font-size: 11px; font-weight: 600; color: var(--blue-600); cursor: pointer;" onclick="switchTab('debtors')">See all (${State.debtors.length}) →</span>
+        </div>
+
+        <div id="recentDebtorsList">
+          ${recentDebtors.map(renderDebtorCardHtml).join('')}
+          ${recentDebtors.length === 0 ? '<div style="text-align: center; padding: 24px; color: var(--slate-400); font-size: 12px;">No debtors loaded yet. Tap Refresh or check Server Connection.</div>' : ''}
+        </div>
+      `;
+    }
+
+    /* -------------------------------------------------------------
+       TAB 2: DEBTORS DIRECTORY VIEW
+    ---------------------------------------------------------------- */
+    function renderDebtorsView(container) {
+      container.innerHTML = `
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--slate-400);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" class="search-input" id="debtorSearchInput" placeholder="${t('searchPlaceholder')}" value="${State.searchQuery}" oninput="handleSearch(this.value)">
+        </div>
+
+        <!-- Filter Chips: Categories -->
+        <div class="filter-chips">
+          <div class="chip ${State.activeFilterCategory === 'all' ? 'active' : ''}" onclick="setFilterCategory('all')">All Stages</div>
+          <div class="chip ${State.activeFilterCategory === 'paying' ? 'active' : ''}" onclick="setFilterCategory('paying')">Paying</div>
+          <div class="chip ${State.activeFilterCategory === 'promise_to_pay' ? 'active' : ''}" onclick="setFilterCategory('promise_to_pay')">Promise to Pay</div>
+          <div class="chip ${State.activeFilterCategory === 'waiver_letter' ? 'active' : ''}" onclick="setFilterCategory('waiver_letter')">Waiver</div>
+          <div class="chip ${State.activeFilterCategory === 'disputed' ? 'active' : ''}" onclick="setFilterCategory('disputed')">Disputed</div>
+          <div class="chip ${State.activeFilterCategory === 'completed' ? 'active' : ''}" onclick="setFilterCategory('completed')">Settled</div>
+        </div>
+
+        <!-- Filter Chips: Priority Flags -->
+        <div class="filter-chips">
+          <div class="chip ${State.activeFilterFlag === 'all' ? 'active' : ''}" onclick="setFilterFlag('all')">All Flags</div>
+          <div class="chip ${State.activeFilterFlag === 'red' ? 'active' : ''}" onclick="setFilterFlag('red')"><span class="flag-dot flag-red" style="margin-right: 4px;"></span>Critical</div>
+          <div class="chip ${State.activeFilterFlag === 'yellow' ? 'active' : ''}" onclick="setFilterFlag('yellow')"><span class="flag-dot flag-yellow" style="margin-right: 4px;"></span>Medium</div>
+          <div class="chip ${State.activeFilterFlag === 'blue' ? 'active' : ''}" onclick="setFilterFlag('blue')"><span class="flag-dot flag-blue" style="margin-right: 4px;"></span>Normal</div>
+          <div class="chip ${State.activeFilterFlag === 'green' ? 'active' : ''}" onclick="setFilterFlag('green')"><span class="flag-dot flag-green" style="margin-right: 4px;"></span>Clear</div>
+        </div>
+
+        <div style="font-size: 11px; font-weight: 600; color: var(--slate-400); margin-bottom: 8px;">
+          Showing <span id="filteredCount">0</span> debtor dossiers
+        </div>
+
+        <div id="debtorsListContainer">
+          <!-- Rendered dynamically -->
+        </div>
+      `;
+
+      applyDebtorFilters();
+    }
+
+    function handleSearch(q) {
+      State.searchQuery = q.toLowerCase().trim();
+      applyDebtorFilters();
+    }
+
+    function setFilterCategory(cat) {
+      State.activeFilterCategory = cat;
+      renderDebtorsView(document.getElementById('mainViewArea'));
+    }
+
+    function setFilterFlag(flag) {
+      State.activeFilterFlag = flag;
+      renderDebtorsView(document.getElementById('mainViewArea'));
+    }
+
+    function applyDebtorFilters() {
+      const list = State.debtors.filter(d => {
+        // Category filter
+        if (State.activeFilterCategory !== 'all' && d.category !== State.activeFilterCategory) return false;
+        // Flag filter
+        if (State.activeFilterFlag !== 'all' && d.colorFlag !== State.activeFilterFlag) return false;
+        // Search query
+        if (State.searchQuery) {
+          const name = (d.debtorName || '').toLowerCase();
+          const acc = (d.accountNumber || '').toLowerCase();
+          const bank = (d.clientName || '').toLowerCase();
+          const cif = (d.customerId || '').toLowerCase();
+          if (!name.includes(State.searchQuery) && !acc.includes(State.searchQuery) && !bank.includes(State.searchQuery) && !cif.includes(State.searchQuery)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      const container = document.getElementById('debtorsListContainer');
+      const countEl = document.getElementById('filteredCount');
+      if (countEl) countEl.textContent = list.length;
+
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px 16px; color: var(--slate-400); font-size: 12px;">
+            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 8px auto; opacity: 0.5;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            No debtors match your current search/filter.
+          </div>
+        `;
       } else {
-        document.getElementById('spinner').style.display = 'none';
-        statusBox.textContent = 'Could not reach ' + url + '. Verify server is running.';
-        alert('Cannot reach ' + url + '\n\nPlease ensure your PC dev server is running with:\nnpm run dev');
+        container.innerHTML = list.map(renderDebtorCardHtml).join('');
       }
     }
 
-    // Start auto connect on load
-    autoConnect();
+    function renderDebtorCardHtml(debtor) {
+      const flagClass = 'flag-' + (debtor.colorFlag || 'blue');
+      const categoryClass = 'badge-' + (debtor.category === 'promise_to_pay' ? 'ptp' : (debtor.category === 'waiver_letter' ? 'waiver' : (debtor.category === 'disputed' ? 'disputed' : 'paying')));
+
+      return `
+        <div class="debtor-card">
+          <div class="debtor-card-header" onclick="openDossierModal('${debtor.id}')">
+            <div>
+              <div class="debtor-name">
+                <span class="flag-dot ${flagClass}"></span>
+                <span>${debtor.debtorName || 'Unnamed Debtor'}</span>
+              </div>
+              <div class="debtor-acc">${debtor.accountNumber || 'ACC-N/A'} &bull; <span class="badge-bank">${debtor.clientName || 'Bank'}</span></div>
+            </div>
+            <div class="debtor-balance">
+              <div class="balance-label">Balance Due</div>
+              <div class="balance-amt">${formatRWF(debtor.outstandingBalance)}</div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+            <span class="badge ${categoryClass}">${debtor.category || 'paying'}</span>
+            <span style="font-size: 10px; color: var(--slate-400);">Paid: ${formatRWF(debtor.paidAmount)}</span>
+          </div>
+
+          <div class="debtor-actions">
+            ${debtor.whatsappNumber ? `
+              <button class="action-btn whatsapp" onclick="triggerWhatsApp('${debtor.whatsappNumber}', '${debtor.debtorName}', '${debtor.clientName}', '${debtor.accountNumber}', '${debtor.outstandingBalance}')">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.101.005.232-.038.361.273.13.311.448 1.092.487 1.172.039.08.065.174.013.277-.052.103-.078.167-.156.257-.078.09-.163.201-.233.27-.078.077-.16.16-.068.318.092.158.408.673.875 1.09.601.536 1.109.702 1.267.78.158.078.251.066.344-.041.093-.107.401-.468.508-.628.107-.16.213-.133.359-.079.146.054.924.436 1.083.515.159.079.265.118.304.184.039.066.039.383-.105.788z"/></svg>
+                <span>WhatsApp</span>
+              </button>
+            ` : ''}
+
+            <button class="action-btn" onclick="openDossierModal('${debtor.id}')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <span>Dossier</span>
+            </button>
+
+            <button class="action-btn primary" onclick="openQuickPayForDebtor('${debtor.id}')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Pay</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* -------------------------------------------------------------
+       TAB 3: INSTITUTIONS (BANKS)
+    ---------------------------------------------------------------- */
+    function renderInstitutionsView(container) {
+      // Group debtors by bank
+      const bankMap = {};
+      State.debtors.forEach(d => {
+        const bank = d.clientName || 'General Financial Institution';
+        if (!bankMap[bank]) {
+          bankMap[bank] = { count: 0, outstanding: 0, paid: 0, balance: 0 };
+        }
+        bankMap[bank].count += 1;
+        bankMap[bank].outstanding += Number(d.outstandingAmount || 0);
+        bankMap[bank].paid += Number(d.paidAmount || 0);
+        bankMap[bank].balance += Number(d.outstandingBalance || 0);
+      });
+
+      const banks = Object.entries(bankMap);
+
+      container.innerHTML = `
+        <div style="margin-bottom: 14px;">
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--slate-900);">Financial Institutions Portfolio</h3>
+          <p style="font-size: 11px; color: var(--slate-500); margin-top: 2px;">Assigned bank books and recovery distribution</p>
+        </div>
+
+        ${banks.map(([name, stats]) => {
+          const rate = stats.outstanding > 0 ? Math.min(100, Math.round((stats.paid / stats.outstanding) * 100)) : 0;
+          return `
+            <div class="card" style="padding: 14px; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: var(--slate-900);">${name}</div>
+                  <div style="font-size: 11px; color: var(--slate-500); margin-top: 2px;">${stats.count} debtor accounts in book</div>
+                </div>
+                <span class="badge" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">
+                  ${rate}% Recovered
+                </span>
+              </div>
+
+              <div class="metric-grid" style="margin-top: 10px; margin-bottom: 8px;">
+                <div style="background: var(--slate-50); padding: 8px 10px; border-radius: 8px;">
+                  <div style="font-size: 9px; font-weight: 700; color: var(--slate-400); text-transform: uppercase;">Exposure</div>
+                  <div style="font-size: 12px; font-weight: 700; font-family: monospace; color: var(--slate-800);">${formatRWF(stats.outstanding)}</div>
+                </div>
+                <div style="background: var(--slate-50); padding: 8px 10px; border-radius: 8px;">
+                  <div style="font-size: 9px; font-weight: 700; color: var(--slate-400); text-transform: uppercase;">Remaining</div>
+                  <div style="font-size: 12px; font-weight: 700; font-family: monospace; color: var(--amber-600);">${formatRWF(stats.balance)}</div>
+                </div>
+              </div>
+
+              <div class="progress-track" style="height: 6px; background: var(--slate-100);">
+                <div class="progress-fill" style="width: ${rate}%;"></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+
+        ${banks.length === 0 ? '<div style="text-align: center; padding: 40px; color: var(--slate-400); font-size: 12px;">No institution portfolios available.</div>' : ''}
+      `;
+    }
+
+    /* -------------------------------------------------------------
+       TAB 4: SETTINGS & BACKEND CONFIG
+    ---------------------------------------------------------------- */
+    function renderSettingsView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--slate-900); margin-bottom: 12px;">Active Agent Profile</h4>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">
+              ${(State.user ? State.user.username : 'A').substring(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--slate-900);">${State.user ? State.user.fullName : 'Administrator'}</div>
+              <div style="font-size: 11px; color: var(--slate-500);">${State.user ? State.user.email : 'agent@recoverycredit.rw'} &bull; <strong style="text-transform: capitalize;">${State.user ? State.user.role : 'Admin'}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--slate-900); margin-bottom: 6px;">Backend Server Connection</h4>
+          <p style="font-size: 11px; color: var(--slate-500); margin-bottom: 12px;">
+            Configured API Gateway connecting to your Next.js backend and PostgreSQL.
+          </p>
+
+          <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+            <div style="font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase;">Active Endpoint</div>
+            <div style="font-size: 13px; font-family: monospace; font-weight: 700; color: var(--navy-900); margin-top: 2px;">
+              ${State.serverUrl}
+            </div>
+            <div style="font-size: 11px; color: ${State.isOnline ? '#059669' : '#dc2626'}; font-weight: 600; margin-top: 4px;">
+              &bull; ${State.isOnline ? 'Online — API Healthy' : 'Offline / Cannot reach server'}
+            </div>
+          </div>
+
+          <button class="action-btn primary" style="width: 100%; padding: 10px;" onclick="openServerModal()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>Change Server Endpoint URL</span>
+          </button>
+        </div>
+
+        <div class="card">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--slate-900); margin-bottom: 10px;">Language / Ururimi</h4>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+            <button class="preset-btn ${State.language === 'rw' ? 'active' : ''}" style="${State.language === 'rw' ? 'background: var(--navy-900); color: #ffffff;' : ''}" onclick="setLanguage('rw')">Ikinyarwanda</button>
+            <button class="preset-btn ${State.language === 'en' ? 'active' : ''}" style="${State.language === 'en' ? 'background: var(--navy-900); color: #ffffff;' : ''}" onclick="setLanguage('en')">English</button>
+            <button class="preset-btn ${State.language === 'fr' ? 'active' : ''}" style="${State.language === 'fr' ? 'background: var(--navy-900); color: #ffffff;' : ''}" onclick="setLanguage('fr')">Français</button>
+          </div>
+        </div>
+
+        <button class="action-btn" style="width: 100%; padding: 12px; color: #dc2626; border-color: #fecaca; background: #fff5f5; font-weight: 700;" onclick="handleSignOut()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          <span>${t('signOut')}</span>
+        </button>
+      `;
+    }
+
+    function setLanguage(l) {
+      State.language = l;
+      localStorage.setItem('rc_mobile_lang', l);
+      showToast('Language updated');
+      renderMainShell();
+    }
+
+    function cycleLanguage() {
+      const order = ['rw', 'en', 'fr'];
+      const idx = order.indexOf(State.language);
+      const next = order[(idx + 1) % order.length];
+      setLanguage(next);
+    }
+
+    function handleSignOut() {
+      State.token = '';
+      State.user = null;
+      localStorage.removeItem('rc_mobile_token');
+      localStorage.removeItem('rc_mobile_user');
+      showToast('Signed out');
+      renderLoginView();
+    }
+
+    /* -------------------------------------------------------------
+       QUICK PAYMENT MODAL
+    ---------------------------------------------------------------- */
+    function openQuickPayModal(preselectedDebtorId = '') {
+      populateDebtorDropdown(preselectedDebtorId);
+      document.getElementById('quickPayModal').classList.add('open');
+    }
+
+    function openQuickPayForDebtor(debtorId) {
+      openQuickPayModal(debtorId);
+    }
+
+    function closeQuickPayModal() {
+      document.getElementById('quickPayModal').classList.remove('open');
+    }
+
+    function populateDebtorDropdown(preselectedId = '') {
+      const select = document.getElementById('payDebtorSelect');
+      select.innerHTML = '<option value="">Choose debtor from portfolio...</option>';
+
+      State.debtors.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `${d.debtorName || 'Debtor'} — ${d.clientName} (Due: ${formatRWF(d.outstandingBalance)})`;
+        if (d.id === preselectedId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      handleDebtorSelectionChange();
+    }
+
+    function handleDebtorSelectionChange() {
+      const debtorId = document.getElementById('payDebtorSelect').value;
+      const infoBox = document.getElementById('selectedDebtorInfo');
+      const debtor = State.debtors.find(d => d.id === debtorId);
+
+      if (debtor) {
+        infoBox.style.display = 'block';
+        document.getElementById('payInfoBank').textContent = debtor.clientName || 'Bank';
+        document.getElementById('payInfoBalance').textContent = formatRWF(debtor.outstandingBalance);
+      } else {
+        infoBox.style.display = 'none';
+      }
+    }
+
+    function setQuickAmount(amt) {
+      document.getElementById('payAmountInput').value = amt;
+    }
+
+    function setFullBalanceAmount() {
+      const debtorId = document.getElementById('payDebtorSelect').value;
+      const debtor = State.debtors.find(d => d.id === debtorId);
+      if (debtor) {
+        document.getElementById('payAmountInput').value = Math.max(0, debtor.outstandingBalance);
+      }
+    }
+
+    async function handleQuickPaySubmit(e) {
+      e.preventDefault();
+      const debtorId = document.getElementById('payDebtorSelect').value;
+      const amount = parseFloat(document.getElementById('payAmountInput').value);
+      const channel = document.getElementById('payChannelSelect').value;
+      const notes = document.getElementById('payNotesInput').value;
+      const btn = document.getElementById('paySubmitBtn');
+
+      if (!debtorId || isNaN(amount) || amount <= 0) {
+        alert('Please select a debtor and enter a valid positive amount.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = 'Recording in ledger...';
+
+      try {
+        await apiRequest(`/debtors/${encodeURIComponent(debtorId)}/payments`, {
+          method: 'POST',
+          body: JSON.stringify({
+            amountPaid: amount,
+            paymentDate: new Date().toISOString().split('T')[0],
+            recordedBy: State.user ? State.user.fullName : 'Field Collector',
+            role: State.user ? State.user.role : 'collector',
+            notes: `${channel}: ${notes || 'Payment recorded via mobile app'}`
+          })
+        });
+
+        showToast(`Recorded payment of ${formatRWF(amount)}!`);
+        closeQuickPayModal();
+        await refreshAllData(false);
+      } catch (err) {
+        alert('Failed to record payment: ' + (err.message || 'Server error'));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Confirm & Record Payment</span>`;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       DOSSIER MODAL
+    ---------------------------------------------------------------- */
+    async function openDossierModal(debtorId) {
+      const debtor = State.debtors.find(d => d.id === debtorId);
+      if (!debtor) return;
+
+      State.currentDossierDebtor = debtor;
+      document.getElementById('dossierTitle').textContent = debtor.debtorName || 'Debtor Dossier';
+      const body = document.getElementById('dossierBody');
+      body.innerHTML = `
+        <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 12px; padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--slate-900);">${debtor.debtorName}</div>
+              <div style="font-size: 11px; font-family: monospace; color: var(--slate-500); margin-top: 2px;">Account: ${debtor.accountNumber} &bull; CIF: ${debtor.customerId || 'N/A'}</div>
+            </div>
+            <span class="badge badge-bank">${debtor.clientName}</span>
+          </div>
+
+          <div class="metric-grid" style="margin-top: 14px; margin-bottom: 6px;">
+            <div style="background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid var(--slate-200);">
+              <div style="font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase;">Total Claim</div>
+              <div style="font-size: 13px; font-weight: 700; font-family: monospace; color: var(--slate-800);">${formatRWF(debtor.outstandingAmount)}</div>
+            </div>
+            <div style="background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid var(--slate-200);">
+              <div style="font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase;">Net Balance</div>
+              <div style="font-size: 13px; font-weight: 700; font-family: monospace; color: var(--amber-600);">${formatRWF(debtor.outstandingBalance)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          ${debtor.whatsappNumber ? `
+            <button class="action-btn whatsapp" style="flex: 1; padding: 10px;" onclick="triggerWhatsApp('${debtor.whatsappNumber}', '${debtor.debtorName}', '${debtor.clientName}', '${debtor.accountNumber}', '${debtor.outstandingBalance}')">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.101.005.232-.038.361.273.13.311.448 1.092.487 1.172.039.08.065.174.013.277-.052.103-.078.167-.156.257-.078.09-.163.201-.233.27-.078.077-.16.16-.068.318.092.158.408.673.875 1.09.601.536 1.109.702 1.267.78.158.078.251.066.344-.041.093-.107.401-.468.508-.628.107-.16.213-.133.359-.079.146.054.924.436 1.083.515.159.079.265.118.304.184.039.066.039.383-.105.788z"/></svg>
+              <span>Send WhatsApp</span>
+            </button>
+          ` : ''}
+
+          <button class="action-btn primary" style="flex: 1; padding: 10px;" onclick="closeDossierModal(); openQuickPayForDebtor('${debtor.id}')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Record Payment</span>
+          </button>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--slate-900);">Payment History</h4>
+        </div>
+        <div id="dossierPaymentsList" style="font-size: 11px; color: var(--slate-500);">Loading ledger records...</div>
+      `;
+
+      document.getElementById('debtorDossierModal').classList.add('open');
+
+      // Fetch payment history for this debtor
+      try {
+        const res = await apiRequest(`/debtors/${encodeURIComponent(debtorId)}/payments`);
+        const payments = res.payments || [];
+        const container = document.getElementById('dossierPaymentsList');
+        if (payments.length === 0) {
+          container.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--slate-400);">No prior payments recorded for this account.</div>';
+        } else {
+          container.innerHTML = payments.map(p => `
+            <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 8px; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: var(--emerald-600); font-family: monospace; font-size: 13px;">${formatRWF(p.amountPaid)}</strong>
+                <div style="font-size: 10px; color: var(--slate-500); margin-top: 2px;">${p.paymentDate || 'Recent'} &bull; Recorded by ${p.recordedBy || 'Collector'}</div>
+                ${p.notes ? `<div style="font-size: 10px; color: var(--slate-400); margin-top: 2px;">${p.notes}</div>` : ''}
+              </div>
+              <span class="badge" style="background: #ecfdf5; color: #065f46;">Verified</span>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        document.getElementById('dossierPaymentsList').innerHTML = '<div style="color: #dc2626; font-size: 11px;">Could not load payments.</div>';
+      }
+    }
+
+    function closeDossierModal() {
+      document.getElementById('debtorDossierModal').classList.remove('open');
+    }
+
+    /* -------------------------------------------------------------
+       1-CLICK WHATSAPP NOTICE LAUNCHER
+    ---------------------------------------------------------------- */
+    function triggerWhatsApp(phone, debtorName, bankName, accNo, balance) {
+      if (!phone) {
+        alert('No phone number recorded for this debtor.');
+        return;
+      }
+
+      let cleanPhone = phone.replace(/[^0-9+]/g, '');
+      if (cleanPhone.startsWith('07')) cleanPhone = '+250' + cleanPhone.slice(1);
+      else if (!cleanPhone.startsWith('+')) cleanPhone = '+' + cleanPhone;
+      cleanPhone = cleanPhone.replace('+', '');
+
+      let msg = '';
+      if (State.language === 'rw') {
+        msg = `Muraho ${debtorName}, Ubu ni ubutumwa bw'ubuyobozi bwa Recovery Credit bwerekeye dosiye yawe muri ${bankName} (Konti: ${accNo}). Umwenda usigaye kwishyurwa ni ${formatRWF(balance)}. Mwagana umukozi ushinzwe dosiye yanyu kugira ngo mushyireho uburyo bwo kwishyura. Murakoze.`;
+      } else {
+        msg = `Dear ${debtorName}, this is an official message from Recovery Credit regarding your ${bankName} account (${accNo}). The remaining balance due is ${formatRWF(balance)}. Please arrange settlement with your recovery officer. Thank you.`;
+      }
+
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank');
+    }
+
+    /* -------------------------------------------------------------
+       SERVER CONFIGURATION MODAL
+    ---------------------------------------------------------------- */
+    function openServerModal() {
+      document.getElementById('customServerInput').value = State.serverUrl;
+      document.getElementById('serverModal').classList.add('open');
+    }
+
+    function closeServerModal() {
+      document.getElementById('serverModal').classList.remove('open');
+    }
+
+    function setServerUrlPreset(url) {
+      document.getElementById('customServerInput').value = url;
+      testServerPing();
+    }
+
+    async function testServerPing() {
+      const input = document.getElementById('customServerInput');
+      const url = input.value.trim().replace(/\/$/, '');
+      const statusEl = document.getElementById('pingStatusText');
+
+      statusEl.textContent = 'Testing...';
+      const start = Date.now();
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        await fetch(`${url}/favicon.ico`, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timeoutId);
+        const ms = Date.now() - start;
+        statusEl.textContent = `Online (${ms}ms)`;
+        statusEl.style.color = '#10b981';
+      } catch {
+        statusEl.textContent = 'Unreachable';
+        statusEl.style.color = '#ef4444';
+      }
+    }
+
+    function saveServerUrl() {
+      const url = document.getElementById('customServerInput').value.trim().replace(/\/$/, '');
+      if (!url) return;
+      State.serverUrl = url;
+      localStorage.setItem('rc_mobile_server_url', url);
+      closeServerModal();
+      showToast('Server endpoint updated to ' + url);
+      checkServerHealth();
+      if (State.user) {
+        refreshAllData(true);
+      } else {
+        renderLoginView();
+      }
+    }
+
+    /* -------------------------------------------------------------
+       DATA REFRESH CONTROLLER
+    ---------------------------------------------------------------- */
+    async function refreshAllData(showFeedback = false) {
+      if (!State.token) return;
+
+      if (showFeedback) showToast('Syncing with backend...');
+
+      try {
+        // Parallel fetch for speed
+        const [statsRes, debtorsRes] = await Promise.all([
+          apiRequest('/dashboard/stats', {
+            params: { role: State.user.role, username: State.user.username }
+          }).catch(() => null),
+          apiRequest('/debtors', {
+            params: { role: State.user.role, username: State.user.username }
+          }).catch(() => null)
+        ]);
+
+        if (statsRes) {
+          State.stats = statsRes;
+        }
+
+        if (debtorsRes && debtorsRes.debtors) {
+          State.debtors = debtorsRes.debtors;
+        }
+
+        switchTab(State.currentTab);
+        if (showFeedback) showToast('Data synchronized.');
+      } catch (err) {
+        if (showFeedback) showToast('Sync error: ' + (err.message || 'Offline'));
+      }
+    }
+
+    // Launch on DOM ready
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
