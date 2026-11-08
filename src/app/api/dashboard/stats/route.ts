@@ -25,15 +25,27 @@ export async function GET(request: Request) {
       : (searchParams.get('username') || verifiedUsername || '');
 
     let debtorsRows: DebtorRow[];
-    if (effectiveRole === 'collector' && effectiveUsername) {
-      const rows = await sql`
-        SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag
-        FROM debtors
-        WHERE LOWER(assigned_collector) = ${effectiveUsername.toLowerCase()}
-           OR assigned_collector IS NULL
-           OR assigned_collector = ''
-      `;
-      debtorsRows = rows as unknown as DebtorRow[];
+    if (effectiveRole === 'collector') {
+      const collectorUser = (effectiveUsername || searchParams.get('username') || '').trim().toLowerCase();
+      if (!collectorUser) {
+        debtorsRows = [];
+      } else {
+        let allowedNames = [collectorUser];
+        try {
+          const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${collectorUser} LIMIT 1`;
+          if (u.length > 0) {
+            if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
+            if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
+          }
+        } catch (_) {}
+        const uniqueNames = Array.from(new Set(allowedNames.filter(Boolean)));
+        const rows = await sql`
+          SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag
+          FROM debtors
+          WHERE LOWER(assigned_collector) = ANY(${uniqueNames})
+        `;
+        debtorsRows = rows as unknown as DebtorRow[];
+      }
     } else {
       const rows = await sql`
         SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag

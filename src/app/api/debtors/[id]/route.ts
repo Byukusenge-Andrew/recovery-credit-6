@@ -15,6 +15,29 @@ export async function GET(
     }
 
     const r = rows[0];
+    const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
+
+    // RBAC: If collector, verify dossier is strictly assigned to them
+    if (verifiedRole === 'collector') {
+      const assigned = (r.assigned_collector || '').trim().toLowerCase();
+      const user = (verifiedUsername || '').trim().toLowerCase();
+      if (!user || !assigned) {
+        return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
+      }
+      let allowedNames = [user];
+      try {
+        const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
+        if (u.length > 0) {
+          if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
+          if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
+        }
+      } catch (_) {}
+      if (!allowedNames.includes(assigned)) {
+        return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
+      }
+    }
+
     const debtor: Debtor = {
       id: r.id,
       accountNumber: r.account_number,
@@ -58,7 +81,28 @@ export async function PATCH(
 
     const existing = existingRows[0];
     const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
     const isCollector = verifiedRole === 'collector' || body.actorRole === 'collector';
+
+    // RBAC: Collectors can only modify dossiers strictly assigned to them
+    if (isCollector) {
+      const assigned = (existing.assigned_collector || '').trim().toLowerCase();
+      const user = (verifiedUsername || body.username || '').trim().toLowerCase();
+      if (!user || !assigned) {
+        return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
+      }
+      let allowedNames = [user];
+      try {
+        const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
+        if (u.length > 0) {
+          if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
+          if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
+        }
+      } catch (_) {}
+      if (!allowedNames.includes(assigned)) {
+        return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
+      }
+    }
 
     // RBAC: Collectors can update recovery status, flags, WhatsApp phone, and remarks.
     // They cannot alter core loan amounts or reassign dossiers away from admin allocation.

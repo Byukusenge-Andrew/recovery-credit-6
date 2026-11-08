@@ -23,10 +23,26 @@ export async function GET(request: Request) {
     let queryText = `SELECT * FROM debtors WHERE 1=1`;
     const params: any[] = [];
 
-    // Role-based data isolation: Collectors see their assigned dossiers plus unassigned agency pool
-    if (effectiveRole === 'collector' && effectiveUsername) {
-      params.push(effectiveUsername.toLowerCase());
-      queryText += ` AND (LOWER(assigned_collector) = $${params.length} OR assigned_collector IS NULL OR assigned_collector = '')`;
+    // Role-based data isolation: Collectors strictly see ONLY dossiers assigned to them
+    if (effectiveRole === 'collector') {
+      const collectorUser = (effectiveUsername || searchParams.get('username') || '').trim().toLowerCase();
+      if (!collectorUser) {
+        return NextResponse.json({ debtors: [] });
+      }
+      let allowedNames = [collectorUser];
+      try {
+        const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${collectorUser} LIMIT 1`;
+        if (u.length > 0) {
+          if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
+          if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
+        }
+      } catch (_) {}
+      const uniqueNames = Array.from(new Set(allowedNames.filter(Boolean)));
+      const namePlaceholders = uniqueNames.map(n => {
+        params.push(n);
+        return `$${params.length}`;
+      }).join(', ');
+      queryText += ` AND LOWER(assigned_collector) IN (${namePlaceholders})`;
     }
 
     if (client) {

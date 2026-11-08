@@ -8,6 +8,32 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
+
+    if (verifiedRole === 'collector') {
+      const debtorRows = await sql`SELECT assigned_collector FROM debtors WHERE id = ${id} LIMIT 1`;
+      if (debtorRows.length === 0) {
+        return NextResponse.json({ error: 'Debtor not found' }, { status: 404 });
+      }
+      const assigned = (debtorRows[0].assigned_collector || '').trim().toLowerCase();
+      const user = (verifiedUsername || '').trim().toLowerCase();
+      if (!user || !assigned) {
+        return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
+      }
+      let allowedNames = [user];
+      try {
+        const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
+        if (u.length > 0) {
+          if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
+          if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
+        }
+      } catch (_) {}
+      if (!allowedNames.includes(assigned)) {
+        return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
+      }
+    }
+
     const rows = await sql`SELECT * FROM payments WHERE debtor_id = ${id} ORDER BY created_at DESC`;
     const payments: Payment[] = rows.map((r: any) => ({
       id: r.id,
@@ -44,11 +70,24 @@ export async function POST(
     }
     const debtor = debtorRows[0];
 
-    // Authorization check: Collectors cannot record payments for debtors assigned to other agents
+    // Authorization check: Collectors cannot record payments for debtors not assigned to them
     const verifiedRole = request.headers.get('x-verified-role');
     const verifiedUsername = request.headers.get('x-verified-username');
-    if (verifiedRole === 'collector' && verifiedUsername) {
-      if (debtor.assigned_collector && debtor.assigned_collector.toLowerCase() !== verifiedUsername.toLowerCase()) {
+    if (verifiedRole === 'collector') {
+      const assigned = (debtor.assigned_collector || '').trim().toLowerCase();
+      const user = (verifiedUsername || recordedBy || '').trim().toLowerCase();
+      if (!user || !assigned) {
+        return NextResponse.json({ error: 'Forbidden: You are not authorized to collect for this debtor account.' }, { status: 403 });
+      }
+      let allowedNames = [user];
+      try {
+        const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
+        if (u.length > 0) {
+          if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
+          if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
+        }
+      } catch (_) {}
+      if (!allowedNames.includes(assigned)) {
         return NextResponse.json({ error: 'Forbidden: You are not authorized to collect for this debtor account.' }, { status: 403 });
       }
     }
