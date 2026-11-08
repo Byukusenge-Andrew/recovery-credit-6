@@ -57,13 +57,22 @@ export async function PATCH(
     }
 
     const existing = existingRows[0];
-    let outstandingAmount = 'outstandingAmount' in body ? Number(body.outstandingAmount || 0) : Number(existing.outstanding_amount);
-    let paidAmount = 'paidAmount' in body ? Number(body.paidAmount || 0) : Number(existing.paid_amount);
+    const verifiedRole = request.headers.get('x-verified-role');
+    const isCollector = verifiedRole === 'collector' || body.actorRole === 'collector';
 
-    // SECURITY ENFORCEMENT: If the requester is a collector, they cannot edit previously recorded paidAmount
-    if (body.actorRole === 'collector') {
-      paidAmount = Number(existing.paid_amount);
-    }
+    // RBAC: Collectors can update recovery status, flags, WhatsApp phone, and remarks.
+    // They cannot alter core loan amounts or reassign dossiers away from admin allocation.
+    const outstandingAmount = !isCollector && 'outstandingAmount' in body
+      ? Number(body.outstandingAmount || 0)
+      : Number(existing.outstanding_amount);
+
+    let paidAmount = !isCollector && 'paidAmount' in body
+      ? Number(body.paidAmount || 0)
+      : Number(existing.paid_amount);
+
+    const assignedCollector = !isCollector && body.assignedCollector !== undefined
+      ? body.assignedCollector
+      : existing.assigned_collector;
 
     if (paidAmount > outstandingAmount) {
       paidAmount = outstandingAmount;
@@ -78,11 +87,11 @@ export async function PATCH(
     await sql`
       UPDATE debtors
       SET
-        account_number = ${body.accountNumber !== undefined ? body.accountNumber : existing.account_number},
-        customer_id = ${body.customerId !== undefined ? body.customerId : existing.customer_id},
-        debtor_name = ${body.debtorName !== undefined ? body.debtorName : existing.debtor_name},
-        client_name = ${body.clientName !== undefined ? body.clientName : existing.client_name},
-        bank_name = ${body.bankName !== undefined ? body.bankName : existing.bank_name},
+        account_number = ${!isCollector && body.accountNumber !== undefined ? body.accountNumber : existing.account_number},
+        customer_id = ${!isCollector && body.customerId !== undefined ? body.customerId : existing.customer_id},
+        debtor_name = ${!isCollector && body.debtorName !== undefined ? body.debtorName : existing.debtor_name},
+        client_name = ${!isCollector && body.clientName !== undefined ? body.clientName : existing.client_name},
+        bank_name = ${!isCollector && body.bankName !== undefined ? body.bankName : existing.bank_name},
         outstanding_amount = ${outstandingAmount},
         paid_amount = ${paidAmount},
         outstanding_balance = ${outstandingBalance},
@@ -90,7 +99,7 @@ export async function PATCH(
         whatsapp_number = ${body.whatsappNumber !== undefined ? body.whatsappNumber : existing.whatsapp_number},
         category = ${category},
         color_flag = ${body.colorFlag !== undefined ? body.colorFlag : existing.color_flag},
-        assigned_collector = ${body.assignedCollector !== undefined ? body.assignedCollector : existing.assigned_collector},
+        assigned_collector = ${assignedCollector},
         notes = ${body.notes !== undefined ? body.notes : existing.notes},
         updated_at = NOW()
       WHERE id = ${id}

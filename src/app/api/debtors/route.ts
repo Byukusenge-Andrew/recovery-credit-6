@@ -90,12 +90,21 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const verifiedRole = request.headers.get('x-verified-role');
+    const verifiedUsername = request.headers.get('x-verified-username');
+
     const data = await request.json();
     const id = data.id || crypto.randomUUID();
     const outstandingAmount = Math.max(0, Number(data.outstandingAmount || 0));
     const paidAmount = Math.min(outstandingAmount, Math.max(0, Number(data.paidAmount || 0)));
     const outstandingBalance = outstandingAmount - paidAmount;
     const now = new Date().toISOString();
+
+    // RBAC: If requester is a collector, automatically lock assignment to their own username
+    const assignedCollector = verifiedRole === 'collector' && verifiedUsername
+      ? verifiedUsername
+      : (data.assignedCollector || '');
+    const createdBy = verifiedUsername || data.createdBy || 'Admin';
 
     await sql`
       INSERT INTO debtors (
@@ -119,9 +128,9 @@ export async function POST(request: Request) {
         ${data.whatsappNumber || ''},
         ${data.category || 'paying'},
         ${data.colorFlag || 'none'},
-        ${data.assignedCollector || ''},
+        ${assignedCollector},
         ${data.notes || ''},
-        ${data.createdBy || 'Admin'},
+        ${createdBy},
         ${now},
         ${now}
       )

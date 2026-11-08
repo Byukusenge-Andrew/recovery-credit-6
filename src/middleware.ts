@@ -108,7 +108,58 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    // 5. Forward verified claims down to API route handlers via trusted headers
+    // 5. Role-Based Access Control (RBAC) Enforcement
+    if (payload.role !== 'admin') {
+      // a. Audit logs are strictly admin-only
+      if (pathname.startsWith('/api/audit')) {
+        return NextResponse.json(
+          { error: 'Forbidden: Administrator privileges required to access audit trail.' },
+          { status: 403, headers: { 'Access-Control-Allow-Origin': '*', ...SECURITY_HEADERS } }
+        );
+      }
+
+      // b. Creating collectors / user management is strictly admin-only
+      if (pathname === '/api/collectors' && request.method === 'POST') {
+        return NextResponse.json(
+          { error: 'Forbidden: Administrator privileges required to register collectors.' },
+          { status: 403, headers: { 'Access-Control-Allow-Origin': '*', ...SECURITY_HEADERS } }
+        );
+      }
+
+      // c. Bulk dossier upload is strictly admin-only
+      if (pathname.startsWith('/api/debtors/bulk')) {
+        return NextResponse.json(
+          { error: 'Forbidden: Administrator privileges required for bulk upload.' },
+          { status: 403, headers: { 'Access-Control-Allow-Origin': '*', ...SECURITY_HEADERS } }
+        );
+      }
+
+      // d. Deleting any core entity (debtor, institution, payment) is strictly admin-only
+      if (request.method === 'DELETE') {
+        return NextResponse.json(
+          { error: 'Forbidden: Record deletion is strictly restricted to Administrators.' },
+          { status: 403, headers: { 'Access-Control-Allow-Origin': '*', ...SECURITY_HEADERS } }
+        );
+      }
+
+      // e. Creating or modifying financial institutions is strictly admin-only
+      if (pathname.startsWith('/api/institutions') && (request.method === 'POST' || request.method === 'PATCH' || request.method === 'PUT')) {
+        return NextResponse.json(
+          { error: 'Forbidden: Only administrators can create or modify partner institutions.' },
+          { status: 403, headers: { 'Access-Control-Allow-Origin': '*', ...SECURITY_HEADERS } }
+        );
+      }
+
+      // f. Editing previously recorded payments is strictly admin-only
+      if (pathname.startsWith('/api/payments/') && request.method === 'PATCH') {
+        return NextResponse.json(
+          { error: 'Forbidden: Previously recorded payment receipts can only be amended by an administrator.' },
+          { status: 403, headers: { 'Access-Control-Allow-Origin': '*', ...SECURITY_HEADERS } }
+        );
+      }
+    }
+
+    // 6. Forward verified claims down to API route handlers via trusted headers
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-verified-user-id', payload.id);
     requestHeaders.set('x-verified-username', payload.username);
