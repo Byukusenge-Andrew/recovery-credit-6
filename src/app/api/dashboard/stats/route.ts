@@ -30,6 +30,8 @@ export async function GET(request: Request) {
         SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag
         FROM debtors
         WHERE LOWER(assigned_collector) = ${effectiveUsername.toLowerCase()}
+gt           OR assigned_collector IS NULL
+           OR assigned_collector = ''
       `;
       debtorsRows = rows as unknown as DebtorRow[];
     } else {

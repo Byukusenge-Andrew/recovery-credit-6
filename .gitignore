@@ -48,3 +48,5 @@ next-env.d.ts
 android/
 recovery-credit-app.apk
 *.apk
+test_*.js
+test_neon.js

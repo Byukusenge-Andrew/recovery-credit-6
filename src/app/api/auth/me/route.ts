@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Cryptographically verify token
-    const payload = verifySessionToken(token);
+    const payload = await verifySessionToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Invalid or expired session token.' }, { status: 401 });
     }

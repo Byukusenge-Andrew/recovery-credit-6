@@ -23,10 +23,10 @@ export async function GET(request: Request) {
     let queryText = `SELECT * FROM debtors WHERE 1=1`;
     const params: any[] = [];
 
-    // Role-based data isolation
+    // Role-based data isolation: Collectors see their assigned dossiers plus unassigned agency pool
     if (effectiveRole === 'collector' && effectiveUsername) {
       params.push(effectiveUsername.toLowerCase());
-      queryText += ` AND LOWER(assigned_collector) = $${params.length}`;
+      queryText += ` AND (LOWER(assigned_collector) = $${params.length} OR assigned_collector IS NULL OR assigned_collector = '')`;
     }
 
     if (client) {

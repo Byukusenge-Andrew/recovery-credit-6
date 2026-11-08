@@ -18,7 +18,7 @@ const PUBLIC_API_ROUTES = [
   '/api/whatsapp/webhook',
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Apply to API routes
@@ -94,7 +94,7 @@ export function middleware(request: NextRequest) {
       );
     }
 
-    const payload = verifySessionToken(token);
+    const payload = await verifySessionToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Unauthorized: Invalid or expired session token.' },

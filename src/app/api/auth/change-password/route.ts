@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Authentication required. Please log in.' }, { status: 401 });
     }
 
-    const payload = verifySessionToken(token);
+    const payload = await verifySessionToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Session expired. Please log in again.' }, { status: 401 });
     }
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     };
 
     // 6. Generate fresh session token
-    const newToken = createSessionToken({
+    const newToken = await createSessionToken({
       id: updatedUser.id,
       username: updatedUser.username,
       role: updatedUser.role,
