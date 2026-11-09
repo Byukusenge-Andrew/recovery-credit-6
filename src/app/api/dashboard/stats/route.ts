@@ -30,14 +30,14 @@ export async function GET(request: Request) {
       if (!collectorUser) {
         debtorsRows = [];
       } else {
-        let allowedNames = [collectorUser];
+        const allowedNames = [collectorUser];
         try {
           const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${collectorUser} LIMIT 1`;
           if (u.length > 0) {
             if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
             if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
           }
-        } catch (_) {}
+        } catch {}
         const uniqueNames = Array.from(new Set(allowedNames.filter(Boolean)));
         const rows = await sql`
           SELECT outstanding_amount, paid_amount, outstanding_balance, client_name, category, color_flag

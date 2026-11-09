@@ -25,14 +25,14 @@ export async function GET(
       if (!user || !assigned) {
         return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
       }
-      let allowedNames = [user];
+      const allowedNames = [user];
       try {
         const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
         if (u.length > 0) {
           if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
           if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
         }
-      } catch (_) {}
+      } catch {}
       if (!allowedNames.includes(assigned)) {
         return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
       }
@@ -60,9 +60,10 @@ export async function GET(
     };
 
     return NextResponse.json({ debtor });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors/[id] GET error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -91,14 +92,14 @@ export async function PATCH(
       if (!user || !assigned) {
         return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
       }
-      let allowedNames = [user];
+      const allowedNames = [user];
       try {
         const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
         if (u.length > 0) {
           if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
           if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
         }
-      } catch (_) {}
+      } catch {}
       if (!allowedNames.includes(assigned)) {
         return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
       }
@@ -168,9 +169,10 @@ export async function PATCH(
     `;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors/[id] PATCH error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -185,6 +187,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Debtor not found' }, { status: 404 });
     }
 
+    // Deliberate Cascade Deletion: Erase all payments, activity logs, and debtor record
+    await sql`DELETE FROM payments WHERE debtor_id = ${id}`;
+    await sql`DELETE FROM activities WHERE debtor_id = ${id}`;
     await sql`DELETE FROM debtors WHERE id = ${id}`;
 
     await sql`
@@ -205,8 +210,9 @@ export async function DELETE(
     `;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors/[id] DELETE error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

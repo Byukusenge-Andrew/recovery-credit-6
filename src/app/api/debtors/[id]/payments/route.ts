@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import type { Payment } from '@/lib/types';
 
+interface PaymentRow {
+  id: string;
+  debtor_id: string;
+  amount_paid: number | string | null;
+  payment_date: string;
+  recorded_by: string;
+  notes: string | null;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -21,21 +30,21 @@ export async function GET(
       if (!user || !assigned) {
         return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
       }
-      let allowedNames = [user];
+      const allowedNames = [user];
       try {
         const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
         if (u.length > 0) {
           if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
           if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
         }
-      } catch (_) {}
+      } catch {}
       if (!allowedNames.includes(assigned)) {
         return NextResponse.json({ error: 'Forbidden: Dossier is not assigned to you' }, { status: 403 });
       }
     }
 
     const rows = await sql`SELECT * FROM payments WHERE debtor_id = ${id} ORDER BY created_at DESC`;
-    const payments: Payment[] = rows.map((r: any) => ({
+    const payments: Payment[] = (rows as unknown as PaymentRow[]).map(r => ({
       id: r.id,
       debtorId: r.debtor_id,
       amountPaid: Number(r.amount_paid || 0),
@@ -44,9 +53,10 @@ export async function GET(
       notes: r.notes || ''
     }));
     return NextResponse.json({ payments });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors/[id]/payments GET error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -79,14 +89,14 @@ export async function POST(
       if (!user || !assigned) {
         return NextResponse.json({ error: 'Forbidden: You are not authorized to collect for this debtor account.' }, { status: 403 });
       }
-      let allowedNames = [user];
+      const allowedNames = [user];
       try {
         const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${user} LIMIT 1`;
         if (u.length > 0) {
           if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
           if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
         }
-      } catch (_) {}
+      } catch {}
       if (!allowedNames.includes(assigned)) {
         return NextResponse.json({ error: 'Forbidden: You are not authorized to collect for this debtor account.' }, { status: 403 });
       }
@@ -140,8 +150,9 @@ export async function POST(
     `;
 
     return NextResponse.json({ success: true, paymentId });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors/[id]/payments POST error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,7 +1,28 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { resolveDebtorName } from '@/lib/debtorHealer';
-import type { Debtor } from '@/lib/types';
+import type { Debtor, Category, ColorFlag } from '@/lib/types';
+
+interface DebtorDbRow {
+  id: string;
+  account_number: string;
+  customer_id: string;
+  debtor_name: string;
+  client_name: string;
+  bank_name?: string | null;
+  outstanding_amount: number | string | null;
+  paid_amount: number | string | null;
+  outstanding_balance: number | string | null;
+  date_of_payment?: string | null;
+  whatsapp_number?: string | null;
+  category: Category;
+  color_flag: ColorFlag;
+  assigned_collector?: string | null;
+  notes?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export async function GET(request: Request) {
   try {
@@ -21,7 +42,7 @@ export async function GET(request: Request) {
       : (searchParams.get('username') || verifiedUsername || '');
 
     let queryText = `SELECT * FROM debtors WHERE 1=1`;
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     // Role-based data isolation: Collectors strictly see ONLY dossiers assigned to them
     if (effectiveRole === 'collector') {
@@ -29,14 +50,14 @@ export async function GET(request: Request) {
       if (!collectorUser) {
         return NextResponse.json({ debtors: [] });
       }
-      let allowedNames = [collectorUser];
+      const allowedNames = [collectorUser];
       try {
         const u = await sql`SELECT username, full_name FROM users WHERE LOWER(username) = ${collectorUser} LIMIT 1`;
         if (u.length > 0) {
           if (u[0].username) allowedNames.push(String(u[0].username).trim().toLowerCase());
           if (u[0].full_name) allowedNames.push(String(u[0].full_name).trim().toLowerCase());
         }
-      } catch (_) {}
+      } catch {}
       const uniqueNames = Array.from(new Set(allowedNames.filter(Boolean)));
       const namePlaceholders = uniqueNames.map(n => {
         params.push(n);
@@ -76,7 +97,7 @@ export async function GET(request: Request) {
 
     const rows = await sql.query(queryText, params);
 
-    const debtors: Debtor[] = (rows as any[]).map(r => ({
+    const debtors: Debtor[] = (rows as unknown as DebtorDbRow[]).map(r => ({
       id: r.id,
       accountNumber: r.account_number,
       customerId: r.customer_id,
@@ -98,9 +119,10 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json({ debtors });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors GET error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -190,8 +212,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, id });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/debtors POST error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

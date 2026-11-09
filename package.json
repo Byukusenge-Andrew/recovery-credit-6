@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/package.json",
   "name": "recovery-credit",
   "version": "0.1.0",
   "private": true,
