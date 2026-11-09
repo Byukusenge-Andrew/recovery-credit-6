@@ -55,6 +55,26 @@ export default function DebtorDetailPage() {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [isWhatsAppSettingsOpen, setIsWhatsAppSettingsOpen] = useState(false);
 
+  // Deliberate Cascade Deletion State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteToast, setDeleteToast] = useState<string | null>(null);
+
+  const handleCascadeDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await debtorsApi.delete(id);
+      setShowDeleteModal(false);
+      setDeleteToast(`Deliberate Action Executed: Debtor ${debtor?.debtorName || id} and all associated payment and activity records permanently deleted.`);
+      setTimeout(() => {
+        router.push('/debtors');
+      }, 2000);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to delete debtor');
+      setIsDeleting(false);
+    }
+  };
+
   const loadData = useCallback(() => {
     Promise.all([
       debtorsApi.getById(id),
@@ -227,6 +247,18 @@ export default function DebtorDetailPage() {
           <Link href={`/debtors/${id}/edit`} className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-xs transition">
             {t('detail_edit')}
           </Link>
+          {currentUser?.role === 'admin' && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-lg hover:bg-red-100 font-medium text-xs flex items-center gap-1.5 transition"
+              title="Deliberate Cascade Deletion"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Delete</span>
+            </button>
+          )}
           {debtor.whatsappNumber && (
             <button onClick={handleWhatsApp} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-xs flex items-center gap-1.5 transition">
               <span>{t('detail_send_whatsapp')}</span>
@@ -658,6 +690,72 @@ export default function DebtorDetailPage() {
         isOpen={isWhatsAppSettingsOpen}
         onClose={() => setIsWhatsAppSettingsOpen(false)}
       />
+
+      {/* Deliberate Cascade Deletion Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">Deliberate Action Required</h3>
+                <p className="text-xs text-red-600 font-semibold">Permanent Cascade Deletion</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-red-50/80 rounded-xl border border-red-200/80 text-xs text-red-700 leading-relaxed space-y-2">
+              <p className="font-semibold text-slate-900">
+                Are you sure you want to delete the dossier for <u>{debtor?.debtorName || debtor?.clientName}</u> ({debtor?.accountNumber})?
+              </p>
+              <p>
+                <strong>CASCADE NOTICE:</strong> This is an irreversible, deliberate action. Everything associated with this debtor will be permanently erased:
+              </p>
+              <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+                <li>All payment history and verified transaction receipts</li>
+                <li>All collector activity logs and timestamped interaction notes</li>
+                <li>Debtor portfolio dossier and bank claim links</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleCascadeDelete}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+              >
+                {isDeleting ? (
+                  <span>Deleting...</span>
+                ) : (
+                  <span>Confirm Deliberate Cascade Delete</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deliberate Toast Banner */}
+      {deleteToast && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-emerald-600 text-white p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom duration-300">
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-xs font-semibold">{deleteToast}</span>
+        </div>
+      )}
     </div>
   );
 }
