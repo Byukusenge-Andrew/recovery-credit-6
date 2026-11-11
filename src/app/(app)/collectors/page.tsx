@@ -1395,8 +1395,8 @@ export default function CollectorsPage() {
       {/* MODAL: UNCONTACTED CLIENTS ASSIGNED TO COLLECTOR */}
       {/* ========================================================================= */}
       {selectedCollectorUncontacted && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 overflow-y-auto max-h-[85vh] space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-md border border-slate-200 overflow-y-auto max-h-[85vh] space-y-4">
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
               <div>
                 <div className="flex items-center gap-2">
@@ -1506,8 +1506,8 @@ export default function CollectorsPage() {
       {/* MODAL: COLLECTOR CREATION & OTP CONFIRMATION */}
       {/* ========================================================================= */}
       {createdNotice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-md border border-slate-200 space-y-5">
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useId } from 'react';
 
 interface LogoProps {
   className?: string;
@@ -8,11 +8,20 @@ interface LogoProps {
   variant?: 'full' | 'icon';
 }
 
+/**
+ * Recovery Credit emblem.
+ * Navy badge + gold ring + green shield + bank card + rising recovery arrow.
+ * Drawn on a square 512 grid so the icon never clips; small sizes drop the
+ * fine card details so the mark stays legible in headers and favicons.
+ */
 export default function Logo({ className = '', size = 36, variant = 'icon' }: LogoProps) {
-  // If variant is 'icon', we view just the emblem badge (0 100 800 500)
-  // If variant is 'full', we view the full 800x900 canvas with typography
-  const viewBox = variant === 'icon' ? '140 100 520 460' : '0 0 800 780';
-  const height = variant === 'icon' ? Math.round(size * (460 / 520)) : Math.round(size * (780 / 800));
+  const uid = useId().replace(/:/g, '');
+  const id = (name: string) => `${name}-${uid}`;
+  const isFull = variant === 'full';
+  const detailed = size >= 40;
+
+  const viewBox = isFull ? '0 0 512 600' : '0 0 512 512';
+  const height = isFull ? Math.round(size * (600 / 512)) : size;
 
   return (
     <svg
@@ -21,142 +30,103 @@ export default function Logo({ className = '', size = 36, variant = 'icon' }: Lo
       width={size}
       height={height}
       className={className}
+      role="img"
+      aria-label="Recovery Credit"
     >
       <defs>
-        <radialGradient id="bg-glow-c" cx="50%" cy="40%" r="50%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#f4f7fa" />
-        </radialGradient>
-
-        <linearGradient id="gold-grad-c" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={id('navy')} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#1b334f" />
+          <stop offset="55%" stopColor="#0f2038" />
+          <stop offset="100%" stopColor="#081321" />
+        </linearGradient>
+        <linearGradient id={id('gold')} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#f5d77f" />
           <stop offset="45%" stopColor="#c99738" />
           <stop offset="70%" stopColor="#e8c15a" />
           <stop offset="100%" stopColor="#996a1e" />
         </linearGradient>
-
-        <linearGradient id="navy-grad-c" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1b334f" />
-          <stop offset="50%" stopColor="#0f2038" />
-          <stop offset="100%" stopColor="#081321" />
-        </linearGradient>
-
-        <linearGradient id="shield-grad-c" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={id('shield')} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#145044" />
           <stop offset="60%" stopColor="#0b302a" />
           <stop offset="100%" stopColor="#061c18" />
         </linearGradient>
-
-        <linearGradient id="card-grad-c" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={id('card')} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#1f7a68" />
           <stop offset="100%" stopColor="#0e3a32" />
         </linearGradient>
-
-        <linearGradient id="arrow-grad-c" x1="0%" y1="100%" x2="80%" y2="0%">
-          <stop offset="0%" stopColor="#058055" />
-          <stop offset="35%" stopColor="#00a86b" />
-          <stop offset="70%" stopColor="#25cf82" />
-          <stop offset="100%" stopColor="#64f3a9" />
-        </linearGradient>
-
-        <linearGradient id="chip-grad-c" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={id('chip')} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#ffe89e" />
           <stop offset="100%" stopColor="#b88422" />
         </linearGradient>
-
-        <filter id="badge-shadow-c" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#0b1b2d" floodOpacity="0.22" />
-          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0b1b2d" floodOpacity="0.12" />
-        </filter>
-
-        <filter id="arrow-shadow-c" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="2" dy="8" stdDeviation="7" floodColor="#031f17" floodOpacity="0.45" />
-        </filter>
+        <linearGradient id={id('arrow')} gradientUnits="userSpaceOnUse" x1="140" y1="390" x2="386" y2="160">
+          <stop offset="0%" stopColor="#058055" />
+          <stop offset="40%" stopColor="#00a86b" />
+          <stop offset="75%" stopColor="#25cf82" />
+          <stop offset="100%" stopColor="#64f3a9" />
+        </linearGradient>
       </defs>
 
-      <g id="logo-emblem" transform="translate(0, -10)">
-        <circle cx="400" cy="355" r="235" fill="#0c1f33" opacity="0.08" filter="url(#badge-shadow-c)" />
-        <circle cx="400" cy="355" r="230" fill="url(#navy-grad-c)" />
-        <circle cx="400" cy="355" r="214" fill="none" stroke="url(#gold-grad-c)" strokeWidth="15" />
-        <circle cx="400" cy="355" r="202" fill="#091522" />
-        <circle cx="400" cy="355" r="184" fill="none" stroke="#254a6d" strokeWidth="4" opacity="0.6" />
+      <g id="logo-emblem">
+        {/* Badge */}
+        <circle cx="256" cy="256" r="248" fill={`url(#${id('navy')})`} />
+        <circle cx="256" cy="256" r="226" fill="none" stroke={`url(#${id('gold')})`} strokeWidth="18" />
+        <circle cx="256" cy="256" r="214" fill="#091522" />
+        {detailed && <circle cx="256" cy="256" r="198" fill="none" stroke="#254a6d" strokeWidth="3" opacity="0.6" />}
 
+        {/* Shield */}
         <path
-          d="M400, 195 C470, 225 530, 235 530, 310 C530, 420 460, 495 400, 525 C340, 495 270, 420 270, 310 C270, 235 330, 225 400, 195 Z"
-          fill="#1c3347"
+          d="M256 92 C302 116 346 126 386 130 L386 236 C386 328 330 390 256 424 C182 390 126 328 126 236 L126 130 C166 126 210 116 256 92 Z"
+          fill={`url(#${id('shield')})`}
           stroke="#486985"
           strokeWidth="6"
+          strokeLinejoin="round"
         />
-
         <path
-          d="M400, 208 C462, 235 515, 245 515, 312 C515, 410 452, 480 400, 508 C348, 480 285, 410 285, 312 C285, 245 338, 235 400, 208 Z"
-          fill="url(#shield-grad-c)"
-        />
-
-        <path
-          d="M400, 214 C455, 238 503, 248 503, 312 C503, 370 478, 425 440, 465 C435, 340 410, 255 400, 214 Z"
+          d="M256 104 C298 126 338 135 374 139 L374 236 C374 318 326 374 268 406 C300 320 290 190 256 104 Z"
           fill="#ffffff"
-          opacity="0.06"
+          opacity="0.05"
         />
 
-        <g id="ebt-card" transform="rotate(-6 385 360)">
-          <rect x="270" y="276" width="232" height="152" rx="14" fill="#051713" opacity="0.6" />
-          <rect
-            x="268"
-            y="272"
-            width="232"
-            height="148"
-            rx="14"
-            fill="url(#card-grad-c)"
-            stroke="#2ce59b"
-            strokeWidth="2.5"
-            strokeOpacity="0.4"
-          />
-          <path d="M269 304 L499 304" stroke="#092721" strokeWidth="12" opacity="0.8" />
-          <rect x="296" y="332" width="46" height="36" rx="6" fill="url(#chip-grad-c)" stroke="#744f0b" strokeWidth="1.5" />
-          <path d="M296 350 L342 350 M314 332 L314 368 M324 332 L324 368" stroke="#634204" strokeWidth="1.2" opacity="0.65" />
-          <rect x="296" y="386" width="54" height="6.5" rx="3.25" fill="#a4ebd3" opacity="0.75" />
-          <rect x="358" y="386" width="42" height="6.5" rx="3.25" fill="#a4ebd3" opacity="0.75" />
-          <rect x="408" y="386" width="42" height="6.5" rx="3.25" fill="#a4ebd3" opacity="0.75" />
-          <rect x="458" y="386" width="28" height="6.5" rx="3.25" fill="#a4ebd3" opacity="0.75" />
+        {/* Bank card */}
+        <g transform="rotate(-8 248 258)">
+          <rect x="148" y="194" width="200" height="128" rx="16" fill={`url(#${id('card')})`} stroke="#2ce59b" strokeOpacity="0.45" strokeWidth="3" />
+          <rect x="149.5" y="218" width="197" height="18" fill="#092721" opacity="0.85" />
+          <rect x="172" y="252" width="40" height="30" rx="6" fill={`url(#${id('chip')})`} stroke="#744f0b" strokeWidth="1.5" />
+          {detailed && (
+            <>
+              <path d="M172 267 H212 M186 252 V282 M198 252 V282" stroke="#634204" strokeWidth="1.4" opacity="0.6" />
+              <rect x="172" y="298" width="40" height="6" rx="3" fill="#a4ebd3" opacity="0.7" />
+              <rect x="220" y="298" width="34" height="6" rx="3" fill="#a4ebd3" opacity="0.7" />
+              <rect x="262" y="298" width="34" height="6" rx="3" fill="#a4ebd3" opacity="0.7" />
+            </>
+          )}
         </g>
 
-        <g id="recovery-swoosh-arrow" filter="url(#arrow-shadow-c)">
-          <path
-            d="M260, 410 C245, 480 320, 520 375, 510 C435, 500 480, 440 515, 360 C525, 338 535, 310 545, 280 L565, 305 L590, 210 L498, 245 L525, 268 C495, 325 455, 400 410, 435 C370, 465 315, 460 295, 420 C282, 395 288, 360 300, 335 C275, 355 264, 385 260, 410 Z"
-            fill="#091b29"
-            opacity="0.8"
-          />
-          <path
-            d="M268, 412 C255, 470 318, 506 368, 498 C422, 488 465, 432 502, 355 C516, 328 528, 298 540, 270 L515, 252 L580, 222 L556, 300 L535, 280 C505, 335 465, 410 418, 445 C375, 476 322, 472 300, 430 C286, 402 292, 366 306, 340 C280, 362 272, 388 268, 412 Z"
-            fill="url(#arrow-grad-c)"
-          />
-          <path d="M580, 222 L540, 270 C530, 290 518, 315 505, 342 L525, 275 L515, 252 Z" fill="#a2ffd2" opacity="0.6" />
-          <path
-            d="M306, 340 C340, 300 410, 370 515, 252 L540, 270 C475, 350 365, 445 300, 430 C290, 400 295, 365 306, 340 Z"
-            fill="#ffffff"
-            opacity="0.18"
-          />
+        {/* Rising recovery arrow: crisp offset shadow, then the swoosh */}
+        <g transform="translate(4 7)" opacity="0.55">
+          <path d="M140 318 C170 394 288 404 360 216" fill="none" stroke="#031f17" strokeWidth="30" strokeLinecap="round" />
+          <path d="M381 160 L391 231 L326 206 Z" fill="#031f17" strokeLinejoin="round" />
         </g>
+        <path d="M140 318 C170 394 288 404 360 216" fill="none" stroke={`url(#${id('arrow')})`} strokeWidth="30" strokeLinecap="round" />
+        <path d="M381 160 L391 231 L326 206 Z" fill="#64f3a9" stroke="#64f3a9" strokeWidth="6" strokeLinejoin="round" />
+        <path d="M150 322 C182 380 276 384 338 236" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinecap="round" opacity="0.22" />
       </g>
 
-      {variant === 'full' && (
-        <g id="brand-name">
-          <text
-            x="400"
-            y="695"
-            style={{
-              fontFamily: 'Montserrat, Arial Black, -apple-system, sans-serif',
-              fontWeight: 900,
-              fontSize: '53px',
-              letterSpacing: '0.04em',
-              fill: '#0c2340',
-              textAnchor: 'middle',
-            }}
-          >
-            RECOVERY CREDIT
-          </text>
-        </g>
+      {isFull && (
+        <text
+          x="256"
+          y="572"
+          textAnchor="middle"
+          style={{
+            fontFamily: 'Montserrat, "Arial Black", -apple-system, sans-serif',
+            fontWeight: 800,
+            fontSize: '44px',
+            letterSpacing: '0.04em',
+            fill: '#0c2340',
+          }}
+        >
+          RECOVERY CREDIT
+        </text>
       )}
     </svg>
   );

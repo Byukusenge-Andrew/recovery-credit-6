@@ -77,12 +77,12 @@ export default function DashboardPage() {
     : 0;
 
   return (
-    <div className="space-y-6" suppressHydrationWarning>
+    <div className="space-y-4 sm:space-y-6" suppressHydrationWarning>
       {/* Title + Primary Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               {isCollector ? t('dash_title_collector') : t('dash_title_admin')}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
@@ -98,11 +98,11 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className={`grid ${isCollector ? 'grid-cols-1' : 'grid-cols-2'} sm:flex sm:items-center gap-2`}>
           {/* Download Button */}
           <button
             onClick={handleDownloadAll}
-            className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition shadow-sm flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 text-center"
             title={isCollector ? t('dash_btn_download_my') : t('dash_btn_download_all')}
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -116,14 +116,14 @@ export default function DashboardPage() {
             <>
               <Link
                 href="/debtors"
-                className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition shadow-sm flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 text-center"
               >
                 <span>{t('dash_view_all_debtors')}</span>
               </Link>
 
               <Link
                 href="/debtors/add"
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-sm"
+                className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-sm"
               >
                 <span>+</span>
                 <span>{t('dash_btn_add')}</span>
@@ -199,13 +199,13 @@ export default function DashboardPage() {
 
       {/* 4 Clean Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
                 {isCollector ? t('dash_card_my_debtors') : t('dash_card_total_debtors')}
               </p>
-              <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? stats.totalDebtors : 0}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1.5 sm:mt-2 tabular-nums">{stats ? stats.totalDebtors : 0}</h3>
               <p className="text-xs text-blue-600 font-medium mt-3">
                 {isCollector ? t('dash_card_clients_queue') : t('dash_card_clients')} <strong>{stats ? stats.clientsCount : 0}</strong>
               </p>
@@ -218,13 +218,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
                 {isCollector ? t('dash_card_my_outstanding') : t('dash_card_outstanding')}
               </p>
-              <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? formatCurrency(stats.totalOutstanding) : 'R 0.00'}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1.5 sm:mt-2 tabular-nums">{stats ? formatCurrency(stats.totalOutstanding) : 'R 0.00'}</h3>
               <p className="text-xs text-slate-500 font-medium mt-3">
                 {isCollector ? t('dash_card_cases_mgmt') : t('dash_card_book_claims')}
               </p>
@@ -238,13 +238,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
                 {isCollector ? t('dash_card_my_recovered') : t('dash_card_recovered')}
               </p>
-              <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? formatCurrency(stats.totalPaid) : 'R 0.00'}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1.5 sm:mt-2 tabular-nums">{stats ? formatCurrency(stats.totalPaid) : 'R 0.00'}</h3>
               <p className="text-xs text-emerald-600 font-medium mt-3">
                 {isCollector ? t('dash_card_my_recovered_sub') : t('dash_card_recovered_sub')}
               </p>
@@ -257,13 +257,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-500">
                 {isCollector ? t('dash_card_my_balance') : t('dash_card_balance')}
               </p>
-              <h3 className="text-2xl font-bold text-slate-900 mt-2">{stats ? formatCurrency(stats.totalBalance) : 'R 0.00'}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1.5 sm:mt-2 tabular-nums">{stats ? formatCurrency(stats.totalBalance) : 'R 0.00'}</h3>
               <p className="text-xs text-amber-600 font-medium mt-3">{t('dash_card_open_exposure')}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function DashboardPage() {
 
       {/* Grid: Categories & Priority Flags */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-slate-900">
               {isCollector ? t('dash_my_categories_title') : t('dash_categories_title')}
@@ -310,7 +310,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-slate-900">{t('dash_flags_title')}</h2>
           </div>
@@ -340,7 +340,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Debtors Table */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-slate-900">
             {isCollector ? t('dash_my_recent_debtors') : t('dash_recent_debtors')}

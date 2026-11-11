@@ -99,8 +99,8 @@ export default function WhatsAppSettingsModal({
   const isTokenActive = Boolean(config?.userTokenStatus && config.userTokenStatus.valid);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 overflow-y-auto max-h-[90vh] space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-md border border-slate-200 overflow-y-auto max-h-[90vh] space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between pb-3 border-b border-slate-100">
           <div>

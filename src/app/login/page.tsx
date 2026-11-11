@@ -143,7 +143,7 @@ export default function LoginPage() {
       />
 
       {/* Top Header Bar */}
-      <header className="relative z-10 w-full border-b border-slate-200/70 bg-white/70 backdrop-blur-sm">
+      <header className="relative z-10 w-full border-b border-slate-200/70 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 transition hover:opacity-90">
             <Logo size={28} variant="icon" className="shrink-0" />
