@@ -55,7 +55,7 @@ function AppLayoutContent({
             title="Toggle Menu"
             className="flex items-center gap-2.5 group focus:outline-none cursor-pointer"
           >
-            <Logo size={34} variant="icon" className="shrink-0 drop-shadow-sm transition-transform group-hover:scale-105" />
+            <Logo size={34} variant="icon" className="shrink-0" />
             <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:inline group-hover:text-blue-600 transition-colors">
               Recovery Credit
             </span>
@@ -117,7 +117,7 @@ function AppLayoutContent({
       {sidebarExpanded && (
         <div
           onClick={() => setSidebarExpanded(false)}
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-20 md:hidden"
+          className="fixed inset-0 bg-slate-900/30 z-20 md:hidden"
           aria-hidden="true"
         />
       )}

@@ -36,32 +36,32 @@ export default function LandingPage() {
       className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900"
     >
       {/* Header / Nav */}
-      <header className="border-b border-slate-100 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-slate-100 bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Logo size={36} variant="icon" className="shrink-0 drop-shadow-sm" />
-            <span className="font-extrabold text-slate-900 text-base tracking-tight">{t('app_name')}</span>
+            <Logo size={36} variant="icon" className="shrink-0" />
+            <span className="font-extrabold text-slate-900 text-base tracking-tight whitespace-nowrap">{t('app_name')}</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
+          <nav className="hidden lg:flex items-center gap-6 mx-6 text-xs font-semibold text-slate-600 whitespace-nowrap">
             <a href="#features" className="hover:text-blue-600 transition">{t('landing_features')}</a>
             <a href="#workflow" className="hover:text-blue-600 transition">{t('landing_workflow')}</a>
             <a href="#portfolios" className="hover:text-blue-600 transition">{t('landing_portfolios')}</a>
-            <Link href="/privacy" className="hover:text-blue-600 transition">{t('landing_privacy')}</Link>
-            <Link href="/terms" className="hover:text-blue-600 transition">{t('landing_terms')}</Link>
+            <Link href="/privacy" className="hidden 2xl:inline hover:text-blue-600 transition">{t('landing_privacy')}</Link>
+            <Link href="/terms" className="hidden 2xl:inline hover:text-blue-600 transition">{t('landing_terms')}</Link>
           </nav>
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             <Link
               href="/login"
-              className="px-3.5 py-2 text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+              className="hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold text-blue-600 hover:text-blue-700 transition whitespace-nowrap"
             >
               {t('landing_agent_signin')}
             </Link>
             <Link
               href="/login"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition shadow-sm"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition shadow-sm whitespace-nowrap"
             >
               {t('landing_launch_portal')}
             </Link>
@@ -73,7 +73,7 @@ export default function LandingPage() {
       <section className="py-20 md:py-28 px-6 bg-linear-to-b from-blue-50/40 via-slate-50/30 to-white">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/70 text-blue-700 text-xs font-medium shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
             {t('landing_hero_badge')}
           </div>
 
