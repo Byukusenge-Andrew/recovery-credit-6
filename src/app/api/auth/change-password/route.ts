@@ -61,13 +61,14 @@ export async function POST(request: Request) {
 
     const dbUser = rows[0];
 
-    // 4. If currentPassword supplied, verify it
-    if (currentPassword && dbUser.password !== currentPassword) {
-      return NextResponse.json({ error: 'Current one-time password is incorrect.' }, { status: 400 });
+    // 4. Always verify the current (or temporary one-time) password, so a
+    //    signed-in session alone cannot be used to take over the account.
+    if (!currentPassword || dbUser.password !== currentPassword) {
+      return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 400 });
     }
 
     if (newPassword === dbUser.password) {
-      return NextResponse.json({ error: 'New password cannot be the same as your temporary password.' }, { status: 400 });
+      return NextResponse.json({ error: 'New password must be different from your current password.' }, { status: 400 });
     }
 
     // 5. Update user password and clear must_change_password flag
@@ -116,7 +117,9 @@ export async function POST(request: Request) {
           'user',
           ${updatedUser.id},
           ${`User: ${updatedUser.username}`},
-          ${`Collector @${updatedUser.username} successfully upgraded temporary OTP to permanent password.`},
+          ${dbUser.must_change_password
+            ? `@${updatedUser.username} replaced their temporary one-time password.`
+            : `@${updatedUser.username} changed their password.`},
           ${ip}
         )
       `;
