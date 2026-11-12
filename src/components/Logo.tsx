@@ -9,10 +9,9 @@ interface LogoProps {
 }
 
 /**
- * Recovery Credit emblem.
- * Navy badge + gold ring + green shield + bank card + rising recovery arrow.
- * Drawn on a square 512 grid so the icon never clips; small sizes drop the
- * fine card details so the mark stays legible in headers and favicons.
+ * Recovery Credit mark: navy tile, gold recovery arrow circling three rising
+ * credit bars. Drawn on a square 512 grid (public/logo.svg is the same art);
+ * small sizes drop the sheen and inner keyline so the mark stays crisp.
  */
 export default function Logo({ className = '', size = 36, variant = 'icon' }: LogoProps) {
   const uid = useId().replace(/:/g, '');
@@ -22,6 +21,8 @@ export default function Logo({ className = '', size = 36, variant = 'icon' }: Lo
 
   const viewBox = isFull ? '0 0 512 600' : '0 0 512 512';
   const height = isFull ? Math.round(size * (600 / 512)) : size;
+  const gold = `url(#${id('gold')})`;
+  const silver = `url(#${id('silver')})`;
 
   return (
     <svg
@@ -34,96 +35,53 @@ export default function Logo({ className = '', size = 36, variant = 'icon' }: Lo
       aria-label="Recovery Credit"
     >
       <defs>
-        <linearGradient id={id('navy')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#1b334f" />
-          <stop offset="55%" stopColor="#0f2038" />
-          <stop offset="100%" stopColor="#081321" />
+        <linearGradient id={id('tile')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#17345a" />
+          <stop offset="1" stopColor="#0a1a30" />
         </linearGradient>
         <linearGradient id={id('gold')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f5d77f" />
-          <stop offset="45%" stopColor="#c99738" />
-          <stop offset="70%" stopColor="#e8c15a" />
-          <stop offset="100%" stopColor="#996a1e" />
+          <stop offset="0" stopColor="#f3d68a" />
+          <stop offset="0.45" stopColor="#d4a446" />
+          <stop offset="0.7" stopColor="#e9c46c" />
+          <stop offset="1" stopColor="#a8761f" />
         </linearGradient>
-        <linearGradient id={id('shield')} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#145044" />
-          <stop offset="60%" stopColor="#0b302a" />
-          <stop offset="100%" stopColor="#061c18" />
+        <linearGradient id={id('silver')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="1" stopColor="#c9d3e0" />
         </linearGradient>
-        <linearGradient id={id('card')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#1f7a68" />
-          <stop offset="100%" stopColor="#0e3a32" />
-        </linearGradient>
-        <linearGradient id={id('chip')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffe89e" />
-          <stop offset="100%" stopColor="#b88422" />
-        </linearGradient>
-        <linearGradient id={id('arrow')} gradientUnits="userSpaceOnUse" x1="140" y1="390" x2="386" y2="160">
-          <stop offset="0%" stopColor="#058055" />
-          <stop offset="40%" stopColor="#00a86b" />
-          <stop offset="75%" stopColor="#25cf82" />
-          <stop offset="100%" stopColor="#64f3a9" />
+        <linearGradient id={id('sheen')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.10" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      <g id="logo-emblem">
-        {/* Badge */}
-        <circle cx="256" cy="256" r="248" fill={`url(#${id('navy')})`} />
-        <circle cx="256" cy="256" r="226" fill="none" stroke={`url(#${id('gold')})`} strokeWidth="18" />
-        <circle cx="256" cy="256" r="214" fill="#091522" />
-        {detailed && <circle cx="256" cy="256" r="198" fill="none" stroke="#254a6d" strokeWidth="3" opacity="0.6" />}
+      <rect x="8" y="8" width="496" height="496" rx="112" fill={`url(#${id('tile')})`} />
+      {detailed && (
+        <>
+          <rect x="8" y="8" width="496" height="496" rx="112" fill={`url(#${id('sheen')})`} />
+          <rect x="30" y="30" width="452" height="452" rx="92" fill="none" stroke="#d4a446" strokeOpacity="0.35" strokeWidth="3" />
+        </>
+      )}
 
-        {/* Shield */}
-        <path
-          d="M256 92 C302 116 346 126 386 130 L386 236 C386 328 330 390 256 424 C182 390 126 328 126 236 L126 130 C166 126 210 116 256 92 Z"
-          fill={`url(#${id('shield')})`}
-          stroke="#486985"
-          strokeWidth="6"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M256 104 C298 126 338 135 374 139 L374 236 C374 318 326 374 268 406 C300 320 290 190 256 104 Z"
-          fill="#ffffff"
-          opacity="0.05"
-        />
+      {/* Recovery arrow */}
+      <path d="M313.9 132.1 A132 132 0 1 0 373.1 271.4" fill="none" stroke={gold} strokeWidth="38" />
+      <path d="M422 281.8 L387.7 203 L324.2 261 Z" fill={gold} stroke={gold} strokeWidth="4" strokeLinejoin="round" />
 
-        {/* Bank card */}
-        <g transform="rotate(-8 248 258)">
-          <rect x="148" y="194" width="200" height="128" rx="16" fill={`url(#${id('card')})`} stroke="#2ce59b" strokeOpacity="0.45" strokeWidth="3" />
-          <rect x="149.5" y="218" width="197" height="18" fill="#092721" opacity="0.85" />
-          <rect x="172" y="252" width="40" height="30" rx="6" fill={`url(#${id('chip')})`} stroke="#744f0b" strokeWidth="1.5" />
-          {detailed && (
-            <>
-              <path d="M172 267 H212 M186 252 V282 M198 252 V282" stroke="#634204" strokeWidth="1.4" opacity="0.6" />
-              <rect x="172" y="298" width="40" height="6" rx="3" fill="#a4ebd3" opacity="0.7" />
-              <rect x="220" y="298" width="34" height="6" rx="3" fill="#a4ebd3" opacity="0.7" />
-              <rect x="262" y="298" width="34" height="6" rx="3" fill="#a4ebd3" opacity="0.7" />
-            </>
-          )}
-        </g>
-
-        {/* Rising recovery arrow: crisp offset shadow, then the swoosh */}
-        <g transform="translate(4 7)" opacity="0.55">
-          <path d="M140 318 C170 394 288 404 360 216" fill="none" stroke="#031f17" strokeWidth="30" strokeLinecap="round" />
-          <path d="M381 160 L391 231 L326 206 Z" fill="#031f17" strokeLinejoin="round" />
-        </g>
-        <path d="M140 318 C170 394 288 404 360 216" fill="none" stroke={`url(#${id('arrow')})`} strokeWidth="30" strokeLinecap="round" />
-        <path d="M381 160 L391 231 L326 206 Z" fill="#64f3a9" stroke="#64f3a9" strokeWidth="6" strokeLinejoin="round" />
-        <path d="M150 322 C182 380 276 384 338 236" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinecap="round" opacity="0.22" />
-      </g>
+      {/* Rising credit bars */}
+      <rect x="178" y="266" width="34" height="54" rx="5" fill={silver} />
+      <rect x="227" y="232" width="34" height="88" rx="5" fill={silver} />
+      <rect x="276" y="196" width="34" height="124" rx="5" fill={gold} />
 
       {isFull && (
         <text
           x="256"
-          y="572"
+          y="574"
           textAnchor="middle"
-          style={{
-            fontFamily: 'Montserrat, "Arial Black", -apple-system, sans-serif',
-            fontWeight: 800,
-            fontSize: '44px',
-            letterSpacing: '0.04em',
-            fill: '#0c2340',
-          }}
+          fontFamily="Inter, 'Segoe UI', Arial, sans-serif"
+          fontWeight="700"
+          fontSize="42"
+          letterSpacing="3"
+          fill="#0c2340"
         >
           RECOVERY CREDIT
         </text>
