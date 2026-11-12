@@ -38,6 +38,11 @@ export const debtorsApi = {
     return apiClient.delete<{ success: boolean }>(`/debtors/${encodeURIComponent(id)}`);
   },
 
+  /** Admin only: permanently deletes many debtor files (with payments and activities) in one transaction. */
+  bulkDelete: async (ids: string[]): Promise<{ success: boolean; count: number }> => {
+    return apiClient.post<{ success: boolean; count: number }>('/debtors/bulk/delete', { ids });
+  },
+
   bulkUpload: async (payload: {
     debtors: any[];
     institutionId?: string;
