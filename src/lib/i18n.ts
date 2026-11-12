@@ -700,14 +700,14 @@ export const translations = {
 export type TranslationKey = keyof typeof translations.en;
 
 export function getStoredLanguage(): Language {
-  if (typeof window === 'undefined') return 'rw';
+  if (typeof window === 'undefined') return 'en';
   try {
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language | null;
     if (stored === 'en' || stored === 'rw') return stored;
   } catch {
     // fallback
   }
-  return 'rw';
+  return 'en';
 }
 
 export function setStoredLanguage(lang: Language): void {
@@ -720,7 +720,7 @@ export function setStoredLanguage(lang: Language): void {
   }
 }
 
-export function translate(key: TranslationKey, lang: Language = 'rw'): string {
+export function translate(key: TranslationKey, lang: Language = 'en'): string {
   const dict = translations[lang] as Record<string, string> | undefined;
   const rwDict = translations.rw as Record<string, string>;
   const enDict = translations.en as Record<string, string>;

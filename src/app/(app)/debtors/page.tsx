@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { exportClientsDebtorsCSV, importClientsDebtorsFromCSV, getCurrentUser } from '@/lib/store';
 import { debtorsApi } from '@/services/api';
+import { readUploadAsCsv, BULK_UPLOAD_ACCEPT } from '@/lib/spreadsheet';
 import { CATEGORIES, COLOR_FLAGS, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
 import { TranslationKey } from '@/lib/i18n';
@@ -110,36 +111,38 @@ export default function DebtorsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const content = event.target?.result as string;
-      if (content) {
-        const res = importClientsDebtorsFromCSV(content);
-
-        if (res.parsedDebtors && res.parsedDebtors.length > 0) {
-          try {
-            await debtorsApi.bulkUpload({
-              debtors: res.parsedDebtors,
-              actorUsername: currentUser?.username,
-              actorFullName: currentUser?.fullName
-            });
-          } catch (err) {
-            console.warn('Bulk debtors sync error:', err);
-          }
-        }
-
-        setUploadResult({ success: res.successCount, errors: res.errors });
-        loadDebtors();
-      }
-    };
-    reader.readAsText(file);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    if (!file) return;
+
+    let content = '';
+    try {
+      content = await readUploadAsCsv(file);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setUploadResult({ success: 0, errors: [e?.message || 'Could not read the file.'] });
+      return;
+    }
+    if (!content) return;
+
+    const res = importClientsDebtorsFromCSV(content);
+    if (res.parsedDebtors && res.parsedDebtors.length > 0) {
+      try {
+        await debtorsApi.bulkUpload({
+          debtors: res.parsedDebtors,
+          actorUsername: currentUser?.username,
+          actorFullName: currentUser?.fullName
+        });
+      } catch (err) {
+        console.warn('Bulk debtors sync error:', err);
+      }
+    }
+
+    setUploadResult({ success: res.successCount, errors: res.errors });
+    loadDebtors();
   };
 
   const handleWhatsApp = (debtor: Debtor) => {
@@ -153,7 +156,7 @@ export default function DebtorsPage() {
       {/* Hidden file input for bulk upload */}
       <input
         type="file"
-        accept=".csv"
+        accept={BULK_UPLOAD_ACCEPT}
         ref={fileInputRef}
         onChange={handleFileUpload}
         className="hidden"
@@ -190,12 +193,12 @@ export default function DebtorsPage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
-                title="Bulk Upload Debtors CSV"
+                title="Bulk upload debtors from CSV or Excel"
               >
                 <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <span>Bulk Upload CSV</span>
+                <span>Bulk Upload CSV / Excel</span>
               </button>
 
               <button

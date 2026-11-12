@@ -11,14 +11,14 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType>({
-  lang: 'rw',
-  language: 'rw',
+  lang: 'en',
+  language: 'en',
   setLang: () => {},
-  t: (key) => translate(key, 'rw'),
+  t: (key) => translate(key, 'en'),
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Language>('rw');
+  const [lang, setLangState] = useState<Language>('en');
 
   useEffect(() => {
     // Initial sync

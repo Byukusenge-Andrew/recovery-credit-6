@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from '
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, exportCollectorsCSV, parseCollectorsCSV } from '@/lib/store';
+import { readUploadAsCsv, BULK_UPLOAD_ACCEPT } from '@/lib/spreadsheet';
 import { collectorsApi, activitiesApi } from '@/services/api';
 import { ACTIVITY_TYPES, formatCurrency } from '@/lib/constants';
 import { useLanguage } from '@/components/LanguageContext';
@@ -215,37 +216,40 @@ export default function CollectorsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const content = event.target?.result as string;
-      if (content) {
-        const parsed = parseCollectorsCSV(content);
-        let createdCount = 0;
-        const uploadErrors = [...parsed.errors];
-
-        for (const col of parsed.parsedCollectors) {
-          try {
-            await collectorsApi.create(col);
-            createdCount++;
-          } catch (err: unknown) {
-            const e = err as { message?: string };
-            console.warn('Upload collector error:', err);
-            uploadErrors.push(`@${col.username}: ${e?.message || 'Failed to create collector'}`);
-          }
-        }
-        setUploadResult({ success: createdCount, errors: uploadErrors });
-        loadCollectorsRoster();
-        loadMetrics();
-      }
-    };
-    reader.readAsText(file);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    if (!file) return;
+
+    let content = '';
+    try {
+      content = await readUploadAsCsv(file);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setUploadResult({ success: 0, errors: [e?.message || 'Could not read the file.'] });
+      return;
+    }
+    if (!content) return;
+
+    const parsed = parseCollectorsCSV(content);
+    let createdCount = 0;
+    const uploadErrors = [...parsed.errors];
+
+    for (const col of parsed.parsedCollectors) {
+      try {
+        await collectorsApi.create(col);
+        createdCount++;
+      } catch (err: unknown) {
+        const e = err as { message?: string };
+        console.warn('Upload collector error:', err);
+        uploadErrors.push(`@${col.username}: ${e?.message || 'Failed to create collector'}`);
+      }
+    }
+    setUploadResult({ success: createdCount, errors: uploadErrors });
+    loadCollectorsRoster();
+    loadMetrics();
   };
 
   const handleAddCollector = async (e: React.FormEvent) => {
@@ -341,7 +345,7 @@ export default function CollectorsPage() {
       {/* Hidden file input */}
       <input
         type="file"
-        accept=".csv"
+        accept={BULK_UPLOAD_ACCEPT}
         ref={fileInputRef}
         onChange={handleFileUpload}
         className="hidden"
@@ -1182,12 +1186,12 @@ export default function CollectorsPage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
-                title="Bulk Upload Collectors CSV"
+                title="Bulk upload collectors from CSV or Excel"
               >
                 <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <span>Bulk Upload CSV</span>
+                <span>Bulk Upload CSV / Excel</span>
               </button>
 
               <button
