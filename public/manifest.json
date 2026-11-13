@@ -1,6 +1,6 @@
 {
-  "name": "Bureau of Debt Collection Agency Ltd",
-  "short_name": "Bureau of Debt",
+  "name": "CRM6 - Bureau of Debt Collection Agency",
+  "short_name": "CRM6",
   "description": "Debt recovery, client bank portfolios, and field collection management system",
   "start_url": "/dashboard",
   "display": "standalone",

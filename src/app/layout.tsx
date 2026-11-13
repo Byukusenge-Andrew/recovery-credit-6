@@ -5,13 +5,13 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Bureau of Debt Collection Agency | Debt Collection Management System',
+  title: 'CRM6 | Bureau of Debt Collection Agency',
   description: 'Enterprise Debt Collection, Bank Client Portfolios & Recovery Tracking',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Bureau of Debt',
+    title: 'CRM6',
   },
   icons: {
     icon: '/logo.svg',
