@@ -1,17 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 600" width="512" height="600">
-  <defs>
-    <linearGradient id="rc-tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17345a"/><stop offset="1" stop-color="#0a1a30"/></linearGradient>
-    <linearGradient id="rc-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d68a"/><stop offset="0.45" stop-color="#d4a446"/><stop offset="0.7" stop-color="#e9c46c"/><stop offset="1" stop-color="#a8761f"/></linearGradient>
-    <linearGradient id="rc-silver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c9d3e0"/></linearGradient>
-    <linearGradient id="rc-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
-  </defs>
-  <g id="logo-emblem">
-    <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#rc-tile)"/>
-    <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#rc-sheen)"/>
-    <rect x="30" y="30" width="452" height="452" rx="92" fill="none" stroke="#d4a446" stroke-opacity="0.35" stroke-width="3"/>
-    <path d="M313.9 132.1 A132 132 0 1 0 373.1 271.4" fill="none" stroke="url(#rc-gold)" stroke-width="38" stroke-linecap="butt"/>
-    <path d="M422 281.8 L387.7 203 L324.2 261 Z" fill="url(#rc-gold)" stroke="url(#rc-gold)" stroke-width="4" stroke-linejoin="round"/>
-    <rect x="178" y="266" width="34" height="54" rx="5" fill="url(#rc-silver)"/><rect x="227" y="232" width="34" height="88" rx="5" fill="url(#rc-silver)"/><rect x="276" y="196" width="34" height="124" rx="5" fill="url(#rc-gold)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 560" width="600" height="560">
+  <g transform="translate(-22.72 -31.26) scale(2.3301)">
+    <path d="M145.5 22 L145.5 99 L78 173.5 L126 111 L126 47.5 Z" fill="#0078FF"/>
+    <path d="M195.5 66 L146.5 127.5 L133.5 143.5 L119.5 165.5 L115.5 176.5 L95 176.5 Z" fill="#0B0B0C"/>
+    <path d="M148 121 L162 107.5 L199 176.5 L178.5 176.5 Z" fill="#0B0B0C"/>
+    <path d="M131 145.5 L164 145.5 L173.5 162.5 L118 162.5 Z" fill="#0B0B0C"/>
   </g>
-  <text x="256" y="574" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="42" letter-spacing="3" fill="#0c2340">RECOVERY CREDIT</text>
+  <g font-family="Montserrat, 'Arial Black', 'Segoe UI', Arial, sans-serif" font-weight="800" fill="#0B0B0C" text-anchor="middle">
+    <text x="300" y="450" font-size="38">BUREAU OF DEBT</text>
+    <text x="300" y="510" font-size="34">COLLECTION AGENCY LTD</text>
+  </g>
 </svg>

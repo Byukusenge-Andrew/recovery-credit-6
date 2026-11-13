@@ -4,7 +4,7 @@
   "description": "Debt recovery, client bank portfolios, and field collection management system",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#0c2340",
+  "background_color": "#ffffff",
   "theme_color": "#0c2340",
   "orientation": "portrait",
   "icons": [
