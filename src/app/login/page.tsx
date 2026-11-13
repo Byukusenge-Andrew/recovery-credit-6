@@ -144,22 +144,23 @@ export default function LoginPage() {
 
       {/* Top Header Bar */}
       <header className="relative z-10 w-full border-b border-slate-200/70 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 transition hover:opacity-90">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2 min-w-0 transition hover:opacity-90">
             <Logo size={28} variant="icon" className="shrink-0" />
             <BrandWordmark />
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <LanguageSwitcher />
             <Link
               href="/"
+              aria-label={t('login_back_home')}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition"
             >
               <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span>{t('login_back_home')}</span>
+              <span className="hidden min-[380px]:inline">{t('login_back_home')}</span>
             </Link>
           </div>
         </div>

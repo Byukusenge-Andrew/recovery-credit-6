@@ -24,9 +24,9 @@ export default function LanguageSwitcher({ className = '', variant = 'pill' }: P
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const languages: { code: Language; label: string; nativeName: string; flag: string }[] = [
-    { code: 'en', label: 'English', nativeName: 'English (US/UK)', flag: '🇬🇧' },
-    { code: 'rw', label: 'Ikinyarwanda', nativeName: 'Ikinyarwanda (RW)', flag: '🇷🇼' },
+  const languages: { code: Language; label: string; nativeName: string }[] = [
+    { code: 'en', label: 'English', nativeName: 'English (US/UK)' },
+    { code: 'rw', label: 'Ikinyarwanda', nativeName: 'Ikinyarwanda (RW)' },
   ];
 
   const current = languages.find((l) => l.code === lang) || languages[0];
@@ -45,7 +45,6 @@ export default function LanguageSwitcher({ className = '', variant = 'pill' }: P
           }`}
           title="English"
         >
-          <span>🇬🇧</span>
           <span>EN</span>
         </button>
         <button
@@ -58,7 +57,6 @@ export default function LanguageSwitcher({ className = '', variant = 'pill' }: P
           }`}
           title="Ikinyarwanda"
         >
-          <span>🇷🇼</span>
           <span>RW</span>
         </button>
       </div>
@@ -72,9 +70,9 @@ export default function LanguageSwitcher({ className = '', variant = 'pill' }: P
         onClick={() => setIsOpen(!isOpen)}
         className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium transition shadow-xs flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         title="Switch Language / Hitamo Ururimi"
-        aria-label="Select language"
+        aria-label={`${current.code.toUpperCase()} - select language`}
       >
-        <span className="text-sm">{current.flag}</span>
+        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0c2.5-2.4 3.75-5.4 3.75-9S14.5 5.4 12 3m0 18c-2.5-2.4-3.75-5.4-3.75-9S9.5 5.4 12 3M3.6 9h16.8M3.6 15h16.8" /></svg>
         <span className="font-semibold text-slate-800">{current.code.toUpperCase()}</span>
         <svg
           className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
@@ -112,7 +110,6 @@ export default function LanguageSwitcher({ className = '', variant = 'pill' }: P
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-base">{item.flag}</span>
                     <div>
                       <p className="leading-tight">{item.label}</p>
                       <p className="text-[10px] text-slate-400 font-normal">{item.nativeName}</p>

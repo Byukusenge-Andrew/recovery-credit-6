@@ -1,34 +1,12 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const emptySubscribe = () => () => {};
-
 export default function LandingPage() {
-  const { t, setLang } = useLanguage();
-  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('rc6_language');
-    if (!stored) {
-      setLang('rw');
-    }
-  }, [setLang]);
-
-  if (!mounted) {
-    return (
-      <div 
-        suppressHydrationWarning 
-        className="min-h-screen bg-white text-slate-900 flex items-center justify-center font-sans"
-      >
-        <div className="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const { t } = useLanguage();
 
   return (
     <div 
@@ -37,10 +15,11 @@ export default function LandingPage() {
     >
       {/* Header / Nav */}
       <header className="border-b border-slate-100 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Logo size={36} variant="icon" className="shrink-0" />
-            <BrandWordmark size="md" />
+            <BrandWordmark className="flex sm:hidden" />
+            <BrandWordmark size="md" className="hidden sm:flex" />
           </div>
 
           <nav className="hidden lg:flex items-center gap-6 mx-6 text-xs font-semibold text-slate-600 whitespace-nowrap">
@@ -51,7 +30,7 @@ export default function LandingPage() {
             <Link href="/terms" className="hidden 2xl:inline hover:text-blue-600 transition">{t('landing_terms')}</Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <LanguageSwitcher />
             <Link
               href="/login"
@@ -70,6 +49,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
+      <main className="flex-1">
       <section className="py-20 md:py-28 px-6 bg-linear-to-b from-blue-50/40 via-slate-50/30 to-white">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/70 text-blue-700 text-xs font-medium shadow-2xs">
@@ -251,7 +231,7 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-              <span className="text-emerald-600 font-extrabold text-sm font-mono">04</span>
+              <span className="text-emerald-700 font-extrabold text-sm font-mono">04</span>
               <h3 className="text-sm font-bold text-slate-900">{t('landing_wf_step4_title')}</h3>
               <p className="text-xs text-slate-500 leading-relaxed">{t('landing_wf_step4_desc')}</p>
             </div>
@@ -291,6 +271,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-100 bg-white py-12 px-6">

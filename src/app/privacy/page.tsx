@@ -1,37 +1,25 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const emptySubscribe = () => () => {};
-
 export default function PrivacyPage() {
   const { t, language } = useLanguage();
-  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-
-  if (!mounted) {
-    return (
-      <div suppressHydrationWarning className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
-        <div className="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div suppressHydrationWarning className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <header className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+      <header className="bg-white border-b border-slate-100 py-3 sm:py-4 px-4 sm:px-6 sticky top-0 z-20">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2 min-w-0">
             <Logo size={32} variant="icon" className="shrink-0" />
             <BrandWordmark />
           </Link>
-          <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs font-medium text-slate-600 shrink-0">
             <LanguageSwitcher />
-            <Link href="/" className="hover:text-blue-600 transition">{t('legal_home')}</Link>
-            <Link href="/terms" className="hover:text-blue-600 transition">{t('legal_terms')}</Link>
+            <Link href="/" className="hidden sm:inline hover:text-blue-600 transition">{t('legal_home')}</Link>
+            <Link href="/terms" className="hidden sm:inline hover:text-blue-600 transition">{t('legal_terms')}</Link>
             <Link href="/login" className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
               {t('legal_signin')}
             </Link>
