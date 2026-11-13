@@ -137,15 +137,15 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Overview Card */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl uppercase tracking-wider shrink-0 shadow-sm">
               {currentUser.username.substring(0, 2)}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-slate-900">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <h2 className="text-lg font-bold text-slate-900 break-words">
                   {currentUser.fullName || currentUser.username}
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
@@ -153,8 +153,8 @@ export default function ProfilePage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-mono mt-0.5">@{currentUser.username}</p>
-              <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
-                <span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-slate-500">
+                <span className="break-all">
                   Email:{' '}
                   <strong className="text-slate-700 font-medium">
                     {currentUser.email || 'No email attached'}
