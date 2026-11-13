@@ -13,7 +13,7 @@ export async function getEmailSettings(): Promise<EmailSettings> {
   let gmailUser = process.env.GMAIL_USER || '';
   let gmailPass = process.env.GMAIL_APP_PASSWORD || '';
   let resendApiKey = process.env.RESEND_API_KEY || '';
-  let fromEmail = process.env.RESEND_FROM_EMAIL || 'Recovery Credit <onboarding@resend.dev>';
+  let fromEmail = process.env.RESEND_FROM_EMAIL || 'Bureau of Debt Collection Agency <onboarding@resend.dev>';
 
   try {
     const rows = await sql`
@@ -72,7 +72,7 @@ export async function sendCollectorWelcomeEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Recovery Credit</title>
+  <title>Welcome to Bureau of Debt Collection Agency</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 15px;">
@@ -82,7 +82,7 @@ export async function sendCollectorWelcomeEmail({
           <!-- Header -->
           <tr>
             <td style="padding: 32px 32px 24px 32px; background-color: #0f172a; text-align: center;">
-              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">RECOVERY CREDIT</h1>
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">BUREAU OF DEBT COLLECTION AGENCY</h1>
               <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Authorized Recovery Officer Portal</p>
             </td>
           </tr>
@@ -92,7 +92,7 @@ export async function sendCollectorWelcomeEmail({
             <td style="padding: 32px;">
               <h2 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700; color: #0f172a;">Welcome to the Team, ${fullName}</h2>
               <p style="margin: 0 0 20px 0; font-size: 13px; line-height: 1.6; color: #475569;">
-                An administrator has registered your official debt collection account on the <strong>Recovery Credit Management Platform</strong>.
+                An administrator has registered your official debt collection account on the <strong>Bureau of Debt Collection Agency platform</strong>.
               </p>
 
               <!-- Credentials Box -->
@@ -128,7 +128,7 @@ export async function sendCollectorWelcomeEmail({
                 <tr>
                   <td align="center">
                     <a href="${portalUrl}" style="display: inline-block; padding: 12px 28px; background-color: #2563eb; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 10px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);">
-                      Sign In to Recovery Credit Portal &rarr;
+                      Sign In to the Bureau of Debt Collection Agency Portal &rarr;
                     </a>
                   </td>
                 </tr>
@@ -140,7 +140,7 @@ export async function sendCollectorWelcomeEmail({
           <tr>
             <td style="padding: 20px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0 0 6px 0; font-size: 11px; color: #94a3b8;">
-                Recovery Credit &bull; Credit Portfolio Recovery & Debtor Management
+                Bureau of Debt Collection Agency Ltd &bull; Debt Recovery & Debtor Management
               </p>
               <p style="margin: 0; font-size: 10px; color: #cbd5e1;">
                 This email was sent to ${to}. Please do not reply directly to this automated security dispatch.
@@ -167,9 +167,9 @@ export async function sendCollectorWelcomeEmail({
         });
 
         const info = await transporter.sendMail({
-          from: `"Recovery Credit" <${settings.gmailUser}>`,
+          from: `"Bureau of Debt Collection Agency" <${settings.gmailUser}>`,
           to,
-          subject: `Welcome to Recovery Credit - Your One-Time Password (${username})`,
+          subject: `Welcome to Bureau of Debt Collection Agency - Your One-Time Password (${username})`,
           html: htmlContent
         });
 
@@ -191,7 +191,7 @@ export async function sendCollectorWelcomeEmail({
         body: JSON.stringify({
           from: settings.fromEmail,
           to: [to],
-          subject: `Welcome to Recovery Credit - Your One-Time Password (${username})`,
+          subject: `Welcome to Bureau of Debt Collection Agency - Your One-Time Password (${username})`,
           html: htmlContent
         })
       });

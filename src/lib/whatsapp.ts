@@ -229,19 +229,19 @@ export function getWhatsAppTemplates(context: DebtorReminderContext) {
       id: 'standard_reminder',
       name: 'Standard Balance Reminder',
       category: 'Friendly',
-      text: `Dear ${context.debtorName}, this is an official reminder from Recovery Credit regarding your ${context.clientName} account (${context.accountNumber}). The remaining balance due is ${balanceStr}. Please contact ${collector} to arrange settlement or schedule a payment meeting. Thank you.`
+      text: `Dear ${context.debtorName}, this is an official reminder from Bureau of Debt Collection Agency regarding your ${context.clientName} account (${context.accountNumber}). The remaining balance due is ${balanceStr}. Please contact ${collector} to arrange settlement or schedule a payment meeting. Thank you.`
     },
     {
       id: 'urgent_notice',
       name: 'Urgent Overdue Notice',
       category: 'Urgent',
-      text: `URGENT NOTICE: Dear ${context.debtorName}, your account (${context.accountNumber}) with ${context.clientName} has an overdue outstanding balance of ${balanceStr}. Immediate contact with Recovery Credit (${collector}) is required today to avoid formal credit escalation.`
+      text: `URGENT NOTICE: Dear ${context.debtorName}, your account (${context.accountNumber}) with ${context.clientName} has an overdue outstanding balance of ${balanceStr}. Immediate contact with Bureau of Debt Collection Agency (${collector}) is required today to avoid formal credit escalation.`
     },
     {
       id: 'settlement_offer',
       name: 'Payment Plan / Settlement Offer',
       category: 'Negotiation',
-      text: `Dear ${context.debtorName}, Recovery Credit is open to structured settlement discussions for your ${context.clientName} balance (${balanceStr}, Acc: ${context.accountNumber}). Please reply to this message or contact ${collector} to arrange an affordable installment plan.`
+      text: `Dear ${context.debtorName}, Bureau of Debt Collection Agency is open to structured settlement discussions for your ${context.clientName} balance (${balanceStr}, Acc: ${context.accountNumber}). Please reply to this message or contact ${collector} to arrange an affordable installment plan.`
     },
     {
       id: 'promise_followup',

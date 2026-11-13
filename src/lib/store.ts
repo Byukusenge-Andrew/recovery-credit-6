@@ -751,7 +751,7 @@ export function generateWhatsAppLink(debtorOrPhone: Debtor | string, customMessa
   
   let msg = customMessage;
   if (!msg && typeof debtorOrPhone !== 'string') {
-    msg = `Dear ${debtorOrPhone.debtorName}, this is an official message from Recovery Credit regarding your ${debtorOrPhone.clientName} account (${debtorOrPhone.accountNumber}). The remaining balance due is R ${debtorOrPhone.outstandingBalance.toFixed(2)}. Please contact your assigned recovery officer to arrange settlement or meeting. Thank you.`;
+    msg = `Dear ${debtorOrPhone.debtorName}, this is an official message from Bureau of Debt Collection Agency regarding your ${debtorOrPhone.clientName} account (${debtorOrPhone.accountNumber}). The remaining balance due is R ${debtorOrPhone.outstandingBalance.toFixed(2)}. Please contact your assigned recovery officer to arrange settlement or meeting. Thank you.`;
   }
   
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg || '')}`;

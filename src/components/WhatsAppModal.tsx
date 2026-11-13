@@ -51,7 +51,7 @@ export default function WhatsAppModal({
       const collector = debtor.assignedCollector || currentUser?.fullName || 'Recovery Officer';
       const balanceStr = formatCurrency(debtor.outstandingBalance);
 
-      const standardText = `Dear ${debtor.debtorName}, this is an official reminder from Recovery Credit regarding your ${debtor.clientName} account (${debtor.accountNumber}). The remaining balance due is ${balanceStr}. Please contact your assigned recovery officer (${collector}) to arrange payment or a meeting. Thank you.`;
+      const standardText = `Dear ${debtor.debtorName}, this is an official reminder from Bureau of Debt Collection Agency regarding your ${debtor.clientName} account (${debtor.accountNumber}). The remaining balance due is ${balanceStr}. Please contact your assigned recovery officer (${collector}) to arrange payment or a meeting. Thank you.`;
       setMessage(standardText);
     }
   }, [debtor, currentUser]);
@@ -75,17 +75,17 @@ export default function WhatsAppModal({
     switch (type) {
       case 'standard':
         setMessage(
-          `Dear ${debtor.debtorName}, this is an official reminder from Recovery Credit regarding your ${debtor.clientName} account (${debtor.accountNumber}). The remaining balance due is ${balanceStr}. Please contact your assigned recovery officer (${collector}) to arrange payment or a meeting. Thank you.`
+          `Dear ${debtor.debtorName}, this is an official reminder from Bureau of Debt Collection Agency regarding your ${debtor.clientName} account (${debtor.accountNumber}). The remaining balance due is ${balanceStr}. Please contact your assigned recovery officer (${collector}) to arrange payment or a meeting. Thank you.`
         );
         break;
       case 'urgent':
         setMessage(
-          `URGENT NOTICE: Dear ${debtor.debtorName}, your account (${debtor.accountNumber}) with ${debtor.clientName} has an overdue outstanding balance of ${balanceStr}. Immediate contact with Recovery Credit (${collector}) is required today to avoid formal credit recovery escalation.`
+          `URGENT NOTICE: Dear ${debtor.debtorName}, your account (${debtor.accountNumber}) with ${debtor.clientName} has an overdue outstanding balance of ${balanceStr}. Immediate contact with Bureau of Debt Collection Agency (${collector}) is required today to avoid formal credit recovery escalation.`
         );
         break;
       case 'settlement':
         setMessage(
-          `Dear ${debtor.debtorName}, Recovery Credit is open to structured settlement discussions for your ${debtor.clientName} balance (${balanceStr}, Acc: ${debtor.accountNumber}). Please reply to this message or contact ${collector} to arrange a workable repayment plan.`
+          `Dear ${debtor.debtorName}, Bureau of Debt Collection Agency is open to structured settlement discussions for your ${debtor.clientName} balance (${balanceStr}, Acc: ${debtor.accountNumber}). Please reply to this message or contact ${collector} to arrange a workable repayment plan.`
         );
         break;
       case 'promise':

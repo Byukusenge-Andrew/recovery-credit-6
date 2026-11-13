@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -26,7 +26,7 @@ export default function DataDeletionPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Logo size={32} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm">{t('app_name')}</span>
+            <BrandWordmark />
           </Link>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
             <LanguageSwitcher />
@@ -62,7 +62,7 @@ export default function DataDeletionPage() {
                 1. Overview & Rights to Deletion
               </h2>
               <p>
-                In compliance with the Meta Platform Terms, General Data Protection Regulation (GDPR), and Protection of Personal Information Act (POPIA), Recovery Credit provides users and data subjects with the right to request the deletion or anonymization of personal data collected through our services, integrations, or messaging channels (such as WhatsApp Business Cloud API).
+                In compliance with the Meta Platform Terms, General Data Protection Regulation (GDPR), and Protection of Personal Information Act (POPIA), Bureau of Debt Collection Agency Ltd provides users and data subjects with the right to request the deletion or anonymization of personal data collected through our services, integrations, or messaging channels (such as WhatsApp Business Cloud API).
               </p>
             </section>
 

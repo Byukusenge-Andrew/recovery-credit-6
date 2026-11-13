@@ -58,3 +58,19 @@ export default function Logo({ className = '', size = 36, variant = 'icon' }: Lo
     </svg>
   );
 }
+
+/**
+ * Company name set like the logo: two stacked uppercase lines.
+ * `size="md"` for page headers, `size="sm"` for compact headers.
+ */
+export function BrandWordmark({ className = 'flex', size = 'sm' }: { className?: string; size?: 'sm' | 'md' }) {
+  const top = size === 'md' ? 'text-[13px]' : 'text-[11px]';
+  const bottom = size === 'md' ? 'text-[10.5px]' : 'text-[9px]';
+  // className carries the display utility (default `flex`, e.g. `hidden sm:flex`).
+  return (
+    <span className={`flex-col leading-[1.1] font-extrabold uppercase tracking-tight whitespace-nowrap ${className}`}>
+      <span className={`${top} text-slate-900`}>Bureau of Debt</span>
+      <span className={`${bottom} text-slate-600`}>Collection Agency Ltd</span>
+    </span>
+  );
+}

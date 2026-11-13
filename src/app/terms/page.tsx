@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -26,7 +26,7 @@ export default function TermsPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Logo size={32} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm">{t('app_name')}</span>
+            <BrandWordmark />
           </Link>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
             <LanguageSwitcher />
@@ -60,8 +60,8 @@ export default function TermsPage() {
               </h2>
               <p>
                 {language === 'rw'
-                  ? 'Iyo winjiye muri sisitemu ya Recovery Credit, uba wemeje ko uri umukozi wemewe ushinzwe kwishyuza cyangwa uhagarariye ikigo cy’imari cyemewe. Kwinjira bitemewe cyangwa gukwirakwiza amadosiye y’abafite imyenda birabujijwe kandi bihanwa n’amategeko.'
-                  : 'By checking the mandatory authorization checkbox and signing into Recovery Credit, you affirm that you are an accredited debt collector, legal representative, or authorized agent of the creditor institution. Unauthorized access or transmission of debtor records is strictly prohibited and constitutes an offence under cybercrime legislation.'}
+                  ? 'Iyo winjiye muri sisitemu ya Bureau of Debt Collection Agency Ltd, uba wemeje ko uri umukozi wemewe ushinzwe kwishyuza cyangwa uhagarariye ikigo cy’imari cyemewe. Kwinjira bitemewe cyangwa gukwirakwiza amadosiye y’abafite imyenda birabujijwe kandi bihanwa n’amategeko.'
+                  : 'By checking the mandatory authorization checkbox and signing into Bureau of Debt Collection Agency Ltd, you affirm that you are an accredited debt collector, legal representative, or authorized agent of the creditor institution. Unauthorized access or transmission of debtor records is strictly prohibited and constitutes an offence under cybercrime legislation.'}
               </p>
             </section>
 
@@ -111,8 +111,8 @@ export default function TermsPage() {
               </h2>
               <p>
                 {language === 'rw'
-                  ? 'Recovery Credit ifite uburenganzira bwo guhagarika konti y’umukozi igihe cyose agaragaje imyitwarire iteye amakenga yo gukura amakuru menshi icyarimwe cyangwa kwinjira mu buryo butemewe.'
-                  : 'Recovery Credit reserves the unilateral right to suspend access immediately upon detection of anomalous bulk downloads, suspicious geographic login attempts, or violations of privacy legislation.'}
+                  ? 'Bureau of Debt Collection Agency Ltd ifite uburenganzira bwo guhagarika konti y’umukozi igihe cyose agaragaje imyitwarire iteye amakenga yo gukura amakuru menshi icyarimwe cyangwa kwinjira mu buryo butemewe.'
+                  : 'Bureau of Debt Collection Agency Ltd reserves the unilateral right to suspend access immediately upon detection of anomalous bulk downloads, suspicious geographic login attempts, or violations of privacy legislation.'}
               </p>
             </section>
           </div>

@@ -5,7 +5,7 @@ export const LANGUAGE_STORAGE_KEY = 'rc6_language';
 export const translations = {
   en: {
     // Brand
-    app_name: 'Recovery Credit',
+    app_name: 'Bureau of Debt Collection Agency Ltd',
     app_tagline: 'Debt Collection Management System',
     
     // Language names
@@ -351,7 +351,7 @@ export const translations = {
   },
   rw: {
     // Brand
-    app_name: 'Recovery Credit',
+    app_name: 'Bureau of Debt Collection Agency Ltd',
     app_tagline: 'Uburyo bwo Gukurikirana no Kwishyuza Imyenda',
 
     // Language names

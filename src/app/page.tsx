@@ -2,7 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -40,7 +40,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size={36} variant="icon" className="shrink-0" />
-            <span className="font-extrabold text-slate-900 text-base tracking-tight whitespace-nowrap">{t('app_name')}</span>
+            <BrandWordmark size="md" />
           </div>
 
           <nav className="hidden lg:flex items-center gap-6 mx-6 text-xs font-semibold text-slate-600 whitespace-nowrap">

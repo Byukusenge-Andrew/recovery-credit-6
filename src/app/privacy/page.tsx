@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Logo size={32} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm">{t('app_name')}</span>
+            <BrandWordmark />
           </Link>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
             <LanguageSwitcher />
@@ -60,8 +60,8 @@ export default function PrivacyPage() {
               </h2>
               <p>
                 {language === 'rw'
-                  ? 'Recovery Credit ikora yubahiriza amategeko yo kurinda amakuru bwite (POPIA/Data Protection), amategeko agenga inguzanyo, n’amabwiriza mpuzamahanga. Tuzi agaciro k’amakuru y’umwenda n’imari, bityo dukoresha ubwirinzi buhambaye bwa banki mu bikorwa byose byo gucunga no kwishyuza.'
-                  : 'Recovery Credit operates under strict compliance with the Protection of Personal Information Act (POPIA), National Credit Act (NCA), and international data privacy benchmarks. We recognize the sensitive nature of debtor financial records and maintain bank-grade confidentiality across all processing operations.'}
+                  ? 'Bureau of Debt Collection Agency Ltd ikora yubahiriza amategeko yo kurinda amakuru bwite (POPIA/Data Protection), amategeko agenga inguzanyo, n’amabwiriza mpuzamahanga. Tuzi agaciro k’amakuru y’umwenda n’imari, bityo dukoresha ubwirinzi buhambaye bwa banki mu bikorwa byose byo gucunga no kwishyuza.'
+                  : 'Bureau of Debt Collection Agency Ltd operates under strict compliance with the Protection of Personal Information Act (POPIA), National Credit Act (NCA), and international data privacy benchmarks. We recognize the sensitive nature of debtor financial records and maintain bank-grade confidentiality across all processing operations.'}
               </p>
             </section>
 

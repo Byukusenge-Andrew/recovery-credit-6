@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -26,7 +26,7 @@ export default function SecurityPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Logo size={32} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm">{t('app_name')}</span>
+            <BrandWordmark />
           </Link>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
             <LanguageSwitcher />

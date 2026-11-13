@@ -7,7 +7,7 @@ import { initializeStore, getCurrentUser, setAuthUser, setAuthToken } from '@/li
 import { authApi } from '@/services/api';
 import { useLanguage } from '@/components/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -147,7 +147,7 @@ export default function LoginPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 transition hover:opacity-90">
             <Logo size={28} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm tracking-tight">{t('app_name')}</span>
+            <BrandWordmark />
           </Link>
 
           <div className="flex items-center gap-3">

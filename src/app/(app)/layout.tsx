@@ -3,7 +3,7 @@
 import AuthGuard from '@/components/AuthGuard';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import QuickPaymentModal from '@/components/QuickPaymentModal';
@@ -56,9 +56,7 @@ function AppLayoutContent({
             className="flex items-center gap-2.5 group focus:outline-none cursor-pointer"
           >
             <Logo size={34} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:inline group-hover:text-blue-600 transition-colors">
-              Recovery Credit
-            </span>
+            <BrandWordmark className="hidden sm:flex" />
           </button>
         </div>
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser, setAuthUser, setAuthToken, logout } from '@/lib/store';
 import { authApi } from '@/services/api';
-import Logo from '@/components/Logo';
+import Logo, { BrandWordmark } from '@/components/Logo';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -149,7 +149,7 @@ export default function ChangePasswordPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Logo size={28} variant="icon" className="shrink-0" />
-            <span className="font-bold text-slate-900 text-sm tracking-tight">Recovery Credit</span>
+            <BrandWordmark />
           </div>
 
           <button
